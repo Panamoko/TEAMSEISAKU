@@ -236,7 +236,10 @@ void editor::AddObject(
 	 )
 {
 	std::string name = MakeUniqueName(objects, baseName);//objects中に重複しない名前を生成
-	auto obj = std::make_unique<GameObject>();
+	
+	std::unique_ptr<GameObject> obj = Factory::Create(baseName);
+	
+	//auto obj = std::make_unique<GameObject>();
 	obj->name = name;//新しいオブジェクトの name メンバに代入
 	obj->mesh_index = mesh_index;
 

@@ -11,6 +11,7 @@
 #include "System/ModelRenderer.h"
 #include "ModelManager.h"
 #include "GameObject.h"
+#include "Factory.h"
 
 using json = nlohmann::json;
 
