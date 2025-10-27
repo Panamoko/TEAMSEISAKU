@@ -20,6 +20,15 @@ public:
 
 	//ê∂ê¨ä÷êî
 	static std::unique_ptr<GameObject> Create(const std::string& className);
-
 };
 
+//é©ìÆìoò^É}ÉNÉç
+#define REGISTER_GAMEOBJECT(ClassType) \
+namespace { \
+    struct ClassType##Register { \
+        ClassType##Register() { \
+            Factory::Register(#ClassType, []() { return std::make_unique<ClassType>(); }); \
+        } \
+    }; \
+    static ClassType##Register global_##ClassType##Register; \
+}
