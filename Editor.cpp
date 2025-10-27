@@ -542,6 +542,7 @@ void editor::ToggleMode(
 	{
 		editor_mode = GameMode::Play;
 		play = true;
+		SaveScene(objects, sprites, "scene.json");
 	}
 	else
 	{
