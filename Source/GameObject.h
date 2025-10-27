@@ -5,9 +5,20 @@
 #include <DirectXMath.h>
 
 #include "System/Model.h"
+#include <System/ModelRenderer.h>
 
 class GameObject
 {
+public:
+	virtual void Update(float elapsedTime) {};
+	virtual void Render(const RenderContext& rc, ModelRenderer* renderer)
+	{
+		if (model)
+			renderer->Render(rc, transform, model, ShaderId::Lambert);
+	}
+
+	virtual void UpdateTransform();
+
 public:
 	Model* model = nullptr;//実際のモデルデータ
 
@@ -25,8 +36,6 @@ public:
 	bool dirty = false;
 
 	GameObject();//デフォルトコンストラクタ
-
-	//void UpdateTransform();
 
 };
 
