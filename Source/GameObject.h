@@ -18,7 +18,7 @@ public:
 	DirectX::XMFLOAT4 color;
 	DirectX::XMFLOAT4X4 world;//ワールド変換行列
 
-	enum class Type { None, StaticMesh, SkinnedMesh } type;
+	enum class Type { Object, Player, Enemy } type;
 	int mesh_index;//framework側の配列インデックスbool
 	std::string model_path; // モデルのファイルパス
 
