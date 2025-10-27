@@ -237,6 +237,7 @@ void editor::AddObject(
 {
 	std::string name = MakeUniqueName(objects, baseName);//objects中に重複しない名前を生成
 	
+	//各クラスと紐づけ
 	std::unique_ptr<GameObject> obj = Factory::Create(baseName);
 	
 	//auto obj = std::make_unique<GameObject>();
