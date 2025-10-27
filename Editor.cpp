@@ -165,7 +165,7 @@ void ApplyTransform(GameObject& obj)
 
 	//scale -> rotate -> translate
 	XMMATRIX world = S * R * T;//最終的なワールド変換行列を計算
-	XMStoreFloat4x4(&obj.world, world);//結果を obj.world に格納
+	XMStoreFloat4x4(&obj.transform, world);//結果を obj.world に格納
 }
 
 editor::editor()
@@ -236,7 +236,11 @@ void editor::AddObject(
 	 )
 {
 	std::string name = MakeUniqueName(objects, baseName);//objects中に重複しない名前を生成
-	auto obj = std::make_unique<GameObject>();
+	
+	//各クラスと紐づけ
+	std::unique_ptr<GameObject> obj = Factory::Create(baseName);
+	
+	//auto obj = std::make_unique<GameObject>();
 	obj->name = name;//新しいオブジェクトの name メンバに代入
 	obj->mesh_index = mesh_index;
 
@@ -397,7 +401,7 @@ void editor::Draw3DEditor(
 				for (int r = 0; r < 4; r++)
 				{
 					ImGui::Text("%.3f %.3f %.3f %.3f",
-						sel->world.m[r][0], sel->world.m[r][1], sel->world.m[r][2], sel->world.m[r][3]);
+						sel->transform.m[r][0], sel->transform.m[r][1], sel->transform.m[r][2], sel->transform.m[r][3]);
 				}
 			}
 		}

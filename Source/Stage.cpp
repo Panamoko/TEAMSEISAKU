@@ -28,7 +28,7 @@ void Stage::Render(const RenderContext& rc, ModelRenderer* renderer)
     for (auto& obj : objects)
     {
         if (!obj || !obj->model) continue;
-        renderer->Render(rc, obj->world, obj->model, ShaderId::Lambert);
+        renderer->Render(rc, obj->transform, obj->model, ShaderId::Lambert);
     }
     //renderer->Render(rc, transform, model, ShaderId::Lambert);
 }

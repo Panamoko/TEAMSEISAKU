@@ -52,6 +52,12 @@
     <Filter Include="Source\Model">
       <UniqueIdentifier>{ddd1933a-56c4-43a7-9ea2-e26a0a44e7bf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\GameObjcet">
+      <UniqueIdentifier>{2f285f26-7147-4205-8ff8-188f7dae62e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Factory">
+      <UniqueIdentifier>{8ca9ee16-2341-4ee8-97f0-45dc58529a67}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui-docking\imconfig.h">
@@ -209,7 +215,12 @@
     <ClInclude Include="Source\AllySlime.h">
       <Filter>Source\Character\Player</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GameObject.h" />
+    <ClInclude Include="Source\GameObject.h">
+      <Filter>Source\GameObjcet</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Factory.h">
+      <Filter>Source\Factory</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -351,7 +362,10 @@
       <Filter>Source\Character\Player</Filter>
     </ClCompile>
     <ClCompile Include="Source\GameObject.cpp">
-      <Filter>Source</Filter>
+      <Filter>Source\GameObjcet</Filter>
+    </ClCompile>
+    <ClCompile Include="Factory.cpp">
+      <Filter>Source\Factory</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
