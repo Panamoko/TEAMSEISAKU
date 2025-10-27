@@ -94,7 +94,15 @@ public:
 private:
 
 	enum class EditorModel { Model3D, Model2D };
+	enum class GameMode { Edit, Play };
+public:
+	//モード切替
+	void ToggleMode();
+	GameMode GetMode()const { return editor_mode; }
+private:
+
 	EditorModel mode = EditorModel::Model3D;
+	GameMode editor_mode = GameMode::Edit;
 
 	int select_index;//選択中インデックス
 	int delete_index;//削除待ちインデックス

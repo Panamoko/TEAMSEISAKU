@@ -205,6 +205,14 @@ void editor::render(
 
 	ImGui::Separator();
 
+	// 🔹 モード切り替えボタン（ImGui）
+	if (ImGui::Button(editor_mode == GameMode::Edit ? "PlayMode" : "EditorMode"))
+	{
+		ToggleMode();
+	}
+
+	ImGui::Separator();
+
 	if (ImGui::Button("3D Mode"))mode = EditorModel::Model3D;
 
 	ImGui::SameLine();
@@ -522,6 +530,16 @@ void editor::Draw2DEditor(
 			sprites.erase(sprites.begin() + delete_index2D);
 		delete_index2D = -1;
 		select_index2D = -1;
+	}
+}
+
+void editor::ToggleMode()
+{
+	if (editor_mode == GameMode::Edit)
+		editor_mode = GameMode::Play;
+	else
+	{
+		editor_mode = GameMode::Edit;
 	}
 }
 
