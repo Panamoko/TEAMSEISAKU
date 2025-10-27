@@ -1,0 +1,58 @@
+{
+    "objects": [
+        {
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "mesh_index": 0,
+            "model_path": "Data/Model/Stage/ExampleStage.mdl",
+            "name": "ExampleStage",
+            "position": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": -842150451
+        },
+        {
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "mesh_index": 1,
+            "model_path": "Data/Model/Slime/Slime.mdl",
+            "name": "Slime",
+            "position": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                0.009999999776482582,
+                0.009999999776482582,
+                0.009999999776482582
+            ],
+            "type": -842150451
+        }
+    ]
+}
