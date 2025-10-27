@@ -16,11 +16,6 @@ void Character::UpdateTransform()
     DirectX::XMMATRIX W = S * R * T;
     // 計算したワールド行列を取り出す
     DirectX::XMStoreFloat4x4(&transform, W);
-
-	for (auto& obj : objects)
-	{
-		obj->UpdateTransform();
-	}
 }
 
 void Character::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer)

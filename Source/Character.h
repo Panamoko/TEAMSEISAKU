@@ -4,9 +4,10 @@
 #include "System/ShapeRenderer.h"
 #include "ModelManager.h"
 #include "Editor.h"
+#include "GameObject.h"
 
 //キャラクター
-class Character
+class Character:public GameObject
 {
 public:
 	Character() {};
