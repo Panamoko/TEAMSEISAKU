@@ -7,6 +7,11 @@
 #include "ProjectileStraite.h"
 #include "ProjectileHoming.h"
 
+Player* Player::sActive = nullptr;
+
+Player& Player::Instance() { return *sActive; }
+void Player::SetActive(Player* p) { sActive = p; }
+Player* Player::GetActivePtr() { return sActive; }
 
 //初期化
 void Player::Initialize()
@@ -25,17 +30,17 @@ void Player::Finalize()
 
 void Player::Update(float elapsedTime)
 {
-	// 移動入力処理
-	InputMove(elapsedTime);
-
-	//ジャンプ入力処理
-	InputJump();
-
-	//弾丸入力処理
-	InputProjectile();
-
-	// 自動攻撃（スライムのように一定間隔で自動発射）
-    AutoAttackUpdate(elapsedTime);
+     const bool isActive = (this == GetActivePtr());
+     if (isActive) {
+         // 入力は“選択された個体のみ”
+         InputMove(elapsedTime);
+         InputJump();
+         InputProjectile();
+         AutoAttackUpdate(elapsedTime);   // ← 非アクティブでも撃たせたいなら下へ移動
+     } else {
+         // 非アクティブでも自動攻撃させたいならこちらで呼ぶ
+         AutoAttackUpdate(elapsedTime);
+     }
 
 	//速力更新処理
 	UpdateVelocity(elapsedTime);
@@ -256,6 +261,14 @@ void Player::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* render
             autoAttackRange,       // 半径
             1.0f,                  // 高さ（見やすくするために低め）
             DirectX::XMFLOAT4(0, 1, 1, 1.0f) // 色：青・半透明
+        );
+    }
+	// --- 選択中マーカー（薄い黄色リング） ---
+    if (this == GetActivePtr()) {
+        DirectX::XMFLOAT3 ringPos = position; ringPos.y += 0.02f;
+        renderer->RenderCylinder(
+            rc, ringPos, radius + 0.15f, 0.05f,
+            DirectX::XMFLOAT4(1, 1, 0, 0.8f)
         );
     }
 }
