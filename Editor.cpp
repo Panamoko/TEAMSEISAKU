@@ -213,11 +213,11 @@ void editor::render(
 
 	ImGui::Separator();
 
-	if (ImGui::Button("3D Mode"))mode = EditorModel::Model3D;
+	if (ImGui::Button("3D Model"))mode = EditorModel::Model3D;
 
 	ImGui::SameLine();
 
-	if (ImGui::Button("2D Mode"))mode = EditorModel::Model2D;
+	if (ImGui::Button("2D Model"))mode = EditorModel::Model2D;
 
 	ImGui::Separator();
 
