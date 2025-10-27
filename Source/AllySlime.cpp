@@ -23,8 +23,8 @@ AllySlime::AllySlime(int formationIndex)
     : index(formationIndex)
 {
     // 見た目は敵スライムを流用（EnemySlime と同じパス／スケールに揃える）
-    slimeModel = ModelManager::Instance().Load("Data/Model/Slime/Slime.mdl");
-    scale = { 0.01f, 0.01f, 0.01f }; // モデルが大きい前提のため縮小
+    slimeModel = ModelManager::Instance().Load("Data/Model/Slime/suraimukari.mdl");
+    scale = { 0.002f, 0.002f, 0.002f }; // モデルが大きい前提のため縮小
     radius = 0.5f;                  // 当たり半径（敵と同等）
     height = 1.0f;                  // 当たり高さ
 
