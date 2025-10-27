@@ -6,6 +6,8 @@
 #include "EnemySlime.h"
 #include "Player.h"
 
+#include <cfloat>
+#include <cmath>
 
 #include "Editor.h"
 
