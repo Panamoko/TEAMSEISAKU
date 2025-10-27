@@ -205,11 +205,19 @@ void editor::render(
 
 	ImGui::Separator();
 
-	if (ImGui::Button("3D Mode"))mode = EditorModel::Model3D;
+	// 🔹 モード切り替えボタン（ImGui）
+	if (ImGui::Button(editor_mode == GameMode::Edit ? "PlayMode" : "EditorMode"))
+	{
+		ToggleMode(objects, sprites);
+	}
+
+	ImGui::Separator();
+
+	if (ImGui::Button("3D Model"))mode = EditorModel::Model3D;
 
 	ImGui::SameLine();
 
-	if (ImGui::Button("2D Mode"))mode = EditorModel::Model2D;
+	if (ImGui::Button("2D Model"))mode = EditorModel::Model2D;
 
 	ImGui::Separator();
 
@@ -522,6 +530,25 @@ void editor::Draw2DEditor(
 			sprites.erase(sprites.begin() + delete_index2D);
 		delete_index2D = -1;
 		select_index2D = -1;
+	}
+}
+
+void editor::ToggleMode(
+	std::vector<std::unique_ptr<GameObject>>& objects,
+	std::vector<std::unique_ptr<SpriteObject>>& sprites
+)
+{
+	if (editor_mode == GameMode::Edit)
+	{
+		editor_mode = GameMode::Play;
+		play = true;
+		SaveScene(objects, sprites, "scene.json");
+	}
+	else
+	{
+		editor_mode = GameMode::Edit;
+		play = false;
+		LoadScene(objects, sprites, "scene.json");
 	}
 }
 

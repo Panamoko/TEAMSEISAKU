@@ -94,7 +94,18 @@ public:
 private:
 
 	enum class EditorModel { Model3D, Model2D };
+	enum class GameMode { Edit, Play };
+public:
+	//モード切替
+	void ToggleMode(
+		std::vector<std::unique_ptr<GameObject>>& objects,
+		std::vector<std::unique_ptr<SpriteObject>>& sprites);
+	GameMode GetMode()const { return editor_mode; }
+	bool GetPlayGame()const { return play; };
+private:
+
 	EditorModel mode = EditorModel::Model3D;
+	GameMode editor_mode = GameMode::Edit;
 
 	int select_index;//選択中インデックス
 	int delete_index;//削除待ちインデックス
@@ -106,6 +117,7 @@ private:
 	int static_index = 0;
 	int skinned_index = 0;
 	int sprite_index = 0;
+	bool play = false;
 
 	Model* model = nullptr;
 
