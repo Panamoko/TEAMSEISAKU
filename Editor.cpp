@@ -12,42 +12,13 @@ using namespace DirectX;
 
 static float DegToRed(float d) { return d * XM_PI / 180.0f; }
 
-GameObject::GameObject() :name("Empty")
-{
-	position = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	color = { 1.0f,1.0f,1.0f,1.0f };
-	world = XMFLOAT4X4
-	{
-		1,0,0,0,
-		0,1,0,0,
-		0,0,1,0,
-		0,0,0,1
-	};
-}
-
-void GameObject::UpdateTransform()
-{
-	using namespace DirectX;
-	XMMATRIX S = XMMatrixScaling(scale.x, scale.y, scale.z);
-	XMMATRIX R = XMMatrixRotationRollPitchYaw(
-		XMConvertToRadians(rotation.x),
-		XMConvertToRadians(rotation.y),
-		XMConvertToRadians(rotation.z)
-	);
-	XMMATRIX T = XMMatrixTranslation(position.x, position.y, position.z);
-
-	XMStoreFloat4x4(&world, S * R * T);
-}
-
 //JSONへ変換
 void to_json(json& j, const GameObject& obj)
 {
 	j = json{
 		{"name",obj.name},
 		{"position",{obj.position.x,obj.position.y,obj.position.z}},
-		{"rotation",{obj.rotation.x,obj.rotation.y,obj.rotation.z}},
+		{"rotation",{obj.angle.x,obj.angle.y,obj.angle.z}},
 		{"scale",{obj.scale.x,obj.scale.y,obj.scale.z}},
 		{"color",{obj.color.x,obj.color.y,obj.color.z,obj.color.w}},
 		{"type",static_cast<int>(obj.type)},
@@ -78,7 +49,7 @@ void from_json(const json& j, GameObject& obj)
 	auto pos = j.at("position");
 	obj.position = { pos[0],pos[1],pos[2] };
 	auto rot = j.at("rotation");
-	obj.rotation = { rot[0],rot[1],rot[2] };
+	obj.angle = { rot[0],rot[1],rot[2] };
 	auto sca = j.at("scale");
 	obj.scale = { sca[0],sca[1],sca[2] };
 	auto col = j.value("color", std::vector<float>{1.0f, 1.0f, 1.0f, 1.0f});
@@ -182,9 +153,9 @@ void ApplyTransform(GameObject& obj)
 	/*XMFLOAT3をDirectXMath が使う高速ベクトル型 XMVECTOR に変換*/
 	XMVECTOR pos = XMLoadFloat3(&obj.position);
 	XMVECTOR rot = XMVectorSet(
-		XMConvertToRadians(obj.rotation.x),
-		XMConvertToRadians(obj.rotation.y),
-		XMConvertToRadians(obj.rotation.z),
+		XMConvertToRadians(obj.angle.x),
+		XMConvertToRadians(obj.angle.y),
+		XMConvertToRadians(obj.angle.z),
 		0.0f
 	);	XMVECTOR scl = XMLoadFloat3(&obj.scale);
 
@@ -380,7 +351,7 @@ void editor::Draw3DEditor(
 		}
 
 		//回転角度を編集可能にする
-		if (ImGui::DragFloat3("Rotation", &sel->rotation.x, 1.0f))
+		if (ImGui::DragFloat3("Rotation", &sel->angle.x, 1.0f))
 		{
 			ApplyTransform(*sel);
 		}
@@ -412,7 +383,7 @@ void editor::Draw3DEditor(
 		if (ImGui::Button("Reset Transform"))
 		{
 			sel->position = XMFLOAT3(0.0f, 0.0f, 0.0f);
-			sel->rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
+			sel->angle = XMFLOAT3(0.0f, 0.0f, 0.0f);
 			sel->scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 			ApplyTransform(*sel);
 		}

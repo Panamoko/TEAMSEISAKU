@@ -1,9 +1,9 @@
 #pragma once
-
 #include <vector>
 #include <string>
 #include <memory>
 #include <DirectXMath.h>
+
 #include "System/Model.h"
 
 class GameObject
@@ -13,7 +13,7 @@ public:
 
 	std::string name;//オブジェクトの名前
 	DirectX::XMFLOAT3 position;//位置
-	DirectX::XMFLOAT3 rotation;//回転角度
+	DirectX::XMFLOAT3 angle;//回転角度
 	DirectX::XMFLOAT3 scale;//拡大・縮小
 	DirectX::XMFLOAT4 color;
 	DirectX::XMFLOAT4X4 world;//ワールド変換行列
@@ -25,6 +25,8 @@ public:
 	bool dirty = false;
 
 	GameObject();//デフォルトコンストラクタ
+
+	void UpdateTransform();
 
 };
 

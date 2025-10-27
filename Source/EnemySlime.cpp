@@ -25,7 +25,7 @@ EnemySlime::EnemySlime()
 		if (obj.dirty)
 		{
 			set_position(obj.position);
-			set_rotation(obj.rotation);
+			set_rotation(obj.angle);
 			set_scale(obj.scale);
 
 			obj.dirty = false;
@@ -76,7 +76,7 @@ void EnemySlime::Update(float elapsedTime)
 		if (obj.dirty)
 		{
 			set_position(obj.position);
-			set_rotation(obj.rotation);
+			set_rotation(obj.angle);
 			set_scale(obj.scale);
 
 			obj.dirty = false;

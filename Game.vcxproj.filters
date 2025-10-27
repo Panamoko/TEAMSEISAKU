@@ -209,6 +209,7 @@
     <ClInclude Include="Source\AllySlime.h">
       <Filter>Source\Character\Player</Filter>
     </ClInclude>
+    <ClInclude Include="Source\GameObject.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -348,6 +349,9 @@
     </ClCompile>
     <ClCompile Include="Source\AllySlime.cpp">
       <Filter>Source\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GameObject.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
