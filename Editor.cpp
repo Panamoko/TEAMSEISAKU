@@ -536,10 +536,14 @@ void editor::Draw2DEditor(
 void editor::ToggleMode()
 {
 	if (editor_mode == GameMode::Edit)
+	{
 		editor_mode = GameMode::Play;
+		play = true;
+	}
 	else
 	{
 		editor_mode = GameMode::Edit;
+		play = false;
 	}
 }
 

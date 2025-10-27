@@ -99,6 +99,7 @@ public:
 	//ÉÇÅ[Éhêÿë÷
 	void ToggleMode();
 	GameMode GetMode()const { return editor_mode; }
+	bool GetPlayGame()const { return play; };
 private:
 
 	EditorModel mode = EditorModel::Model3D;
@@ -114,6 +115,7 @@ private:
 	int static_index = 0;
 	int skinned_index = 0;
 	int sprite_index = 0;
+	bool play = false;
 
 	Model* model = nullptr;
 
