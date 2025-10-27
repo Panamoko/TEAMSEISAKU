@@ -8,17 +8,14 @@
 // プレイヤー
 class Player : public Character
 {
-private:
+public:
 	Player() {};
 	~Player() override {};
 
-public:
-	//インスタンス取得
-	static Player& Instance()
-	{
-		static Player instance;
-		return instance;
-	}
+    // アクティブ個体の取得／設定（“選択した方”を操作するため）
+    static Player& Instance();
+    static void SetActive(Player* p);
+    static Player* GetActivePtr();
 
 	//初期化
 	void Initialize();
@@ -87,4 +84,7 @@ private:
     float autoAttackRange   = 8.0f;     // 索敵半径（m）
     float autoAttackInterval= 1.5f;     // 発射間隔（秒）
     float autoAttackTimer   = 0.0f;     // タイマー
+
+	// 現在アクティブなプレイヤー（実体は Player.cpp で定義）
+    static Player* sActive;
 };
