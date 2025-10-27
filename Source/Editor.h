@@ -97,7 +97,9 @@ private:
 	enum class GameMode { Edit, Play };
 public:
 	//ÉÇÅ[Éhêÿë÷
-	void ToggleMode();
+	void ToggleMode(
+		std::vector<std::unique_ptr<GameObject>>& objects,
+		std::vector<std::unique_ptr<SpriteObject>>& sprites);
 	GameMode GetMode()const { return editor_mode; }
 	bool GetPlayGame()const { return play; };
 private:

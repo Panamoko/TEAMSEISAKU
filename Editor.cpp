@@ -208,7 +208,7 @@ void editor::render(
 	// 🔹 モード切り替えボタン（ImGui）
 	if (ImGui::Button(editor_mode == GameMode::Edit ? "PlayMode" : "EditorMode"))
 	{
-		ToggleMode();
+		ToggleMode(objects, sprites);
 	}
 
 	ImGui::Separator();
@@ -533,7 +533,10 @@ void editor::Draw2DEditor(
 	}
 }
 
-void editor::ToggleMode()
+void editor::ToggleMode(
+	std::vector<std::unique_ptr<GameObject>>& objects,
+	std::vector<std::unique_ptr<SpriteObject>>& sprites
+)
 {
 	if (editor_mode == GameMode::Edit)
 	{
@@ -544,6 +547,7 @@ void editor::ToggleMode()
 	{
 		editor_mode = GameMode::Edit;
 		play = false;
+		LoadScene(objects, sprites, "scene.json");
 	}
 }
 
