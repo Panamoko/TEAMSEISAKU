@@ -125,6 +125,8 @@ void SceneGame::Initialize()
          s->SetPosition({ p.x, p.y, p.z - 1.0f - 0.3f * i });
          allies.emplace_back(std::move(s));
      }
+
+	 LoadScene(objects, sprites2d, "scene.json");
 }
 
 // èIóπâª
