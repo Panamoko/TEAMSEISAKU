@@ -26,13 +26,13 @@ void Stage::Render(const RenderContext& rc, ModelRenderer* renderer)
     DirectX::XMStoreFloat4x4(&transform, DirectX::XMMatrixIdentity());
 
     // Editor ‚É ModelManager ‚Ì‘Sƒ‚ƒfƒ‹‚ð“n‚·
-    game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), renderer);
+    //game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), renderer);
 
-    for (auto& obj : objects)
-    {
-        if (!obj || !obj->model) continue;
-        renderer->Render(rc, obj->transform, obj->model, ShaderId::Lambert);
-    }
+    //for (auto& obj : objects)
+    //{
+    //    if (!obj || !obj->model) continue;
+    //    renderer->Render(rc, transform, model, ShaderId::Lambert);
+    //}
     //renderer->Render(rc, transform, model, ShaderId::Lambert);
 }
 

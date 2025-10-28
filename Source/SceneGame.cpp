@@ -192,6 +192,11 @@ void SceneGame::Update(float elapsedTime)
 	//エネミー更新処理
 	EnemyManager::Instance().Update(elapsedTime);
 
+	for (auto& obj : objects)
+	{
+		obj->Update(elapsedTime);
+	}
+
 	// 味方スライム更新
     for (auto& a : allies) {
         a->Update(elapsedTime);
@@ -217,6 +222,7 @@ void SceneGame::Render()
 	rc.view       = camera.GetView();
 	rc.projection = camera.GetProjection();
 
+	game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), modelRenderer);
 
 	// 3Dモデル描画
 	{
@@ -231,6 +237,11 @@ void SceneGame::Render()
 		{
 	        a->Render(rc, modelRenderer);
 	    }
+
+		for (auto& obj : objects)
+		{
+			obj->Render(rc, modelRenderer);
+		}
 
 		// エネミー描画
 		EnemyManager::Instance().Render(rc, modelRenderer);
