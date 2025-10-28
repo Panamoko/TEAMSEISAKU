@@ -3,8 +3,9 @@
 #include <unordered_map>
 #include <string>
 #include "System/Model.h"
+#include "GameObject.h"
 
-class ModelManager
+class ModelManager :public GameObject
 {
 public:
     static ModelManager& Instance()

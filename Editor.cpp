@@ -17,6 +17,7 @@ void to_json(json& j, const GameObject& obj)
 {
 	j = json{
 		{"name",obj.name},
+		{"class_name",obj.class_name},
 		{"position",{obj.position.x,obj.position.y,obj.position.z}},
 		{"rotation",{obj.angle.x,obj.angle.y,obj.angle.z}},
 		{"scale",{obj.scale.x,obj.scale.y,obj.scale.z}},
@@ -46,6 +47,7 @@ void to_json(json& j, const SpriteObject& sp)
 void from_json(const json& j, GameObject& obj)
 {
 	obj.name = j.at("name").get<std::string>();
+	obj.class_name = j.at("class_name").get<std::string>();
 	auto pos = j.at("position");
 	obj.position = { pos[0],pos[1],pos[2] };
 	auto rot = j.at("rotation");
@@ -246,8 +248,14 @@ void editor::AddObject(
 	std::string name = MakeUniqueName(objects, baseName);//objects中に重複しない名前を生成
 	
 	//各クラスと紐づけ
-	std::unique_ptr<GameObject> obj = Factory::Create(baseName);
-	
+	std::unique_ptr<GameObject> obj = Factory::Create(class_name);
+	if (!obj)
+	{
+		//未登録クラスの場合
+		obj = std::make_unique<GameObject>();
+		obj->class_name = "GameObject";
+	}
+
 	//auto obj = std::make_unique<GameObject>();
 	obj->name = name;//新しいオブジェクトの name メンバに代入
 	obj->mesh_index = mesh_index;

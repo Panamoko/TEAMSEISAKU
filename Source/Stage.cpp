@@ -3,6 +3,8 @@
 //コンストラクタ
 Stage::Stage()
 {
+    class_name = "Stage";
+
     //ステージモデルを読み込み
     model = ModelManager::Instance().Load("Data/Model/Stage/ExampleStage.mdl");
 }

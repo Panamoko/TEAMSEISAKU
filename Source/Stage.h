@@ -3,12 +3,13 @@
 #include "Editor.h"
 #include "System/ModelRenderer.h"
 #include "ModelManager.h"
+#include "GameObject.h"
 
 //ステージ
-class Stage
+class Stage :public GameObject
 {
 public:
-     Stage();
+    Stage();
     ~Stage();
 
     //更新処理

@@ -23,6 +23,7 @@ public:
 	Model* model = nullptr;//実際のモデルデータ
 
 	std::string name;//オブジェクトの名前
+	std::string class_name;//実クラス名
 	DirectX::XMFLOAT3 position;//位置
 	DirectX::XMFLOAT3 angle;//回転角度
 	DirectX::XMFLOAT3 scale;//拡大・縮小

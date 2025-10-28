@@ -7,9 +7,12 @@
 // コンストラクタ
 EnemySlime::EnemySlime()
 {
+	class_name = "EnemySlime";
+
 	// ModelManager からスライムモデル取得
 	slimeModel = ModelManager::Instance().Load("Data/Model/Slime/Slime.mdl");
 	//models.push_back(std::make_unique<Model>("Data/Model/Slime/Slime.mdl"));
+
 
 	// モデルが大きいのでスケーリング
 	scale.x = scale.y = scale.z = 0.01f;
@@ -315,4 +318,5 @@ void EnemySlime::OnDead()
 	Destroy();
 }
 
+REGISTER_GAMEOBJECT(EnemySlime);
 
