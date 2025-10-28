@@ -25,6 +25,7 @@ void Stage::Render(const RenderContext& rc, ModelRenderer* renderer)
     DirectX::XMFLOAT4X4 transform;
     DirectX::XMStoreFloat4x4(&transform, DirectX::XMMatrixIdentity());
 
+    // Editor ‚É ModelManager ‚Ì‘Sƒ‚ƒfƒ‹‚ð“n‚·
     game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), renderer);
 
     for (auto& obj : objects)
@@ -34,5 +35,7 @@ void Stage::Render(const RenderContext& rc, ModelRenderer* renderer)
     }
     //renderer->Render(rc, transform, model, ShaderId::Lambert);
 }
+
+REGISTER_GAMEOBJECT(Stage);
 
 

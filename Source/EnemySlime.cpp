@@ -96,9 +96,6 @@ void EnemySlime::Update(float elapsedTime)
 // •`‰æˆ—
 void EnemySlime::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
-	// Editor ‚É ModelManager ‚Ì‘Sƒ‚ƒfƒ‹‚ğ“n‚·
-	game_editor.render(objects,sprites2d, ModelManager::Instance().GetModels(), renderer);
-
 	// ƒ‚ƒfƒ‹•`‰æ
 	
 	for (auto& obj : objects)
