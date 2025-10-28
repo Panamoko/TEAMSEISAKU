@@ -135,7 +135,9 @@ void LoadScene(
 	if (j.contains("objects"))
 		for (auto& item : j["objects"])
 		{
-			auto obj = std::make_unique<GameObject>();
+			std::string className = item.value("class_name", "GameObject");
+			std::unique_ptr<GameObject> obj = Factory::Create(className);
+			if (!obj) obj = std::make_unique<GameObject>();
 			*obj = item.get<GameObject>();
 			objects.push_back(std::move(obj));
 		}

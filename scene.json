@@ -40,13 +40,13 @@
             "model_path": "Data/Model/Slime/Slime.mdl",
             "name": "Slime",
             "position": [
+                2.8616690635681152,
                 0.0,
-                0.0,
-                0.0
+                -0.5411234498023987
             ],
             "rotation": [
                 0.0,
-                0.0,
+                2.0642709732055664,
                 0.0
             ],
             "scale": [
