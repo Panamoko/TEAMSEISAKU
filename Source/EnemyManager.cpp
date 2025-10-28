@@ -60,6 +60,10 @@ void EnemyManager::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* 
 	{
 		enemy->RenderDebugPrimitive(rc, renderer);
 	}
+	for (auto& obj : objects)
+	{
+		obj->RenderDebugPrimitive(rc, renderer);
+	}
 }
 
 

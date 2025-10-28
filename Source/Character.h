@@ -38,7 +38,7 @@ public:
 	float GetRadius() const { return radius; }
 
 	//デバッグプリミティブ描画
-	virtual void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer);
+	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer);
 
 	// 地面に接地しているか
 	bool IsGround() const { return isGround; }

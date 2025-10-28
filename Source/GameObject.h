@@ -1,4 +1,5 @@
 #pragma once
+
 #include <vector>
 #include <string>
 #include <memory>
@@ -6,6 +7,7 @@
 
 #include "System/Model.h"
 #include <System/ModelRenderer.h>
+#include <System/ShapeRenderer.h>
 
 class GameObject
 {
@@ -18,6 +20,8 @@ public:
 	}
 
 	virtual void UpdateTransform();
+
+	virtual void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) {};
 
 public:
 	Model* model = nullptr;//実際のモデルデータ

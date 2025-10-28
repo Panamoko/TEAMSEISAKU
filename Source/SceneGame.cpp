@@ -194,6 +194,7 @@ void SceneGame::Update(float elapsedTime)
 	//エネミー更新処理
 	EnemyManager::Instance().Update(elapsedTime);
 
+	//エディタモデル更新
 	for (auto& obj : objects)
 	{
 		obj->Update(elapsedTime);
@@ -240,6 +241,7 @@ void SceneGame::Render()
 	        a->Render(rc, modelRenderer);
 	    }
 
+		//エディタモデル描画
 		for (auto& obj : objects)
 		{
 			obj->Render(rc, modelRenderer);
@@ -261,6 +263,11 @@ void SceneGame::Render()
 		{
 	        a->RenderDebugPrimitive(rc, shapeRenderer);
 	    }
+
+		for (auto& obj : objects)
+		{
+			obj->RenderDebugPrimitive(rc, shapeRenderer);
+		}
 	}
 
 	// 2Dスプライト描画
