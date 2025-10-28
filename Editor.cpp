@@ -241,20 +241,15 @@ void editor::render(
 
 void editor::AddObject(
 	std::vector<std::unique_ptr<GameObject>>& objects,
+	const std::string& class_name,
 	const std::string& baseName,
 	int mesh_index
-	 )
+)
 {
 	std::string name = MakeUniqueName(objects, baseName);//objects中に重複しない名前を生成
-	
+
 	//各クラスと紐づけ
 	std::unique_ptr<GameObject> obj = Factory::Create(class_name);
-	if (!obj)
-	{
-		//未登録クラスの場合
-		obj = std::make_unique<GameObject>();
-		obj->class_name = "GameObject";
-	}
 
 	//auto obj = std::make_unique<GameObject>();
 	obj->name = name;//新しいオブジェクトの name メンバに代入
@@ -312,6 +307,32 @@ void editor::Draw3DEditor(
 	else
 		ImGui::TextDisabled("No models loaded.");
 
+	ImGui::Separator();
+	ImGui::Text("Select Class type");
+
+	auto classNames = Factory::GetRegisteredClassNames();
+
+	static std::vector<const char*> className;
+	className.clear();
+
+	for (auto& c : classNames)
+	{
+		className.push_back(c.c_str());
+	}
+
+	static int select_class_index = 0;
+	if (!className.empty())
+	{
+		ImGui::Combo("Class", &select_class_index, className.data(),
+			static_cast<int>(className.size()));
+		select_class = classNames[select_class_index];
+	}
+	else
+	{
+		ImGui::TextDisabled("No registered classes");
+	}
+
+	ImGui::Separator();
 
 	if (ImGui::Button("Add"))
 	{
@@ -320,6 +341,7 @@ void editor::Draw3DEditor(
 			int modelIndex = static_index;
 			AddObject(
 				objects,
+				select_class,
 				models[modelIndex]->name,
 				modelIndex);
 		}

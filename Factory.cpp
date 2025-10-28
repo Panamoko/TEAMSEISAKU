@@ -22,3 +22,13 @@ std::unique_ptr<GameObject> Factory::Create(const std::string& className)
     //登録されていない場合はデフォルト
     return std::make_unique<GameObject>();
 }
+
+std::vector<std::string> Factory::GetRegisteredClassNames()
+{
+    std::vector<std::string> names;
+    for (const auto& pair : Registry())
+    {
+        names.push_back(pair.first);
+    }
+    return names;
+}

@@ -72,6 +72,7 @@ public:
 	//オブジェクト追加
 	void AddObject(
 		std::vector<std::unique_ptr<GameObject>>& objects,
+		const std::string& class_name,
 		const std::string& baseName,
 		int mesh_index = -1
 		//const std::string& modelPath
@@ -117,6 +118,7 @@ private:
 	int static_index = 0;
 	int skinned_index = 0;
 	int sprite_index = 0;
+	std::string select_class;
 	bool play = false;
 
 	Model* model = nullptr;
