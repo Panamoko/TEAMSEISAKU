@@ -281,5 +281,5 @@ void SceneGame::Render()
 // GUI•`‰æ
 void SceneGame::DrawGUI()
 {
-	Player::Instance().DrawDebugGUI();
+	//Player::Instance().DrawDebugGUI();
 }

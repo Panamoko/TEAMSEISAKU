@@ -23,6 +23,7 @@ public:
 
 	virtual void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) {};
 
+	virtual void OnImGui() {};
 public:
 	Model* model = nullptr;//実際のモデルデータ
 

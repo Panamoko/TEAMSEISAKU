@@ -378,6 +378,23 @@ void editor::Draw3DEditor(
 	{
 		GameObject* sel = objects[select_index].get();
 
+		//Deleteボタン
+		if (ImGui::Button("Delete"))
+		{
+			delete_index = select_index;
+		}
+
+		ImGui::SameLine();
+
+		//Resetボタン(初期化する)
+		if (ImGui::Button("Reset Transform"))
+		{
+			sel->position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+			sel->angle = XMFLOAT3(0.0f, 0.0f, 0.0f);
+			sel->scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+			ApplyTransform(*sel);
+		}
+
 		//名前編集用の入力欄
 		char buf[128];
 		strncpy_s(buf, sizeof(buf), sel->name.c_str(), _TRUNCATE);
@@ -412,25 +429,11 @@ void editor::Draw3DEditor(
 
 		ImGui::ColorEdit4("Color", &sel->color.x);
 
-
 		ImGui::Separator();//区切り線
 
-		//Deleteボタン
-		if (ImGui::Button("Delete"))
-		{
-			delete_index = select_index;
-		}
+		sel->OnImGui();
 
-		ImGui::SameLine();
-
-		//Resetボタン(初期化する)
-		if (ImGui::Button("Reset Transform"))
-		{
-			sel->position = XMFLOAT3(0.0f, 0.0f, 0.0f);
-			sel->angle = XMFLOAT3(0.0f, 0.0f, 0.0f);
-			sel->scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
-			ApplyTransform(*sel);
-		}
+		ImGui::Separator();//区切り線
 
 		//デバッグ用にワールド行列を折りたたみヘッダで表示
 		ImGui::Separator();
