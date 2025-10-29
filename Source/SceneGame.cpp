@@ -185,25 +185,28 @@ void SceneGame::Update(float elapsedTime)
 	cameraController->SetTarget(target);
 	cameraController->Update(elapsedTime);
 
-	//ステージ更新処理
-	stage->Update(elapsedTime);
-
-	// 全プレイヤー更新（入力は Player 側で“アクティブのみ”にガード）
-	for (auto& up : players) up->Update(elapsedTime);
-
-	//エネミー更新処理
-	EnemyManager::Instance().Update(elapsedTime);
-
-	//エディタモデル更新
-	for (auto& obj : objects)
+	if (game_editor.PlayGame())
 	{
-		obj->Update(elapsedTime);
-	}
+		//ステージ更新処理
+		stage->Update(elapsedTime);
 
-	// 味方スライム更新
-    for (auto& a : allies) {
-        a->Update(elapsedTime);
-    }
+		// 全プレイヤー更新（入力は Player 側で“アクティブのみ”にガード）
+		for (auto& up : players) up->Update(elapsedTime);
+
+		//エネミー更新処理
+		EnemyManager::Instance().Update(elapsedTime);
+
+		//エディタモデル更新
+		for (auto& obj : objects)
+		{
+			obj->Update(elapsedTime);
+		}
+
+		// 味方スライム更新
+		for (auto& a : allies) {
+			a->Update(elapsedTime);
+		}
+	}
 }
 
 // 描画処理

@@ -102,7 +102,7 @@ public:
 		std::vector<std::unique_ptr<GameObject>>& objects,
 		std::vector<std::unique_ptr<SpriteObject>>& sprites);
 	GameMode GetMode()const { return editor_mode; }
-	bool GetPlayGame()const { return play; };
+	bool PlayGame()const { return play; };
 private:
 
 	EditorModel mode = EditorModel::Model3D;
