@@ -11,17 +11,9 @@ void Camera::SetLookAt(const DirectX::XMFLOAT3& eye, const DirectX::XMFLOAT3& fo
 	DirectX::XMStoreFloat4x4(&view, View);
 
 	// カメラの方向を取り出す
-	this->right.x = view._11;
-	this->right.y = view._12;
-	this->right.z = view._13;
-
-	this->up.x = view._21;
-	this->up.y = view._22;
-	this->up.z = view._23;
-
-	this->front.x = view._31;
-	this->front.y = view._32;
-	this->front.z = view._33;
+	this->right = { view._11, view._21, view._31 };
+	this->up = { view._12, view._22, view._32 };
+	this->front = { view._13, view._23, view._33 };
 
 	// 視点、注視点を保存
 	this->eye = eye;
@@ -34,4 +26,29 @@ void Camera::SetPerspectiveFov(float fovY, float aspect, float nearZ, float farZ
 	// 画角、画面比率、クリップ距離からプロジェクション行列を作成
 	DirectX::XMMATRIX Projection = DirectX::XMMatrixPerspectiveFovLH(fovY, aspect, nearZ, farZ);
 	DirectX::XMStoreFloat4x4(&projection, Projection);
+}
+
+//クォータービュー用のヘルパー
+void Camera::SetQuarterView(const DirectX::XMFLOAT3& focus,
+	float yawDeg, float pitchDeg, float distance)
+{
+	using namespace DirectX;
+	const float yaw = XMConvertToRadians(yawDeg);
+	const float pitch = XMConvertToRadians(pitchDeg);
+
+	// 前方（eye→focus）の単位ベクトル
+	XMFLOAT3 fwd{
+		cosf(pitch) * sinf(yaw),
+		-sinf(pitch),
+		cosf(pitch) * cosf(yaw)
+	};
+
+	// eye = focus - fwd * distance
+	XMFLOAT3 eye{
+		focus.x - fwd.x * distance,
+		focus.y - fwd.y * distance,
+		focus.z - fwd.z * distance
+	};
+
+	SetLookAt(eye, focus, XMFLOAT3{ 0, 1, 0 }); // ロール固定（Up は常に +Y）
 }

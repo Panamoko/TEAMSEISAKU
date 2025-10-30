@@ -1,4 +1,4 @@
-#include "System/Graphics.h"
+ï»¿#include "System/Graphics.h"
 #include "SceneGame.h"
 #include "Camera.h"
 #include <imgui.h>
@@ -11,7 +11,7 @@
 using namespace DirectX;
 
 #include "Editor.h"
-// ƒXƒNƒŠ[ƒ“À•W‚©‚çƒ[ƒ‹ƒh‹óŠÔ‚ÌƒŒƒCiŒ´“_E•ûŒüj‚ğì‚é
+// ã‚¹ã‚¯ãƒªãƒ¼ãƒ³åº§æ¨™ã‹ã‚‰ãƒ¯ãƒ¼ãƒ«ãƒ‰ç©ºé–“ã®ãƒ¬ã‚¤ï¼ˆåŸç‚¹ãƒ»æ–¹å‘ï¼‰ã‚’ä½œã‚‹
 static void MakeMouseRay(float sx, float sy, XMFLOAT3& outOrigin, XMFLOAT3& outDir)
 {
 	Graphics& g = Graphics::Instance();
@@ -32,13 +32,13 @@ static void MakeMouseRay(float sx, float sy, XMFLOAT3& outOrigin, XMFLOAT3& outD
 	XMStoreFloat3(&outDir, dir);
 }
 
-// ƒŒƒC‚Æc‰~’ŒiXZ‰~{‚‚³j‚ÌŒğ·itrue=ƒqƒbƒgj
+// ãƒ¬ã‚¤ã¨ç¸¦å††æŸ±ï¼ˆXZå††ï¼‹é«˜ã•ï¼‰ã®äº¤å·®ï¼ˆtrue=ãƒ’ãƒƒãƒˆï¼‰
 static bool IntersectRayVsVerticalCylinder(
 	const XMFLOAT3& ro, const XMFLOAT3& rd,
 	const XMFLOAT3& base, float radius, float height,
 	float* outT = nullptr)
 {
-	// XZ •½–Ê‚ÌƒŒƒC vs ‰~
+	// XZ å¹³é¢ã®ãƒ¬ã‚¤ vs å††
 	float ox = ro.x - base.x, oz = ro.z - base.z;
 	float dx = rd.x, dz = rd.z;
 
@@ -46,7 +46,7 @@ static bool IntersectRayVsVerticalCylinder(
 	if (a < 1e-8f) {
 		float dist2 = ox * ox + oz * oz;
 		if (dist2 > radius * radius) return false;
-		// y “’Bƒ`ƒFƒbƒNiã‰º•ûŒüj
+		// y åˆ°é”ãƒã‚§ãƒƒã‚¯ï¼ˆä¸Šä¸‹æ–¹å‘ï¼‰
 		if (rd.y > 0 && ro.y > base.y + height) return false;
 		if (rd.y < 0 && ro.y < base.y)         return false;
 		if (outT) *outT = 0.0f;
@@ -70,58 +70,64 @@ static bool IntersectRayVsVerticalCylinder(
 	return true;
 }
 
-// ‰Šú‰»
+// åˆæœŸåŒ–
 void SceneGame::Initialize()
 {
-	//ƒXƒe[ƒW‰Šú‰»
+	//ã‚¹ãƒ†ãƒ¼ã‚¸åˆæœŸåŒ–
 	stage = new Stage();
-	//ƒJƒƒ‰ƒRƒ“ƒgƒ[ƒ‰[‰Šú‰»
+	//ã‚«ãƒ¡ãƒ©ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ãƒ¼åˆæœŸåŒ–
 	cameraController = new CameraController();
 
-	// 2‘Ì‚ÌƒvƒŒƒCƒ„[‚ğ¶¬
+	// 2ä½“ã®ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‚’ç”Ÿæˆ
 	players.emplace_back(std::make_unique<Player>());
 	players.emplace_back(std::make_unique<Player>());
 	players[0]->Initialize();
 	players[1]->Initialize();
 
-	// ”z’u
+	// é…ç½®
 	players[0]->SetPosition(DirectX::XMFLOAT3(-2, 0, 0));
 	players[1]->SetPosition(DirectX::XMFLOAT3(2, 0, 0));
 
-	// Å‰‚Í 0 ”Ô‚ğƒAƒNƒeƒBƒu‚É
+	// æœ€åˆã¯ 0 ç•ªã‚’ã‚¢ã‚¯ãƒ†ã‚£ãƒ–ã«
 	Player::SetActive(players[0].get());
 
-	// ƒJƒƒ‰‰Šúİ’è
-	Graphics& graphics = Graphics::Instance();
-	Camera& camera = Camera::Instance();
-	camera.SetLookAt(
-		DirectX::XMFLOAT3(0, 15, -15),	//‹“_ (—á: Y=15, Z=-15)
-		DirectX::XMFLOAT3(0, 0, 0),		//’‹“_ (—á: Œ´“_)
-		DirectX::XMFLOAT3(0, 1, 0)		//ã•ûŒü
-	);
-	camera.SetPerspectiveFov(
-		DirectX::XMConvertToRadians(45),//‹–ìŠp
-		graphics.GetScreenWidth() / graphics.GetScreenHeight(),//ƒAƒXƒyƒNƒg”ä
-		0.1f,	//ƒNƒŠƒbƒv‹——£i‹ßj
-		1000.0f	//ƒNƒŠƒbƒv‹——£i‰“j
-	);
+	// ã‚«ãƒ¡ãƒ©åˆæœŸè¨­å®šï¼ˆCoCé¢¨ã‚¯ã‚©ãƒ¼ã‚¿ãƒ¼ãƒ“ãƒ¥ãƒ¼ï¼‰
+	{
+		Graphics& graphics = Graphics::Instance();
+		Camera& camera = Camera::Instance();
 
-	// ƒGƒlƒ~[‰Šú‰»
+		const float aspect =
+			(float)graphics.GetScreenWidth() / (float)graphics.GetScreenHeight();
+
+		DirectX::XMFLOAT3 focus{ 0.0f, 0.0f, 0.0f };
+
+		const float yawDeg = 0.0f;
+		const float pitchDeg = 35.264f;
+		const float distance = 45.0f;
+
+		// ã“ã‚Œã ã‘ã§OKï¼ˆè‡ªå‰ã® fwd/eye è¨ˆç®—ã¯ä¸è¦ï¼‰
+		camera.SetQuarterView(focus, yawDeg, pitchDeg, distance);
+
+		// FOVã¯ãŠå¥½ã¿ã§ï¼ˆ30Â°ã«ã—ãŸã„ãªã‚‰ï¼‰
+		camera.SetPerspectiveFov(DirectX::XMConvertToRadians(30.0f), aspect, 0.1f, 1000.0f);
+	}
+
+	// ã‚¨ãƒãƒŸãƒ¼åˆæœŸåŒ–
 	EnemyManager& enemyManager = EnemyManager::Instance();
 
 	for (int i = 0; i < 2; ++i)
 	{
 		EnemySlime* slime = new EnemySlime();
-		slime->SetPosition(DirectX::XMFLOAT3(i * 2.0f, 0, 5));
+		slime->SetPosition(DirectX::XMFLOAT3(i * 2.0f, 0, 15));
 		slime->SetTerritory(slime->GetPosition(), 10.0f);
 		enemyManager.Register(slime);
 	}
-	 // –¡•ûƒXƒ‰ƒCƒ€‰Šú‰»iƒsƒNƒ~ƒ“•—ƒtƒHƒƒ[j
-     const int kFollowerCount = 4; // ‘Ì”‚Í‚¨D‚İ‚Å
+	 // å‘³æ–¹ã‚¹ãƒ©ã‚¤ãƒ åˆæœŸåŒ–ï¼ˆãƒ”ã‚¯ãƒŸãƒ³é¢¨ãƒ•ã‚©ãƒ­ãƒ¯ãƒ¼ï¼‰
+     const int kFollowerCount = 4; // ä½“æ•°ã¯ãŠå¥½ã¿ã§
      allies.reserve(kFollowerCount);
      for (int i = 0; i < kFollowerCount; ++i) {
          auto s = std::make_unique<AllySlime>(i);
-         // ‰Šú‚ÍƒvƒŒƒCƒ„[‚Ì‚â‚âŒã•û‚É”z’uiUpdate‚Å®—ñ’Ç]‚·‚éj
+         // åˆæœŸã¯ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ã‚„ã‚„å¾Œæ–¹ã«é…ç½®ï¼ˆUpdateã§æ•´åˆ—è¿½å¾“ã™ã‚‹ï¼‰
          auto p = Player::Instance().GetPosition();                           // :contentReference[oaicite:14]{index=14}
          s->SetPosition({ p.x, p.y, p.z - 1.0f - 0.3f * i });
          allies.emplace_back(std::move(s));
@@ -132,13 +138,13 @@ void SceneGame::Initialize()
 	 LoadScene(objects, sprites2d, "scene.json");
 }
 
-// I—¹‰»
+// çµ‚äº†åŒ–
 void SceneGame::Finalize()
 {
-	//ƒGƒlƒ~[‚ÌI—¹‰»
+	//ã‚¨ãƒãƒŸãƒ¼ã®çµ‚äº†åŒ–
 	EnemyManager::Instance().Clear();
 
-	//ƒJƒƒ‰ƒRƒ“ƒgƒ[ƒ‰[I—¹‰»
+	//ã‚«ãƒ¡ãƒ©ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ãƒ¼çµ‚äº†åŒ–
 	if (cameraController != nullptr)
 	{
 		delete cameraController;
@@ -151,7 +157,7 @@ void SceneGame::Finalize()
     }
     players.clear();
 
-	//ƒXƒe[ƒWI—¹‰»
+	//ã‚¹ãƒ†ãƒ¼ã‚¸çµ‚äº†åŒ–
 	if (stage != nullptr)
 	{
 		delete stage;
@@ -159,17 +165,17 @@ void SceneGame::Finalize()
 	}
 }
 
-// XVˆ—
+// æ›´æ–°å‡¦ç†
 void SceneGame::Update(float elapsedTime)
 {
-	// --- ¶ƒNƒŠƒbƒN‚ÅƒAƒNƒeƒBƒuØ‘ÖiƒsƒbƒLƒ“ƒOj ---
+	// --- å·¦ã‚¯ãƒªãƒƒã‚¯ã§ã‚¢ã‚¯ãƒ†ã‚£ãƒ–åˆ‡æ›¿ï¼ˆãƒ”ãƒƒã‚­ãƒ³ã‚°ï¼‰ ---
     {
         ImGuiIO& io = ImGui::GetIO();
         if (ImGui::IsMouseClicked(0) && !io.WantCaptureMouse) {
             XMFLOAT3 ro, rd;
             MakeMouseRay(io.MousePos.x, io.MousePos.y, ro, rd);
 
-            // ˆê”Ôè‘O‚ğE‚¤Ft ‚ÌÅ¬’l‚ğÌ—p
+            // ä¸€ç•ªæ‰‹å‰ã‚’æ‹¾ã†ï¼št ã®æœ€å°å€¤ã‚’æ¡ç”¨
             float bestT = FLT_MAX;
             Player* best = nullptr;
             for (auto& up : players) {
@@ -182,7 +188,7 @@ void SceneGame::Update(float elapsedTime)
             if (best) Player::SetActive(best);
         }
     }
-	//ƒJƒƒ‰ƒRƒ“ƒgƒ[ƒ‰[XVˆ—
+	//ã‚«ãƒ¡ãƒ©ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ãƒ¼æ›´æ–°å‡¦ç†
 	DirectX::XMFLOAT3 target = Player::Instance().GetPosition();
 	target.y += 0.5f;
 	cameraController->SetTarget(target);
@@ -191,36 +197,36 @@ void SceneGame::Update(float elapsedTime)
 	BuildingManager::Instance().Update(elapsedTime);
 
 	if (auto th = BuildingManager::Instance().GetTownHall(); th && th->IsDestroyed()) {
-		// TODO: ‚±‚±‚ÅƒQ[ƒ€ƒNƒŠƒA‘JˆÚ
+		// TODO: ã“ã“ã§ã‚²ãƒ¼ãƒ ã‚¯ãƒªã‚¢é·ç§»
 		// FadeManager::LoadScene(SceneType::GameClear);
-		// ‚ ‚é‚¢‚Íƒtƒ‰ƒO‚ğ—§‚Ä‚Ä UI •\¦ ¨ “ü—Í‚Å‘JˆÚ
+		// ã‚ã‚‹ã„ã¯ãƒ•ãƒ©ã‚°ã‚’ç«‹ã¦ã¦ UI è¡¨ç¤º â†’ å…¥åŠ›ã§é·ç§»
 	}
 
 	if (game_editor.PlayGame())
 	{
-		//ƒXƒe[ƒWXVˆ—
+		//ã‚¹ãƒ†ãƒ¼ã‚¸æ›´æ–°å‡¦ç†
 		stage->Update(elapsedTime);
 
-		// ‘SƒvƒŒƒCƒ„[XVi“ü—Í‚Í Player ‘¤‚ÅgƒAƒNƒeƒBƒu‚Ì‚İh‚ÉƒK[ƒhj
+		// å…¨ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼æ›´æ–°ï¼ˆå…¥åŠ›ã¯ Player å´ã§â€œã‚¢ã‚¯ãƒ†ã‚£ãƒ–ã®ã¿â€ã«ã‚¬ãƒ¼ãƒ‰ï¼‰
 		for (auto& up : players) up->Update(elapsedTime);
 
-		//ƒGƒlƒ~[XVˆ—
+		//ã‚¨ãƒãƒŸãƒ¼æ›´æ–°å‡¦ç†
 		EnemyManager::Instance().Update(elapsedTime);
 
-		//ƒGƒfƒBƒ^ƒ‚ƒfƒ‹XV
+		//ã‚¨ãƒ‡ã‚£ã‚¿ãƒ¢ãƒ‡ãƒ«æ›´æ–°
 		for (auto& obj : objects)
 		{
 			obj->Update(elapsedTime);
 		}
 
-		// –¡•ûƒXƒ‰ƒCƒ€XV
+		// å‘³æ–¹ã‚¹ãƒ©ã‚¤ãƒ æ›´æ–°
 		for (auto& a : allies) {
 			a->Update(elapsedTime);
 		}
 	}
 }
 
-// •`‰æˆ—
+// æç”»å‡¦ç†
 void SceneGame::Render()
 {
 	Graphics& graphics = Graphics::Instance();
@@ -228,52 +234,52 @@ void SceneGame::Render()
 	ShapeRenderer* shapeRenderer = graphics.GetShapeRenderer();
 	ModelRenderer* modelRenderer = graphics.GetModelRenderer();
 
-	// •`‰æ€”õ
+	// æç”»æº–å‚™
 	RenderContext rc;
 	rc.deviceContext = dc;
-	rc.lightDirection = { 0.0f, -1.0f, 0.0f };	// ƒ‰ƒCƒg•ûŒüi‰º•ûŒüj
+	rc.lightDirection = { 0.0f, -1.0f, 0.0f };	// ãƒ©ã‚¤ãƒˆæ–¹å‘ï¼ˆä¸‹æ–¹å‘ï¼‰
 	rc.renderState = graphics.GetRenderState();
 
-	// ƒJƒƒ‰ƒpƒ‰ƒ[ƒ^İ’è
+	// ã‚«ãƒ¡ãƒ©ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿è¨­å®š
 	Camera& camera = Camera::Instance();
 	rc.view       = camera.GetView();
 	rc.projection = camera.GetProjection();
 
 	game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), modelRenderer);
 
-	// 3Dƒ‚ƒfƒ‹•`‰æ
+	// 3Dãƒ¢ãƒ‡ãƒ«æç”»
 	{
-		//ƒXƒe[ƒW•`‰æ
+		//ã‚¹ãƒ†ãƒ¼ã‚¸æç”»
 		stage->Render(rc, modelRenderer);
 
-		// ‘SƒvƒŒƒCƒ„[•`‰æ
+		// å…¨ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼æç”»
 		for (auto& up : players) up->Render(rc, modelRenderer);
 
-		// –¡•ûƒXƒ‰ƒCƒ€
+		// å‘³æ–¹ã‚¹ãƒ©ã‚¤ãƒ 
 	    for (auto& a : allies) 
 		{
 	        a->Render(rc, modelRenderer);
 	    }
 
-		//ƒGƒfƒBƒ^ƒ‚ƒfƒ‹•`‰æ
+		//ã‚¨ãƒ‡ã‚£ã‚¿ãƒ¢ãƒ‡ãƒ«æç”»
 		for (auto& obj : objects)
 		{
 			obj->Render(rc, modelRenderer);
 		}
 
-		// ƒGƒlƒ~[•`‰æ
+		// ã‚¨ãƒãƒŸãƒ¼æç”»
 		EnemyManager::Instance().Render(rc, modelRenderer);
 
 		BuildingManager::Instance().Render();
 
 	}
 
-	// 3DƒfƒoƒbƒO•`‰æ
+	// 3Dãƒ‡ãƒãƒƒã‚°æç”»
 	{
-        // ‘SƒvƒŒƒCƒ„[‚ÌƒfƒoƒbƒO•`‰æi‘I‘ğƒŠƒ“ƒO‚Í Player ‘¤‚ÅƒAƒNƒeƒBƒu‚Ì‚İ•\¦j
+        // å…¨ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ãƒ‡ãƒãƒƒã‚°æç”»ï¼ˆé¸æŠãƒªãƒ³ã‚°ã¯ Player å´ã§ã‚¢ã‚¯ãƒ†ã‚£ãƒ–æ™‚ã®ã¿è¡¨ç¤ºï¼‰
         for (auto& up : players) up->RenderDebugPrimitive(rc, shapeRenderer);
 
-		//ƒGƒlƒ~[ƒfƒoƒbƒOƒvƒŠƒ~ƒeƒBƒu•`‰æ
+		//ã‚¨ãƒãƒŸãƒ¼ãƒ‡ãƒãƒƒã‚°ãƒ—ãƒªãƒŸãƒ†ã‚£ãƒ–æç”»
 		EnemyManager::Instance().RenderDebugPrimitive(rc, shapeRenderer);
 		for (auto& a : allies) 
 		{
@@ -288,7 +294,7 @@ void SceneGame::Render()
 		BuildingManager::Instance().DebugDraw(rc, shapeRenderer);
 	}
 
-	// 2DƒXƒvƒ‰ƒCƒg•`‰æ
+	// 2Dã‚¹ãƒ—ãƒ©ã‚¤ãƒˆæç”»
 	{
 
 	}
@@ -296,12 +302,12 @@ void SceneGame::Render()
 
 
 
-// GUI•`‰æ
+// GUIæç”»
 void SceneGame::DrawGUI()
 {
 	//Player::Instance().DrawDebugGUI();
 
-	// HP ‚ğŠÈˆÕ•\¦‚·‚é‚È‚çiImGui “™jF
+	// HP ã‚’ç°¡æ˜“è¡¨ç¤ºã™ã‚‹ãªã‚‰ï¼ˆImGui ç­‰ï¼‰ï¼š
  ImGui::Begin("TownHall");
  if (auto th = BuildingManager::Instance().GetTownHall()) {
  float ratio = (float)th->GetHP() / (float)th->GetMaxHP();
