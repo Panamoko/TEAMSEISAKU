@@ -7,6 +7,8 @@ ProjectileHoming::ProjectileHoming(ProjectileManager* manager)
 
     // モデルが小さいのでスケーリング
     scale.x = scale.y = scale.z = 3.0f;
+
+	SetDamage(15);
 }
 
 ProjectileHoming::~ProjectileHoming()

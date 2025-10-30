@@ -227,6 +227,15 @@
     <ClInclude Include="Source\RayCast.h">
       <Filter>Source\RayCast</Filter>
     </ClInclude>
+    <ClInclude Include="Source\BuildingManager.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ITargetable.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TownHall.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -375,6 +384,12 @@
     </ClCompile>
     <ClCompile Include="Source\RayCast.cpp">
       <Filter>Source\RayCast</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BuildingManager.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TownHall.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

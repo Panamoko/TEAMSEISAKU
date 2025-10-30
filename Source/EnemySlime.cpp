@@ -295,6 +295,7 @@ void EnemySlime::UpdateAttackState(float elapsedTime)
 		pos.z = position.z;
 		//”­ŽË
 		ProjectileStraite* projectile = new ProjectileStraite(&projectileManager);
+		projectile->SetDamage(20);
 		projectile->Launch(dir, pos);
 
 		stateTimer = 2.0f;

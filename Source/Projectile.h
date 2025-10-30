@@ -33,6 +33,9 @@ public:
 	// ƒXƒP[ƒ‹æ“¾
 	const DirectX::XMFLOAT3& GetScale() const { return scale; }
 
+	void SetDamage(int d) { damage = d; }
+	int  GetDamage() const { return damage; }
+
 	//”jŠü
 	void Destroy();
 
@@ -51,4 +54,6 @@ protected:
 	ProjectileManager* manager = nullptr;
 
 	float radius = 0.5f;
+
+	int damage = 10;
 };
