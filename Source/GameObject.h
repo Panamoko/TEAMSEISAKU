@@ -9,6 +9,8 @@
 #include <System/ModelRenderer.h>
 #include <System/ShapeRenderer.h>
 
+#include "Collider.h"
+
 class GameObject
 {
 public:
@@ -26,6 +28,7 @@ public:
 	virtual void OnImGui() {};
 public:
 	Model* model = nullptr;//実際のモデルデータ
+	Collider* collider = nullptr;
 
 	std::string name;//オブジェクトの名前
 	std::string class_name;//実クラス名
