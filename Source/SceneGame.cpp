@@ -1,4 +1,5 @@
-ï»¿#include "System/Graphics.h"
+#include "System/Graphics.h"
+#include "System/Input.h"
 #include "SceneGame.h"
 #include "Camera.h"
 #include <imgui.h>
@@ -6,145 +7,152 @@
 #include "EnemySlime.h"
 #include "Player.h"
 #include "BuildingManager.h"
+#include <cfloat>          // š FLT_MAX —p
+#include "System/Mouse.h"  // š Mouse::BTN_LEFT / GetX()/GetY() ‚ğg‚¤‚È‚ç–¾¦“I‚É
 #include <cmath>
 #include <DirectXMath.h>
 using namespace DirectX;
 
 #include "Editor.h"
-// ã‚¹ã‚¯ãƒªãƒ¼ãƒ³åº§æ¨™ã‹ã‚‰ãƒ¯ãƒ¼ãƒ«ãƒ‰ç©ºé–“ã®ãƒ¬ã‚¤ï¼ˆåŸç‚¹ãƒ»æ–¹å‘ï¼‰ã‚’ä½œã‚‹
-static void MakeMouseRay(float sx, float sy, XMFLOAT3& outOrigin, XMFLOAT3& outDir)
+static float gSelectPixelRadius = 120.0f; // ©D‚İ‚Å 80`160 ‚É’²®‰Â
+static D3D11_VIEWPORT gPickViewport = { 0,0,0,0,0,1 };
+
+// ‰æ–Ê¨ƒrƒ…[ƒ|[ƒg‚Ìî•ñ‚ğæ“¾
+static D3D11_VIEWPORT GetMainViewport()
 {
-	Graphics& g = Graphics::Instance();
+	D3D11_VIEWPORT vp{};
+	UINT n = 1;
+	Graphics::Instance().GetDeviceContext()->RSGetViewports(&n, &vp);
+	return vp;
+}
+static bool WorldToViewportPixel(const DirectX::XMFLOAT3& world, float& outX, float& outY)
+{
 	Camera& cam = Camera::Instance();
 
-	float W = g.GetScreenWidth();
-	float H = g.GetScreenHeight();
+	XMMATRIX view = XMLoadFloat4x4(&cam.GetView());
+	XMMATRIX proj = XMLoadFloat4x4(&cam.GetProjection());
+	XMVECTOR p = XMLoadFloat3(&world);
 
-	XMMATRIX view = DirectX::XMLoadFloat4x4(&cam.GetView());
-	XMMATRIX proj = DirectX::XMLoadFloat4x4(&cam.GetProjection());
-	XMMATRIX world = XMMatrixIdentity();
+	XMVECTOR clip = XMVector4Transform(XMVectorSetW(p, 1.0f), XMMatrixMultiply(view, proj));
+	float cx = XMVectorGetX(clip);
+	float cy = XMVectorGetY(clip);
+	float cw = XMVectorGetW(clip);
+	if (cw <= 0.0f) return false;
 
-	XMVECTOR np = XMVector3Unproject(XMVectorSet(sx, sy, 0.0f, 1.0f), 0, 0, W, H, 0.0f, 1.0f, proj, view, world);
-	XMVECTOR fp = XMVector3Unproject(XMVectorSet(sx, sy, 1.0f, 1.0f), 0, 0, W, H, 0.0f, 1.0f, proj, view, world);
+	float ndcX = cx / cw;
+	float ndcY = cy / cw;
 
-	XMVECTOR dir = XMVector3Normalize(XMVectorSubtract(fp, np));
-	XMStoreFloat3(&outOrigin, np);
-	XMStoreFloat3(&outDir, dir);
-}
-
-// ãƒ¬ã‚¤ã¨ç¸¦å††æŸ±ï¼ˆXZå††ï¼‹é«˜ã•ï¼‰ã®äº¤å·®ï¼ˆtrue=ãƒ’ãƒƒãƒˆï¼‰
-static bool IntersectRayVsVerticalCylinder(
-	const XMFLOAT3& ro, const XMFLOAT3& rd,
-	const XMFLOAT3& base, float radius, float height,
-	float* outT = nullptr)
-{
-	// XZ å¹³é¢ã®ãƒ¬ã‚¤ vs å††
-	float ox = ro.x - base.x, oz = ro.z - base.z;
-	float dx = rd.x, dz = rd.z;
-
-	float a = dx * dx + dz * dz;
-	if (a < 1e-8f) {
-		float dist2 = ox * ox + oz * oz;
-		if (dist2 > radius * radius) return false;
-		// y åˆ°é”ãƒã‚§ãƒƒã‚¯ï¼ˆä¸Šä¸‹æ–¹å‘ï¼‰
-		if (rd.y > 0 && ro.y > base.y + height) return false;
-		if (rd.y < 0 && ro.y < base.y)         return false;
-		if (outT) *outT = 0.0f;
-		return true;
-	}
-
-	float b = 2.0f * (dx * ox + dz * oz);
-	float c = ox * ox + oz * oz - radius * radius;
-	float disc = b * b - 4 * a * c;
-	if (disc < 0) return false;
-
-	float t1 = (-b - std::sqrt(disc)) / (2 * a);
-	float t2 = (-b + std::sqrt(disc)) / (2 * a);
-	float t = (t1 >= 0) ? t1 : ((t2 >= 0) ? t2 : -1.0f);
-	if (t < 0) return false;
-
-	float y = ro.y + rd.y * t;
-	if (y < base.y || y > base.y + height) return false;
-
-	if (outT) *outT = t;
+	// š ƒLƒƒƒbƒVƒ…‚µ‚½ƒrƒ…[ƒ|[ƒg‚ÅƒsƒNƒZƒ‹‰»iTopLeftX/Y‚ğ•K‚¸l—¶j
+	outX = gPickViewport.TopLeftX + (ndcX * 0.5f + 0.5f) * gPickViewport.Width;
+	outY = gPickViewport.TopLeftY + (1.0f - (ndcY * 0.5f + 0.5f)) * gPickViewport.Height;
 	return true;
 }
 
-// åˆæœŸåŒ–
+// ƒ}ƒEƒXˆÊ’u(px)‚©‚ç‚Ì‹——£‚ª gSelectPixelRadius –¢–‚Ì Player ‚ğÅ’Z‹——£‚Å‘I‚Ô
+// players ‚Í SceneGame “à‚ÌƒvƒŒƒCƒ„[”z—ñ‚ğ‘z’è
+static Player* PickPlayerByScreenCircle(float mouseX, float mouseY,const std::vector<std::unique_ptr<Player>>& players)
+{
+	Player* best = nullptr;
+	float bestDist2 = FLT_MAX;
+
+	for (auto& up : players)
+	{
+		Player* p = up.get();
+		DirectX::XMFLOAT3 pos = p->GetPosition();
+		// pos.y += 0.8f; // •K—v‚È‚çƒNƒŠƒbƒN‚µ‚â‚·‚¢‚‚³‚Ö
+
+		float sx, sy;
+		if (!WorldToViewportPixel(pos, sx, sy)) continue;
+
+		float dx = sx - mouseX;
+		float dy = sy - mouseY;
+		float d2 = dx * dx + dy * dy;
+		if (d2 <= gSelectPixelRadius * gSelectPixelRadius && d2 < bestDist2)
+		{
+			bestDist2 = d2;
+			best = p;
+		}
+	}
+	return best;
+}
+static void CapturePickViewportFromRS()
+{
+	ID3D11DeviceContext* dc = Graphics::Instance().GetDeviceContext();
+	UINT n = 1;
+	D3D11_VIEWPORT vp{};
+	dc->RSGetViewports(&n, &vp);
+	if (n == 1 && vp.Width > 0.0f && vp.Height > 0.0f) {
+		gPickViewport = vp;
+	}
+	else {
+		// ƒtƒH[ƒ‹ƒoƒbƒNF‰æ–ÊƒTƒCƒY‚ğg—p
+		gPickViewport.TopLeftX = 0.0f;
+		gPickViewport.TopLeftY = 0.0f;
+		gPickViewport.Width = (float)Graphics::Instance().GetScreenWidth();
+		gPickViewport.Height = (float)Graphics::Instance().GetScreenHeight();
+		gPickViewport.MinDepth = 0.0f;
+		gPickViewport.MaxDepth = 1.0f;
+	}
+}
+// ‰Šú‰»
 void SceneGame::Initialize()
 {
-	//ã‚¹ãƒ†ãƒ¼ã‚¸åˆæœŸåŒ–
+	//ƒXƒe[ƒW‰Šú‰»
 	stage = new Stage();
-	//ã‚«ãƒ¡ãƒ©ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ãƒ¼åˆæœŸåŒ–
+	//ƒJƒƒ‰ƒRƒ“ƒgƒ[ƒ‰[‰Šú‰»
 	cameraController = new CameraController();
 
-	// 2ä½“ã®ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‚’ç”Ÿæˆ
+	// 2‘Ì‚ÌƒvƒŒƒCƒ„[‚ğ¶¬
 	players.emplace_back(std::make_unique<Player>());
 	players.emplace_back(std::make_unique<Player>());
 	players[0]->Initialize();
 	players[1]->Initialize();
 
-	// é…ç½®
+	// ”z’u
 	players[0]->SetPosition(DirectX::XMFLOAT3(-2, 0, 0));
 	players[1]->SetPosition(DirectX::XMFLOAT3(2, 0, 0));
 
-	// æœ€åˆã¯ 0 ç•ªã‚’ã‚¢ã‚¯ãƒ†ã‚£ãƒ–ã«
+	// Å‰‚Í 0 ”Ô‚ğƒAƒNƒeƒBƒu‚É
 	Player::SetActive(players[0].get());
 
-	// ã‚«ãƒ¡ãƒ©åˆæœŸè¨­å®šï¼ˆCoCé¢¨ã‚¯ã‚©ãƒ¼ã‚¿ãƒ¼ãƒ“ãƒ¥ãƒ¼ï¼‰
-	{
-		Graphics& graphics = Graphics::Instance();
-		Camera& camera = Camera::Instance();
+	// ƒJƒƒ‰‰Šúİ’è
+	Graphics& graphics = Graphics::Instance();
+	Camera& camera = Camera::Instance();
+	camera.SetLookAt(
+		DirectX::XMFLOAT3(0, 15, -15),	//‹“_ (—á: Y=15, Z=-15)
+		DirectX::XMFLOAT3(0, 0, 0),		//’‹“_ (—á: Œ´“_)
+		DirectX::XMFLOAT3(0, 1, 0)		//ã•ûŒü
+	);
+	camera.SetPerspectiveFov(
+		DirectX::XMConvertToRadians(45),//‹–ìŠp
+		graphics.GetScreenWidth() / graphics.GetScreenHeight(),//ƒAƒXƒyƒNƒg”ä
+		0.1f,	//ƒNƒŠƒbƒv‹——£i‹ßj
+		1000.0f	//ƒNƒŠƒbƒv‹——£i‰“j
+	);
 
-		const float aspect =
-			(float)graphics.GetScreenWidth() / (float)graphics.GetScreenHeight();
-
-		DirectX::XMFLOAT3 focus{ 0.0f, 0.0f, 0.0f };
-
-		const float yawDeg = 0.0f;
-		const float pitchDeg = 35.264f;
-		const float distance = 45.0f;
-
-		// ã“ã‚Œã ã‘ã§OKï¼ˆè‡ªå‰ã® fwd/eye è¨ˆç®—ã¯ä¸è¦ï¼‰
-		camera.SetQuarterView(focus, yawDeg, pitchDeg, distance);
-
-		// FOVã¯ãŠå¥½ã¿ã§ï¼ˆ30Â°ã«ã—ãŸã„ãªã‚‰ï¼‰
-		camera.SetPerspectiveFov(DirectX::XMConvertToRadians(30.0f), aspect, 0.1f, 1000.0f);
-	}
-
-	// ã‚¨ãƒãƒŸãƒ¼åˆæœŸåŒ–
+	// ƒGƒlƒ~[‰Šú‰»
 	EnemyManager& enemyManager = EnemyManager::Instance();
 
 	for (int i = 0; i < 2; ++i)
 	{
 		EnemySlime* slime = new EnemySlime();
-		slime->SetPosition(DirectX::XMFLOAT3(i * 2.0f, 0, 15));
+		slime->SetPosition(DirectX::XMFLOAT3(i * 2.0f, 0, 5));
 		slime->SetTerritory(slime->GetPosition(), 10.0f);
 		enemyManager.Register(slime);
 	}
-	 // å‘³æ–¹ã‚¹ãƒ©ã‚¤ãƒ åˆæœŸåŒ–ï¼ˆãƒ”ã‚¯ãƒŸãƒ³é¢¨ãƒ•ã‚©ãƒ­ãƒ¯ãƒ¼ï¼‰
-     const int kFollowerCount = 4; // ä½“æ•°ã¯ãŠå¥½ã¿ã§
-     allies.reserve(kFollowerCount);
-     for (int i = 0; i < kFollowerCount; ++i) {
-         auto s = std::make_unique<AllySlime>(i);
-         // åˆæœŸã¯ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ã‚„ã‚„å¾Œæ–¹ã«é…ç½®ï¼ˆUpdateã§æ•´åˆ—è¿½å¾“ã™ã‚‹ï¼‰
-         auto p = Player::Instance().GetPosition();                           // :contentReference[oaicite:14]{index=14}
-         s->SetPosition({ p.x, p.y, p.z - 1.0f - 0.3f * i });
-         allies.emplace_back(std::move(s));
-     }
 
 	 BuildingManager::Instance().Initialize();
 
 	 LoadScene(objects, sprites2d, "scene.json");
 }
 
-// çµ‚äº†åŒ–
+// I—¹‰»
 void SceneGame::Finalize()
 {
-	//ã‚¨ãƒãƒŸãƒ¼ã®çµ‚äº†åŒ–
+	//ƒGƒlƒ~[‚ÌI—¹‰»
 	EnemyManager::Instance().Clear();
 
-	//ã‚«ãƒ¡ãƒ©ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ãƒ¼çµ‚äº†åŒ–
+	//ƒJƒƒ‰ƒRƒ“ƒgƒ[ƒ‰[I—¹‰»
 	if (cameraController != nullptr)
 	{
 		delete cameraController;
@@ -157,7 +165,7 @@ void SceneGame::Finalize()
     }
     players.clear();
 
-	//ã‚¹ãƒ†ãƒ¼ã‚¸çµ‚äº†åŒ–
+	//ƒXƒe[ƒWI—¹‰»
 	if (stage != nullptr)
 	{
 		delete stage;
@@ -165,30 +173,10 @@ void SceneGame::Finalize()
 	}
 }
 
-// æ›´æ–°å‡¦ç†
+// XVˆ—
 void SceneGame::Update(float elapsedTime)
 {
-	// --- å·¦ã‚¯ãƒªãƒƒã‚¯ã§ã‚¢ã‚¯ãƒ†ã‚£ãƒ–åˆ‡æ›¿ï¼ˆãƒ”ãƒƒã‚­ãƒ³ã‚°ï¼‰ ---
-    {
-        ImGuiIO& io = ImGui::GetIO();
-        if (ImGui::IsMouseClicked(0) && !io.WantCaptureMouse) {
-            XMFLOAT3 ro, rd;
-            MakeMouseRay(io.MousePos.x, io.MousePos.y, ro, rd);
-
-            // ä¸€ç•ªæ‰‹å‰ã‚’æ‹¾ã†ï¼št ã®æœ€å°å€¤ã‚’æ¡ç”¨
-            float bestT = FLT_MAX;
-            Player* best = nullptr;
-            for (auto& up : players) {
-                Player* p = up.get();
-                float t;
-                if (IntersectRayVsVerticalCylinder(ro, rd, p->GetPosition(), p->GetRadius(), p->GetHeight(), &t)) {
-                    if (t < bestT) { bestT = t; best = p; }
-                }
-            }
-            if (best) Player::SetActive(best);
-        }
-    }
-	//ã‚«ãƒ¡ãƒ©ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ãƒ¼æ›´æ–°å‡¦ç†
+	//ƒJƒƒ‰ƒRƒ“ƒgƒ[ƒ‰[XVˆ—
 	DirectX::XMFLOAT3 target = Player::Instance().GetPosition();
 	target.y += 0.5f;
 	cameraController->SetTarget(target);
@@ -197,89 +185,98 @@ void SceneGame::Update(float elapsedTime)
 	BuildingManager::Instance().Update(elapsedTime);
 
 	if (auto th = BuildingManager::Instance().GetTownHall(); th && th->IsDestroyed()) {
-		// TODO: ã“ã“ã§ã‚²ãƒ¼ãƒ ã‚¯ãƒªã‚¢é·ç§»
+		// TODO: ‚±‚±‚ÅƒQ[ƒ€ƒNƒŠƒA‘JˆÚ
 		// FadeManager::LoadScene(SceneType::GameClear);
-		// ã‚ã‚‹ã„ã¯ãƒ•ãƒ©ã‚°ã‚’ç«‹ã¦ã¦ UI è¡¨ç¤º â†’ å…¥åŠ›ã§é·ç§»
+		// ‚ ‚é‚¢‚Íƒtƒ‰ƒO‚ğ—§‚Ä‚Ä UI •\¦ ¨ “ü—Í‚Å‘JˆÚ
 	}
 
 	if (game_editor.PlayGame())
 	{
-		//ã‚¹ãƒ†ãƒ¼ã‚¸æ›´æ–°å‡¦ç†
+		//ƒXƒe[ƒWXVˆ—
 		stage->Update(elapsedTime);
 
-		// å…¨ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼æ›´æ–°ï¼ˆå…¥åŠ›ã¯ Player å´ã§â€œã‚¢ã‚¯ãƒ†ã‚£ãƒ–ã®ã¿â€ã«ã‚¬ãƒ¼ãƒ‰ï¼‰
+		// ‘SƒvƒŒƒCƒ„[XVi“ü—Í‚Í Player ‘¤‚ÅgƒAƒNƒeƒBƒu‚Ì‚İh‚ÉƒK[ƒhj
 		for (auto& up : players) up->Update(elapsedTime);
 
-		//ã‚¨ãƒãƒŸãƒ¼æ›´æ–°å‡¦ç†
+		//ƒGƒlƒ~[XVˆ—
 		EnemyManager::Instance().Update(elapsedTime);
 
-		//ã‚¨ãƒ‡ã‚£ã‚¿ãƒ¢ãƒ‡ãƒ«æ›´æ–°
+		//ƒGƒfƒBƒ^ƒ‚ƒfƒ‹XV
 		for (auto& obj : objects)
 		{
 			obj->Update(elapsedTime);
 		}
 
-		// å‘³æ–¹ã‚¹ãƒ©ã‚¤ãƒ æ›´æ–°
+		// –¡•ûƒXƒ‰ƒCƒ€XV
 		for (auto& a : allies) {
 			a->Update(elapsedTime);
 		}
 	}
+	Player::UpdateSelectionFromMouse(players, 120.0f);
+
+	// ¦ Yƒ{ƒ^ƒ“‚Å Ally ‚ğ’Ç‰Á‚·‚éˆ—‚Í Scene ‘¤‚ÌÓ–±‚È‚Ì‚Å‚»‚Ì‚Ü‚Üc‚·:
+	GamePad& gamePad = Input::Instance().GetGamePad();
+	if (gamePad.GetButtonDown() & GamePad::BTN_Y) {
+		AddAllyFor(Player::GetActivePtr());
+	}
+	
 }
 
-// æç”»å‡¦ç†
+// •`‰æˆ—
 void SceneGame::Render()
 {
 	Graphics& graphics = Graphics::Instance();
 	ID3D11DeviceContext* dc = graphics.GetDeviceContext();
+	Player::CapturePickViewportFromRS();
 	ShapeRenderer* shapeRenderer = graphics.GetShapeRenderer();
 	ModelRenderer* modelRenderer = graphics.GetModelRenderer();
-
-	// æç”»æº–å‚™
+	CapturePickViewportFromRS();
+	// •`‰æ€”õ
 	RenderContext rc;
 	rc.deviceContext = dc;
-	rc.lightDirection = { 0.0f, -1.0f, 0.0f };	// ãƒ©ã‚¤ãƒˆæ–¹å‘ï¼ˆä¸‹æ–¹å‘ï¼‰
+	rc.lightDirection = { 0.0f, -1.0f, 0.0f };	// ƒ‰ƒCƒg•ûŒüi‰º•ûŒüj
 	rc.renderState = graphics.GetRenderState();
 
-	// ã‚«ãƒ¡ãƒ©ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿è¨­å®š
+	// ƒJƒƒ‰ƒpƒ‰ƒ[ƒ^İ’è
 	Camera& camera = Camera::Instance();
 	rc.view       = camera.GetView();
 	rc.projection = camera.GetProjection();
 
 	game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), modelRenderer);
 
-	// 3Dãƒ¢ãƒ‡ãƒ«æç”»
+	// 3Dƒ‚ƒfƒ‹•`‰æ
 	{
-		//ã‚¹ãƒ†ãƒ¼ã‚¸æç”»
+		//ƒXƒe[ƒW•`‰æ
 		stage->Render(rc, modelRenderer);
 
-		// å…¨ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼æç”»
+		// ‘SƒvƒŒƒCƒ„[•`‰æ
 		for (auto& up : players) up->Render(rc, modelRenderer);
 
-		// å‘³æ–¹ã‚¹ãƒ©ã‚¤ãƒ 
+		// –¡•ûƒXƒ‰ƒCƒ€
 	    for (auto& a : allies) 
 		{
 	        a->Render(rc, modelRenderer);
 	    }
 
-		//ã‚¨ãƒ‡ã‚£ã‚¿ãƒ¢ãƒ‡ãƒ«æç”»
+		//ƒGƒfƒBƒ^ƒ‚ƒfƒ‹•`‰æ
 		for (auto& obj : objects)
 		{
 			obj->Render(rc, modelRenderer);
 		}
 
-		// ã‚¨ãƒãƒŸãƒ¼æç”»
+		// ƒGƒlƒ~[•`‰æ
 		EnemyManager::Instance().Render(rc, modelRenderer);
 
 		BuildingManager::Instance().Render();
 
 	}
 
-	// 3Dãƒ‡ãƒãƒƒã‚°æç”»
+	// 3DƒfƒoƒbƒO•`‰æ
 	{
-        // å…¨ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ãƒ‡ãƒãƒƒã‚°æç”»ï¼ˆé¸æŠãƒªãƒ³ã‚°ã¯ Player å´ã§ã‚¢ã‚¯ãƒ†ã‚£ãƒ–æ™‚ã®ã¿è¡¨ç¤ºï¼‰
+        // ‘SƒvƒŒƒCƒ„[‚ÌƒfƒoƒbƒO•`‰æi‘I‘ğƒŠƒ“ƒO‚Í Player ‘¤‚ÅƒAƒNƒeƒBƒu‚Ì‚İ•\¦j
         for (auto& up : players) up->RenderDebugPrimitive(rc, shapeRenderer);
 
-		//ã‚¨ãƒãƒŸãƒ¼ãƒ‡ãƒãƒƒã‚°ãƒ—ãƒªãƒŸãƒ†ã‚£ãƒ–æç”»
+		//ƒGƒlƒ~[ƒfƒoƒbƒOƒvƒŠƒ~ƒeƒBƒu•`‰æ
 		EnemyManager::Instance().RenderDebugPrimitive(rc, shapeRenderer);
 		for (auto& a : allies) 
 		{
@@ -290,11 +287,19 @@ void SceneGame::Render()
 		{
 			obj->RenderDebugPrimitive(rc, shapeRenderer);
 		}
-
+		for (auto& up : players) {
+			up->RenderDebugPrimitive(rc, shapeRenderer); // Šù‘¶
+			// š ’Ç‰ÁFŠÈˆÕ‚É‚±‚±‚Å‚à•`‚¯‚é
+			auto* p = up.get();
+			shapeRenderer->RenderCylinder(
+				rc, p->GetPosition(), 1.2f, 0.05f, DirectX::XMFLOAT4(1, 1, 0, 0.5f));
+		}
 		BuildingManager::Instance().DebugDraw(rc, shapeRenderer);
+
+
 	}
 
-	// 2Dã‚¹ãƒ—ãƒ©ã‚¤ãƒˆæç”»
+	// 2DƒXƒvƒ‰ƒCƒg•`‰æ
 	{
 
 	}
@@ -302,16 +307,43 @@ void SceneGame::Render()
 
 
 
-// GUIæç”»
+// GUI•`‰æ
 void SceneGame::DrawGUI()
 {
 	//Player::Instance().DrawDebugGUI();
 
-	// HP ã‚’ç°¡æ˜“è¡¨ç¤ºã™ã‚‹ãªã‚‰ï¼ˆImGui ç­‰ï¼‰ï¼š
+	// HP ‚ğŠÈˆÕ•\¦‚·‚é‚È‚çiImGui “™jF
  ImGui::Begin("TownHall");
  if (auto th = BuildingManager::Instance().GetTownHall()) {
  float ratio = (float)th->GetHP() / (float)th->GetMaxHP();
  ImGui::ProgressBar(ratio, ImVec2(200, 16));
  }
+ Player::DebugDrawSelectionOverlay(players, /*pixelRadius=*/120.0f, /*highlightActive=*/true);
  ImGui::End();
+}
+
+int SceneGame::CountAlliesFor(Player* leader) const
+{
+	int n = 0;
+	for (auto& a : allies) if (a->GetLeader() == leader) ++n;
+	return n;
+}
+
+void SceneGame::AddAllyFor(Player* leader)
+{
+	if (!leader) return;
+
+	// 5‘ÌãŒÀ
+	int idx = CountAlliesFor(leader);
+	if (idx >= 4) return;
+
+	// •Ò‘àƒXƒƒbƒg = ‚¢‚Ü‚Ì”i0..4j
+	auto s = std::make_unique<AllySlime>(idx);
+	s->SetLeader(leader);
+
+	// ¶¬’¼Œã‚ÍƒŠ[ƒ_[‚Ì‚¿‚å‚¢Œã‚ë‚É’u‚­iUpdateAnchor‚Å®—ñ‚µ‚Ä‚¢‚­j
+	const auto p = leader->GetPosition();
+	s->SetPosition({ p.x, p.y, p.z - 1.2f - 0.3f * idx });
+
+	allies.emplace_back(std::move(s));
 }

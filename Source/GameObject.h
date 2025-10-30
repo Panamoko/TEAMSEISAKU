@@ -9,6 +9,8 @@
 #include <System/ModelRenderer.h>
 #include <System/ShapeRenderer.h>
 
+#include "Collider.h"
+
 class GameObject
 {
 public:
@@ -20,13 +22,16 @@ public:
 	}
 
 	virtual void UpdateTransform();
-
 	virtual void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) {};
-
 	virtual void OnImGui() {};
+	virtual void OnCollision(GameObject*object){}
+
+	bool IsActive() const { return is_active; }
+	void SetActive(bool active) { is_active = active; }
+
 public:
 	Model* model = nullptr;//実際のモデルデータ
-
+	Collider* collider = nullptr;
 	std::string name;//オブジェクトの名前
 	std::string class_name;//実クラス名
 	DirectX::XMFLOAT3 position;//位置
@@ -40,6 +45,7 @@ public:
 	std::string model_path; // モデルのファイルパス
 
 	bool dirty = false;
+	bool is_active = true;
 
 	GameObject();//デフォルトコンストラクタ
 

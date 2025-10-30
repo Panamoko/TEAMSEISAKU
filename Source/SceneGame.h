@@ -49,7 +49,8 @@ private:
 	std::vector<std::unique_ptr<Player>> players;
 	std::vector<std::unique_ptr<AllySlime>> allies;
 
-	
+	int CountAlliesFor(Player* leader) const;
+	void AddAllyFor(Player* leader);
 
 	CameraController* cameraController = nullptr;
 };

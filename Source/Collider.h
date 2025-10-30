@@ -1,0 +1,33 @@
+#pragma once
+
+#include "GameObject.h"
+
+class GameObject;
+
+enum class ColliderType { Sphere, Box, Cylinder };
+
+struct Collider
+{
+	ColliderType type;
+	GameObject* owner;//属するオブジェクト
+	virtual ~Collider() = default;
+};
+
+struct SphereCollider :public Collider
+{
+	DirectX::XMFLOAT3 center;
+	float radius;
+};
+
+struct BoxCollider :public Collider
+{
+	DirectX::XMFLOAT3 box_min;
+	DirectX::XMFLOAT3 box_max;
+};
+
+struct CylinderCollider :public Collider
+{
+	DirectX::XMFLOAT3 center;
+	float radius;
+	float height;
+};
