@@ -12,6 +12,8 @@
 #include "Character.h"          // ※環境によって "character.h" かも。プロジェクトに合わせてください。
 #include "ProjectileManager.h"  // プレイヤーでも使っている弾マネージャ
 
+class Player; // ★追加: 前方宣言
+
 class AllySlime : public Character
 {
 public:
@@ -25,6 +27,10 @@ public:
     void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) override;
 
     void SetIndex(int idx) { index = idx; } // 途中で並び替えたいとき用
+
+    // ★追加: リーダー設定/取得
+    void SetLeader(Player* p) { leader = p; }
+    Player* GetLeader() const { return leader; }
 
 private:
     // 内部処理：編隊アンカー更新／自動攻撃更新／弾と敵の当たり判定
@@ -53,4 +59,7 @@ private:
 
     // ★これが無いと「projectileManager が未定義」エラーになります
     ProjectileManager projectileManager;      // 自身の弾管理（生成/更新/描画/破棄）
+
+    // ★追加: 追従先プレイヤー（nullなら Player::Instance() を使う後方互換）
+    Player* leader = nullptr;
 };

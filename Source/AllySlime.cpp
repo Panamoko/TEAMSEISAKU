@@ -30,14 +30,18 @@ AllySlime::AllySlime(int formationIndex)
     height = 1.0f;                  // 当たり高さ
 
     // 初期位置はプレイヤーの近く（実際の整列は UpdateAnchor で行う）
-    position = Player::Instance().GetPosition();
+    {
+        const Player& ref = (leader ? *leader : Player::Instance());
+        position = ref.GetPosition();
+    }
 }
 
 void AllySlime::UpdateAnchor()
 {
     // プレイヤーの位置・角度（Y=ヨー角）を取得
-    const XMFLOAT3& p = Player::Instance().GetPosition();
-    const XMFLOAT3& a = Player::Instance().GetAngle();
+    const Player& ref = (leader ? *leader : Player::Instance());
+    const XMFLOAT3& p = ref.GetPosition();
+    const XMFLOAT3& a = ref.GetAngle();
 
     // 右手座標系：前方=+Z として、ヨー角から前方/右ベクトルを算出
     XMFLOAT3 fwd = { std::sinf(a.y), 0.0f,  std::cosf(a.y) };

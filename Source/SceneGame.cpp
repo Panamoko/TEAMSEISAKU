@@ -1,4 +1,5 @@
 #include "System/Graphics.h"
+#include "System/Input.h"
 #include "SceneGame.h"
 #include "Camera.h"
 #include <imgui.h>
@@ -6,70 +7,93 @@
 #include "EnemySlime.h"
 #include "Player.h"
 #include "BuildingManager.h"
+#include <cfloat>          // ★ FLT_MAX 用
+#include "System/Mouse.h"  // ★ Mouse::BTN_LEFT / GetX()/GetY() を使うなら明示的に
 #include <cmath>
 #include <DirectXMath.h>
 using namespace DirectX;
 
 #include "Editor.h"
-// スクリーン座標からワールド空間のレイ（原点・方向）を作る
-static void MakeMouseRay(float sx, float sy, XMFLOAT3& outOrigin, XMFLOAT3& outDir)
+static float gSelectPixelRadius = 120.0f; // ←好みで 80～160 に調整可
+static D3D11_VIEWPORT gPickViewport = { 0,0,0,0,0,1 };
+
+// 画面→ビューポートの情報を取得
+static D3D11_VIEWPORT GetMainViewport()
 {
-	Graphics& g = Graphics::Instance();
+	D3D11_VIEWPORT vp{};
+	UINT n = 1;
+	Graphics::Instance().GetDeviceContext()->RSGetViewports(&n, &vp);
+	return vp;
+}
+static bool WorldToViewportPixel(const DirectX::XMFLOAT3& world, float& outX, float& outY)
+{
 	Camera& cam = Camera::Instance();
 
-	float W = g.GetScreenWidth();
-	float H = g.GetScreenHeight();
+	XMMATRIX view = XMLoadFloat4x4(&cam.GetView());
+	XMMATRIX proj = XMLoadFloat4x4(&cam.GetProjection());
+	XMVECTOR p = XMLoadFloat3(&world);
 
-	XMMATRIX view = DirectX::XMLoadFloat4x4(&cam.GetView());
-	XMMATRIX proj = DirectX::XMLoadFloat4x4(&cam.GetProjection());
-	XMMATRIX world = XMMatrixIdentity();
+	XMVECTOR clip = XMVector4Transform(XMVectorSetW(p, 1.0f), XMMatrixMultiply(view, proj));
+	float cx = XMVectorGetX(clip);
+	float cy = XMVectorGetY(clip);
+	float cw = XMVectorGetW(clip);
+	if (cw <= 0.0f) return false;
 
-	XMVECTOR np = XMVector3Unproject(XMVectorSet(sx, sy, 0.0f, 1.0f), 0, 0, W, H, 0.0f, 1.0f, proj, view, world);
-	XMVECTOR fp = XMVector3Unproject(XMVectorSet(sx, sy, 1.0f, 1.0f), 0, 0, W, H, 0.0f, 1.0f, proj, view, world);
+	float ndcX = cx / cw;
+	float ndcY = cy / cw;
 
-	XMVECTOR dir = XMVector3Normalize(XMVectorSubtract(fp, np));
-	XMStoreFloat3(&outOrigin, np);
-	XMStoreFloat3(&outDir, dir);
-}
-
-// レイと縦円柱（XZ円＋高さ）の交差（true=ヒット）
-static bool IntersectRayVsVerticalCylinder(
-	const XMFLOAT3& ro, const XMFLOAT3& rd,
-	const XMFLOAT3& base, float radius, float height,
-	float* outT = nullptr)
-{
-	// XZ 平面のレイ vs 円
-	float ox = ro.x - base.x, oz = ro.z - base.z;
-	float dx = rd.x, dz = rd.z;
-
-	float a = dx * dx + dz * dz;
-	if (a < 1e-8f) {
-		float dist2 = ox * ox + oz * oz;
-		if (dist2 > radius * radius) return false;
-		// y 到達チェック（上下方向）
-		if (rd.y > 0 && ro.y > base.y + height) return false;
-		if (rd.y < 0 && ro.y < base.y)         return false;
-		if (outT) *outT = 0.0f;
-		return true;
-	}
-
-	float b = 2.0f * (dx * ox + dz * oz);
-	float c = ox * ox + oz * oz - radius * radius;
-	float disc = b * b - 4 * a * c;
-	if (disc < 0) return false;
-
-	float t1 = (-b - std::sqrt(disc)) / (2 * a);
-	float t2 = (-b + std::sqrt(disc)) / (2 * a);
-	float t = (t1 >= 0) ? t1 : ((t2 >= 0) ? t2 : -1.0f);
-	if (t < 0) return false;
-
-	float y = ro.y + rd.y * t;
-	if (y < base.y || y > base.y + height) return false;
-
-	if (outT) *outT = t;
+	// ★ キャッシュしたビューポートでピクセル化（TopLeftX/Yを必ず考慮）
+	outX = gPickViewport.TopLeftX + (ndcX * 0.5f + 0.5f) * gPickViewport.Width;
+	outY = gPickViewport.TopLeftY + (1.0f - (ndcY * 0.5f + 0.5f)) * gPickViewport.Height;
 	return true;
 }
 
+// マウス位置(px)からの距離が gSelectPixelRadius 未満の Player を最短距離で選ぶ
+// players は SceneGame 内のプレイヤー配列を想定
+static Player* PickPlayerByScreenCircle(float mouseX, float mouseY,const std::vector<std::unique_ptr<Player>>& players)
+{
+	Player* best = nullptr;
+	float bestDist2 = FLT_MAX;
+
+	for (auto& up : players)
+	{
+		Player* p = up.get();
+		DirectX::XMFLOAT3 pos = p->GetPosition();
+		// pos.y += 0.8f; // 必要ならクリックしやすい高さへ
+
+		float sx, sy;
+		if (!WorldToViewportPixel(pos, sx, sy)) continue;
+
+		float dx = sx - mouseX;
+		float dy = sy - mouseY;
+		float d2 = dx * dx + dy * dy;
+		if (d2 <= gSelectPixelRadius * gSelectPixelRadius && d2 < bestDist2)
+		{
+			bestDist2 = d2;
+			best = p;
+		}
+	}
+	return best;
+}
+static void CapturePickViewportFromRS()
+{
+	ID3D11DeviceContext* dc = Graphics::Instance().GetDeviceContext();
+	UINT n = 1;
+	D3D11_VIEWPORT vp{};
+	dc->RSGetViewports(&n, &vp);
+	if (n == 1 && vp.Width > 0.0f && vp.Height > 0.0f) {
+		gPickViewport = vp;
+	}
+	else {
+		// フォールバック：画面サイズを使用
+		gPickViewport.TopLeftX = 0.0f;
+		gPickViewport.TopLeftY = 0.0f;
+		gPickViewport.Width = (float)Graphics::Instance().GetScreenWidth();
+		gPickViewport.Height = (float)Graphics::Instance().GetScreenHeight();
+		gPickViewport.MinDepth = 0.0f;
+		gPickViewport.MaxDepth = 1.0f;
+	}
+}
 // 初期化
 void SceneGame::Initialize()
 {
@@ -116,16 +140,6 @@ void SceneGame::Initialize()
 		slime->SetTerritory(slime->GetPosition(), 10.0f);
 		enemyManager.Register(slime);
 	}
-	 // 味方スライム初期化（ピクミン風フォロワー）
-     const int kFollowerCount = 4; // 体数はお好みで
-     allies.reserve(kFollowerCount);
-     for (int i = 0; i < kFollowerCount; ++i) {
-         auto s = std::make_unique<AllySlime>(i);
-         // 初期はプレイヤーのやや後方に配置（Updateで整列追従する）
-         auto p = Player::Instance().GetPosition();                           // :contentReference[oaicite:14]{index=14}
-         s->SetPosition({ p.x, p.y, p.z - 1.0f - 0.3f * i });
-         allies.emplace_back(std::move(s));
-     }
 
 	 BuildingManager::Instance().Initialize();
 
@@ -162,26 +176,6 @@ void SceneGame::Finalize()
 // 更新処理
 void SceneGame::Update(float elapsedTime)
 {
-	// --- 左クリックでアクティブ切替（ピッキング） ---
-    {
-        ImGuiIO& io = ImGui::GetIO();
-        if (ImGui::IsMouseClicked(0) && !io.WantCaptureMouse) {
-            XMFLOAT3 ro, rd;
-            MakeMouseRay(io.MousePos.x, io.MousePos.y, ro, rd);
-
-            // 一番手前を拾う：t の最小値を採用
-            float bestT = FLT_MAX;
-            Player* best = nullptr;
-            for (auto& up : players) {
-                Player* p = up.get();
-                float t;
-                if (IntersectRayVsVerticalCylinder(ro, rd, p->GetPosition(), p->GetRadius(), p->GetHeight(), &t)) {
-                    if (t < bestT) { bestT = t; best = p; }
-                }
-            }
-            if (best) Player::SetActive(best);
-        }
-    }
 	//カメラコントローラー更新処理
 	DirectX::XMFLOAT3 target = Player::Instance().GetPosition();
 	target.y += 0.5f;
@@ -218,6 +212,14 @@ void SceneGame::Update(float elapsedTime)
 			a->Update(elapsedTime);
 		}
 	}
+	Player::UpdateSelectionFromMouse(players, 120.0f);
+
+	// ※ Yボタンで Ally を追加する処理は Scene 側の責務なのでそのまま残す:
+	GamePad& gamePad = Input::Instance().GetGamePad();
+	if (gamePad.GetButtonDown() & GamePad::BTN_Y) {
+		AddAllyFor(Player::GetActivePtr());
+	}
+	
 }
 
 // 描画処理
@@ -225,9 +227,10 @@ void SceneGame::Render()
 {
 	Graphics& graphics = Graphics::Instance();
 	ID3D11DeviceContext* dc = graphics.GetDeviceContext();
+	Player::CapturePickViewportFromRS();
 	ShapeRenderer* shapeRenderer = graphics.GetShapeRenderer();
 	ModelRenderer* modelRenderer = graphics.GetModelRenderer();
-
+	CapturePickViewportFromRS();
 	// 描画準備
 	RenderContext rc;
 	rc.deviceContext = dc;
@@ -284,8 +287,16 @@ void SceneGame::Render()
 		{
 			obj->RenderDebugPrimitive(rc, shapeRenderer);
 		}
-
+		for (auto& up : players) {
+			up->RenderDebugPrimitive(rc, shapeRenderer); // 既存
+			// ★ 追加：簡易にここでも描ける
+			auto* p = up.get();
+			shapeRenderer->RenderCylinder(
+				rc, p->GetPosition(), 1.2f, 0.05f, DirectX::XMFLOAT4(1, 1, 0, 0.5f));
+		}
 		BuildingManager::Instance().DebugDraw(rc, shapeRenderer);
+
+
 	}
 
 	// 2Dスプライト描画
@@ -307,5 +318,32 @@ void SceneGame::DrawGUI()
  float ratio = (float)th->GetHP() / (float)th->GetMaxHP();
  ImGui::ProgressBar(ratio, ImVec2(200, 16));
  }
+ Player::DebugDrawSelectionOverlay(players, /*pixelRadius=*/120.0f, /*highlightActive=*/true);
  ImGui::End();
+}
+
+int SceneGame::CountAlliesFor(Player* leader) const
+{
+	int n = 0;
+	for (auto& a : allies) if (a->GetLeader() == leader) ++n;
+	return n;
+}
+
+void SceneGame::AddAllyFor(Player* leader)
+{
+	if (!leader) return;
+
+	// 5体上限
+	int idx = CountAlliesFor(leader);
+	if (idx >= 4) return;
+
+	// 編隊スロット = いまの数（0..4）
+	auto s = std::make_unique<AllySlime>(idx);
+	s->SetLeader(leader);
+
+	// 生成直後はリーダーのちょい後ろに置く（UpdateAnchorで整列していく）
+	const auto p = leader->GetPosition();
+	s->SetPosition({ p.x, p.y, p.z - 1.2f - 0.3f * idx });
+
+	allies.emplace_back(std::move(s));
 }
