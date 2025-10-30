@@ -1,17 +1,24 @@
-#include "Player.h"
-#include "System/Input.h"
-#include <imgui.h>
-#include "Camera.h"
-#include "EnemyManager.h"
 #include "Collision.h"
 #include "ProjectileStraite.h"
 #include "ProjectileHoming.h"
+#include "Player.h"
+#include "EnemyManager.h"  // ← 追記
+#include "Enemy.h"         // ← 追記
+#include "Camera.h"
+#include "System/Input.h"
+#include <imgui.h>
+#include <cfloat>          // FLT_MAX
+#include <cmath>           // sqrtf
+
+
+
 
 Player* Player::sActive = nullptr;
 
 Player& Player::Instance() { return *sActive; }
 void Player::SetActive(Player* p) { sActive = p; }
 Player* Player::GetActivePtr() { return sActive; }
+
 
 //初期化
 void Player::Initialize()
@@ -41,6 +48,11 @@ void Player::Update(float elapsedTime)
          // 非アクティブでも自動攻撃させたいならこちらで呼ぶ
          AutoAttackUpdate(elapsedTime);
      }
+
+	 if (!IsActive() && autoMoveToEnemyEnabled) 
+	 {
+		 UpdateAutoMoveToEnemy(elapsedTime);
+	 }
 
 	//速力更新処理
 	UpdateVelocity(elapsedTime);
@@ -479,4 +491,57 @@ void Player::AutoAttackUpdate(float elapsedTime)
 
     // 次回までのインターバル再設定（スライム攻撃ステートのタイマー挙動に近い考え方）:contentReference[oaicite:9]{index=9}
     autoAttackTimer = autoAttackInterval;
+}
+
+bool Player::IsActive() const
+{
+	return sActive == this;
+}
+
+// 最寄りの敵を取得（XZ 平面距離）
+Enemy* Player::FindNearestEnemy() const 
+{
+	int count = EnemyManager::Instance().GetEnemyCount();
+	Enemy* nearest = nullptr;
+	float bestDist2 = FLT_MAX;
+
+	for (int i = 0; i < count; ++i) {
+		Enemy* e = EnemyManager::Instance().GetEnemy(i);
+		if (!e) continue;
+		const auto ep = e->GetPosition();
+		float dx = ep.x - position.x;
+		float dz = ep.z - position.z;
+		float d2 = dx * dx + dz * dz;
+		if (d2 < bestDist2) {
+			bestDist2 = d2;
+			nearest = e;
+		}
+	}
+	return nearest;
+}
+
+// 非アクティブ時の自動移動（敵に向かい、近づきすぎたら停止）
+void Player::UpdateAutoMoveToEnemy(float dt) 
+{
+	Enemy* target = FindNearestEnemy();
+	if (!target) return;
+
+	const auto tp = target->GetPosition();
+	float vx = tp.x - position.x;
+	float vz = tp.z - position.z;
+	float dist = std::sqrt(vx * vx + vz * vz);
+	if (dist < 1e-3f) return;
+
+	vx /= dist; vz /= dist;
+
+	// 常に敵の方向へ向く
+	Turn(dt, vx, vz, turnSpeed * autoMoveTurnRate);
+
+	// 一定距離より遠ければ前進、近ければ止まる
+	if (dist > autoMoveStopDistance) {
+		Move(dt, vx, vz, moveSpeed * autoMoveSpeedRate);
+	}
+	else {
+		Move(dt, 0.0f, 0.0f, 0.0f);
+	}
 }

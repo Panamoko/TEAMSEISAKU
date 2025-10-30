@@ -4,6 +4,8 @@
 #include "character.h"
 #include "ProjectileManager.h"
 
+class Enemy;// ← 追記（前方宣言）ほぼ引数用のポインタ取得
+
 
 // プレイヤー
 class Player : public Character
@@ -38,6 +40,9 @@ public:
 	//デバッグプリミティブ描画
 	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer);
 
+	// 自分がアクティブか判定
+	bool IsActive() const;        
+
 protected:
 	//着地したときに呼ばれる
 	void OnLanding() override;
@@ -67,10 +72,16 @@ private:
 	// 自動攻撃の更新処理
 	void AutoAttackUpdate(float elapsedTime);
 
+	// 自動移動更新
+	void UpdateAutoMoveToEnemy(float dt);  
+
 private:
 	Model* model = nullptr;
 	float		moveSpeed = 5.0f;
 	float		turnSpeed = DirectX::XMConvertToRadians(720);
+
+	Enemy* FindNearestEnemy() const;         // ← 追記：最寄り敵の検索
+	
 
 	float jumpSpeed = 12.0f;
 	//float gravity = -30.0f;
@@ -85,6 +96,13 @@ private:
     float autoAttackInterval= 1.5f;     // 発射間隔（秒）
     float autoAttackTimer   = 0.0f;     // タイマー
 
+	// 調整用パラメータ（必要ならGUIでいじれるように）
+	bool  autoMoveToEnemyEnabled = true; // ← 追記：自動追尾ON/OFF
+	float autoMoveSpeedRate = 0.8f; // ← 追記：通常移動に対する倍率
+	float autoMoveTurnRate = 1.0f; // ← 追記：通常旋回に対する倍率
+	float autoMoveStopDistance = 3.0f; // ← 追記：これ未満で停止
+
 	// 現在アクティブなプレイヤー（実体は Player.cpp で定義）
     static Player* sActive;
+
 };
