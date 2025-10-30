@@ -6,7 +6,6 @@ Gimmic_BreakWall::Gimmic_BreakWall()
     auto wall = std::make_unique<Gimmic_BreakWall>();
 	class_name = "Gimmic_BreakWall";
 	wall->model = ModelManager::Instance().Load("Data/Model/bilud/saku.mdl");
-    GimmicManager::Instance().Add(std::move(wall));
 
     collider->type = ColliderType::Box;
     box = static_cast<BoxCollider*>(collider);
@@ -20,6 +19,8 @@ void Gimmic_BreakWall::OnTrigger(GameObject* objects)
 
 void Gimmic_BreakWall::Update(float elapsedTime)
 {
+    if (!collider)return;
+
     // ① 壁のAABB（軸平行境界ボックス）を求める
     halfSize = { 
         scale.x * 0.5f,
@@ -36,6 +37,7 @@ void Gimmic_BreakWall::Update(float elapsedTime)
         position.y + halfSize.y,
         position.z + halfSize.z
     };
+
 }
 
 void Gimmic_BreakWall::RenderDebugPrimitive(

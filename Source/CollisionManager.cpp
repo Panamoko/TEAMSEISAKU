@@ -18,7 +18,7 @@ void CollisionManager::CheckAllCollision()
 	//登録されている全オブジェクト同士の組み合わせチェック
 	for (size_t i = 0; i < objects.size(); i++)
 	{
-		for (size_t j = i + 1; j < objects.size(), j++)
+		for (size_t j = i + 1; j < objects.size(); j++)
 		{
 			GameObject* objectA = objects[i];
 			GameObject* objectB = objects[j];

@@ -248,6 +248,9 @@
     <ClInclude Include="Source\GimmicManager.h">
       <Filter>Source\Gimmic</Filter>
     </ClInclude>
+    <ClInclude Include="Source\CollisionManager.h">
+      <Filter>Source\Collision</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -411,6 +414,9 @@
     </ClCompile>
     <ClCompile Include="Source\GimmicManager.cpp">
       <Filter>Source\Gimmic</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\CollisionManager.cpp">
+      <Filter>Source\Collision</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
