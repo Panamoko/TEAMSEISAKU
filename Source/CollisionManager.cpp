@@ -75,6 +75,8 @@ void CollisionManager::CheckAllCollision()
 			//Õ“Ë‚µ‚½ê‡
 			if (isCollisionDetected)
 			{
+				objectA->OnCollision(objectB);
+				objectB->OnCollision(objectA);
 			}
 		}
 	}
