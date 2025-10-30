@@ -1,114 +1,179 @@
+// CameraController.cpp（差し替え用フル版）
 #include "CameraController.h"
 
 #include "System/Input.h"
-#include "Camera.h"
 #include "System/Mouse.h"
+#include "System/Graphics.h"
+#include "Camera.h"
+
 #include <DirectXMath.h>
 #include <algorithm>
 #include <cmath>
-
 
 using namespace DirectX;
 
 void CameraController::Update(float elapsedTime)
 {
-	Input& input = Input::Instance();
-	Mouse& mouse = input.GetMouse();
-	Camera& camera = Camera::Instance();
+    Input& input = Input::Instance();
+    Mouse& mouse = input.GetMouse();
+    Camera& camera = Camera::Instance();
 
-	// マウスホイール入力取得
-	int wheel = mouse.GetWheel();
+    // ---- 追加状態（ヘッダは触らず、ここで永続化） ----
+    static bool  s_inited = false;
+    static float s_panVelX = 0.0f;   // パン慣性（X）
+    static float s_panVelZ = 0.0f;   // パン慣性（Z）
+    static float s_zoomVel = 0.0f;   // ズーム慣性（距離変化  [units/frame]）
 
-	// 1ノッチあたりの移動量（ワールド単位）
-	const float zoomStepPerNotch = 1.0f; // 好みに応じて 0.2f ～ 1.0f 程度で調整
+    // チューニング係数（お好みで）
+    const float panTau = 0.08f;     // パン減衰の時定数（秒）  0.06～0.15 推奨
+    const float zoomTau = 0.10f;     // ズーム減衰の時定数（秒）
+    const float wheelStepPerNotch = 2.0f; // ホイール1ノッチあたりの距離変化目安
+    const float rotSpeed = 0.25f;     // オービット回転 [deg/px]
+    const float minD = 10.0f;         // 最小距離
+    const float maxD = 45.0f;         // 最大距離
 
-	if (wheel != 0)
-	{
-		// 現在の視点と注視点
-		XMFLOAT3 eyeF = camera.GetEye();
-		XMFLOAT3 focusF = camera.GetFocus();
+    // 現在のEye/Focus/距離
+    XMFLOAT3 eyeF = camera.GetEye();
+    XMFLOAT3 focusF = camera.GetFocus();
+    XMVECTOR Eye = XMLoadFloat3(&eyeF);
+    XMVECTOR Focus = XMLoadFloat3(&focusF);
+    float currentDist = XMVectorGetX(XMVector3Length(XMVectorSubtract(Focus, Eye)));
 
-		XMVECTOR Eye = XMLoadFloat3(&eyeF);
-		XMVECTOR Focus = XMLoadFloat3(&focusF);
+    if (!s_inited) {
+        // 初回のみ：distanceフィールドを現在距離で初期化
+        if (distance <= 0.0f) distance = currentDist;
+        s_inited = true;
+    }
 
-		// eye→focus 方向
-		XMVECTOR dir = XMVectorSubtract(Focus, Eye);
-		float currentDist = XMVectorGetX(XMVector3Length(dir));
-		XMVECTOR dirN = XMVector3Normalize(dir);
+    // ====== 入力デルタ ======
+    float dx = (float)mouse.GetDX();
+    float dy = (float)mouse.GetDY();
 
-		// 近すぎ/遠すぎを制限
-		const float minDist = 10.0f;
-		const float maxDist = 30.0f;
-		float delta = -(float)wheel * zoomStepPerNotch;
-		if (currentDist <= minDist + 0.01f && delta > 0) delta *= 0.2f;
-		if (currentDist >= maxDist - 0.01f && delta < 0) delta *= 0.2f;
-		float desiredDist = currentDist + delta;
-		desiredDist = std::clamp(desiredDist, minDist, maxDist);
+    // ====== ホイール：ズーム（慣性に積む） ======
+    if (int wheel = mouse.GetWheel(); wheel != 0) {
+        // 既存挙動に合わせて「-wheel」で近づく/遠ざかる
+        s_zoomVel += -(float)wheel * wheelStepPerNotch;
+    }
 
-		// 新しい視点 = focus から dirN 方向に desiredDist 離れた位置
-		XMVECTOR NewEye = XMVectorSubtract(Focus, XMVectorScale(dirN, desiredDist));
+    // ====== 右ドラッグ：パン（距離/FOV連動＋慣性） ======
+    if (mouse.GetButton() & Mouse::BTN_RIGHT)
+    {
+        // 微小ノイズ抑制
+        auto dead = [](float v) { return (std::fabs(v) < 0.5f) ? 0.0f : v; };
+        dx = dead(dx);
+        dy = dead(dy);
 
-		XMStoreFloat3(&eyeF, NewEye);
+        // 微操作の解像感を上げる軽い非線形
+        auto curve = [](float v) { float a = std::fabs(v); return (v >= 0 ? 1.f : -1.f) * std::pow(a, 1.2f); };
+        dx = curve(dx);
+        dy = curve(dy);
 
-		// 反映（上方向はY+固定）
-		camera.SetLookAt(eyeF, focusF, XMFLOAT3(0, 1, 0));
-	}
+        // プロジェクション行列からFOVを復元
+        const auto& P = camera.GetProjection();
+        float fovY = 2.0f * std::atan(1.0f / P._22); // P._22 = 1 / tan(fovY/2)
+        float screenH = (float)Graphics::Instance().GetScreenHeight();
 
-	// マウス感度。小さいほどゆっくり動く
-	const float panSpeed = 0.01f;
+        // 距離とFOVから「1pxが何ワールド単位か」
+        // ※ currentDist を使うことでズーム後も手触り一定
+        float panSensitivity = 0.7f;
+        float unitsPerPixel = (2.0f * currentDist * std::tan(fovY * 0.5f)) / std::max<float>(1.0f, screenH);
+        unitsPerPixel *= panSensitivity;
 
-	float dx = 0.0f;
-	float dy = 0.0f;
+        // カメラRight/FrontのXZ投影
+        XMFLOAT3 r = camera.GetRight();
+        XMFLOAT3 f = camera.GetFront();
+        XMVECTOR Right = XMVector3Normalize(XMVectorSet(r.x, 0.0f, r.z, 0.0f));
+        XMVECTOR Front = XMVector3Normalize(XMVectorSet(f.x, 0.0f, f.z, 0.0f));
 
-	// マウス右ボタンが押されている場合のみ、カメラパン用のマウス移動量を取得
-	if (mouse.GetButton() & Mouse::BTN_RIGHT)
-	{
-		// マウス移動量を取得 (intをfloatにキャスト)
-		dx = (float)mouse.GetDX(); // 左右移動量
-		dy = (float)mouse.GetDY(); // 上下移動量
-	}
+        // 既存の符号を踏襲（右へドラッグで画面も右へ動く→Rightに -dx）
+        XMVECTOR move = XMVectorAdd(
+            XMVectorScale(Right, -dx * unitsPerPixel),
+            XMVectorScale(Front, dy * unitsPerPixel)
+        );
 
-	// マウス移動があった場合のみ処理を実行
-	if (fabsf(dx) > 0.0f || fabsf(dy) > 0.0f)
-	{
-		// カメラの右方向ベクトルを取得（ワールドのX軸に近い方向）
-		const XMFLOAT3& cameraRight = camera.GetRight();
-		// カメラの前方向ベクトルを取得（ワールドのZ軸に近い方向）
-		const XMFLOAT3& cameraFront = camera.GetFront();
+        XMFLOAT3 m; XMStoreFloat3(&m, move);
+        s_panVelX += m.x;   // 慣性（速度）に積む
+        s_panVelZ += m.z;
+    }
 
-		// 1. カメラの右方向をXZ平面に射影し、正規化
-		XMVECTOR Right = XMVectorSet(cameraRight.x, 0.0f, cameraRight.z, 0.0f);
-		Right = XMVector3Normalize(Right);
+    // ====== 中ボタンドラッグ：オービット（距離は常に“今”を使う） ======
+    if (mouse.GetButton() & Mouse::BTN_MIDDLE)
+    {
+        yawDeg += dx * rotSpeed;
+        pitchDeg += dy * rotSpeed;                       // 逆に感じたら -= dy
+        pitchDeg = std::clamp(pitchDeg, minPitchDeg, maxPitchDeg);
 
-		// 2. カメラの前方向をXZ平面に射影し、正規化
-		XMVECTOR Front = XMVectorSet(cameraFront.x, 0.0f, cameraFront.z, 0.0f);
-		Front = XMVector3Normalize(Front);
+        // Eye/Focus から毎フレーム距離を再算出して使うことで
+        // 「中ボタン開始で昔のdistanceに戻る」問題を回避
+        XMVECTOR EyeNow = XMLoadFloat3(&camera.GetEye());
+        XMVECTOR FocusNow = XMLoadFloat3(&camera.GetFocus());
+        float curDistForOrbit = XMVectorGetX(
+            XMVector3Length(XMVectorSubtract(FocusNow, EyeNow))
+        );
 
-		// 3. マウスの移動量とパン速度を使って移動ベクトルを計算
-		// マウスを右に動かす(dx > 0)と、カメラ視点も右に動くようにdxにマイナスをかける (CoC的な操作感)
-		XMVECTOR move = XMVectorAdd(
-			XMVectorScale(Right, -dx * panSpeed),
-			XMVectorScale(Front, dy * panSpeed)
-		);
+        // オービットを優先して即反映（パン/ズーム慣性は同時進行でもOK）
+        camera.SetQuarterView(camera.GetFocus(), yawDeg, pitchDeg,
+            std::clamp(curDistForOrbit, minD, maxD));
+        // ※returnしない：慣性によるパン/ズームもこのフレームで進める
+    }
 
-		// 注視点と視点を更新するためのベクトル
-		XMFLOAT3 moveVec = { 0, 0, 0 };
-		XMStoreFloat3(&moveVec, move);
+    // ====== 速度の指数減衰（dt依存） ======
+    auto alpha = [](float dt, float tau) {
+        return 1.0f - std::exp(-dt / std::max<float>(1e-4f, tau));
+        };
+    float ap = alpha(elapsedTime, panTau);
+    float az = alpha(elapsedTime, zoomTau);
 
+    // ---- ズーム（距離）を慣性で更新
+    {
+        // 速度→距離変化（減衰適用）
+        float deltaDist = s_zoomVel * az;
+        s_zoomVel -= s_zoomVel * az;
 
-		// 現在の視点と注視点に移動ベクトルを加算
-		XMFLOAT3 newEye;
-		XMFLOAT3 newFocus;
+        float desired = std::clamp(currentDist + deltaDist, minD, maxD);
 
-		newEye.x = camera.GetEye().x + moveVec.x;
-		newEye.y = camera.GetEye().y + moveVec.y;
-		newEye.z = camera.GetEye().z + moveVec.z;
+        // dirN（focus→eye 方向）を保持して eye を更新（focusはまだこの後パンで動く）
+        XMVECTOR dir = XMVectorSubtract(Focus, Eye);
+        XMVECTOR dirN = XMVector3Normalize(dir);
+        XMVECTOR NewEye = XMVectorSubtract(Focus, XMVectorScale(dirN, desired));
+        XMStoreFloat3(&eyeF, NewEye);
 
-		newFocus.x = camera.GetFocus().x + moveVec.x;
-		newFocus.y = camera.GetFocus().y + moveVec.y;
-		newFocus.z = camera.GetFocus().z + moveVec.z;
+        // SetLookAt で一旦反映（Upは+Y固定）
+        camera.SetLookAt(eyeF, focusF, XMFLOAT3(0, 1, 0));
 
-		// カメラ位置を更新
-		camera.SetLookAt(newEye, newFocus, XMFLOAT3(0, 1, 0));
-	}
+        // Controllerのdistanceを最新に寄せておく（他所で参照されてもズレないように）
+        distance = desired;
+
+        // 最新値を再取得して以降の計算に使う
+        eyeF = camera.GetEye();
+        focusF = camera.GetFocus();
+        Eye = XMLoadFloat3(&eyeF);
+        Focus = XMLoadFloat3(&focusF);
+        currentDist = XMVectorGetX(XMVector3Length(XMVectorSubtract(Focus, Eye)));
+    }
+
+    // ---- パン（XZ）を慣性で更新
+    {
+        float moveX = s_panVelX * ap;
+        float moveZ = s_panVelZ * ap;
+        s_panVelX -= s_panVelX * ap;
+        s_panVelZ -= s_panVelZ * ap;
+
+        if (std::fabs(moveX) + std::fabs(moveZ) > 0.0f) {
+            XMFLOAT3 newEye = { camera.GetEye().x + moveX, camera.GetEye().y,   camera.GetEye().z + moveZ };
+            XMFLOAT3 newFocus = { camera.GetFocus().x + moveX, camera.GetFocus().y, camera.GetFocus().z + moveZ };
+            camera.SetLookAt(newEye, newFocus, XMFLOAT3(0, 1, 0));
+
+            // 最新値を再取得（この後のオービット・次フレの基準に）
+            eyeF = camera.GetEye();
+            focusF = camera.GetFocus();
+            Eye = XMLoadFloat3(&eyeF);
+            Focus = XMLoadFloat3(&focusF);
+            currentDist = XMVectorGetX(XMVector3Length(XMVectorSubtract(Focus, Eye)));
+        }
+    }
+
+    // ---- 最後に yaw/pitch も反映（距離は currentDist を使って統一）
+    //      ※パン＆ズームで動いた後の focus を基準に作り直すことで一貫性を保つ
+    camera.SetQuarterView(focusF, yawDeg, pitchDeg, std::clamp(currentDist, minD, maxD));
 }

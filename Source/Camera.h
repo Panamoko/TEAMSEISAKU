@@ -44,6 +44,11 @@ public:
 	// ‰E•ûŒüŽæ“¾
 	const DirectX::XMFLOAT3& GetRight() const { return right; }
 
+	void SetQuarterView(const DirectX::XMFLOAT3& focus,
+		float yawDeg = 45.0f,
+		float pitchDeg = 35.264f,
+		float distance = 35.0f);
+
 private:
 	DirectX::XMFLOAT4X4		view;
 	DirectX::XMFLOAT4X4		projection;
