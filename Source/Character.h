@@ -38,7 +38,7 @@ public:
 	float GetRadius() const { return radius; }
 
 	//デバッグプリミティブ描画
-	virtual void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer);
+	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer);
 
 	// 地面に接地しているか
 	bool IsGround() const { return isGround; }
@@ -96,15 +96,15 @@ private:
 
 
 protected:
-	DirectX::XMFLOAT3	position = {0,0,0};
-	DirectX::XMFLOAT3	angle = {0,0,0};
-	DirectX::XMFLOAT3	scale = {1,1,1};
-	DirectX::XMFLOAT4X4	transform = {
-		1,0,0,0,
-		0,1,0,0,
-		0,0,1,0,
-		0,0,0,1
-	};
+	//DirectX::XMFLOAT3	position = {0,0,0};
+	//DirectX::XMFLOAT3	angle = {0,0,0};
+	//DirectX::XMFLOAT3	scale = {1,1,1};
+	//DirectX::XMFLOAT4X4	transform = {
+	//	1,0,0,0,
+	//	0,1,0,0,
+	//	0,0,1,0,
+	//	0,0,0,1
+	//};
 
 	std::vector<std::unique_ptr<GameObject>> objects;
 

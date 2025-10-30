@@ -31,17 +31,3 @@ GameObject::GameObject() :name("Empty")
 		0,0,0,1
 	};
 }
-
-//void GameObject::UpdateTransform()
-//{
-//	using namespace DirectX;
-//	XMMATRIX S = XMMatrixScaling(scale.x, scale.y, scale.z);
-//	XMMATRIX R = XMMatrixRotationRollPitchYaw(
-//		XMConvertToRadians(angle.x),
-//		XMConvertToRadians(angle.y),
-//		XMConvertToRadians(angle.z)
-//	);
-//	XMMATRIX T = XMMatrixTranslation(position.x, position.y, position.z);
-//
-//	XMStoreFloat4x4(&world, S * R * T);
-//}

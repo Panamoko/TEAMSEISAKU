@@ -20,6 +20,9 @@ public:
 
 	//¶¬ŠÖ”
 	static std::unique_ptr<GameObject> Create(const std::string& className);
+
+	//“o˜^Ï‚İƒNƒ‰ƒXˆêŠ‡æ“¾
+	static std::vector<std::string> GetRegisteredClassNames();
 };
 
 //©“®“o˜^ƒ}ƒNƒ

@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 #include "AllySlime.h"
-
+#include <cfloat>   // ← 追加（FLT_MAX 用）
 // ゲームシーン
 //class SceneGame
 class SceneGame : public Scene
@@ -43,11 +43,11 @@ private:
 
 	std::vector<std::unique_ptr<GameObject>> objects;
 	std::vector<std::unique_ptr<SpriteObject>> sprites2d;
-	std::vector<std::unique_ptr<AllySlime>> allies;
 
 	Stage* stage = nullptr;
 
-	Player* player = nullptr;
+	std::vector<std::unique_ptr<Player>> players;
+	std::vector<std::unique_ptr<AllySlime>> allies;
 
 	
 

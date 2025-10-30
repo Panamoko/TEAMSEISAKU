@@ -17,6 +17,7 @@ void to_json(json& j, const GameObject& obj)
 {
 	j = json{
 		{"name",obj.name},
+		{"class_name",obj.class_name},
 		{"position",{obj.position.x,obj.position.y,obj.position.z}},
 		{"rotation",{obj.angle.x,obj.angle.y,obj.angle.z}},
 		{"scale",{obj.scale.x,obj.scale.y,obj.scale.z}},
@@ -46,6 +47,7 @@ void to_json(json& j, const SpriteObject& sp)
 void from_json(const json& j, GameObject& obj)
 {
 	obj.name = j.at("name").get<std::string>();
+	obj.class_name = j.at("class_name").get<std::string>();
 	auto pos = j.at("position");
 	obj.position = { pos[0],pos[1],pos[2] };
 	auto rot = j.at("rotation");
@@ -133,7 +135,9 @@ void LoadScene(
 	if (j.contains("objects"))
 		for (auto& item : j["objects"])
 		{
-			auto obj = std::make_unique<GameObject>();
+			std::string className = item.value("class_name", "GameObject");
+			std::unique_ptr<GameObject> obj = Factory::Create(className);
+			if (!obj) obj = std::make_unique<GameObject>();
 			*obj = item.get<GameObject>();
 			objects.push_back(std::move(obj));
 		}
@@ -205,11 +209,19 @@ void editor::render(
 
 	ImGui::Separator();
 
-	if (ImGui::Button("3D Mode"))mode = EditorModel::Model3D;
+	// 🔹 モード切り替えボタン（ImGui）
+	if (ImGui::Button(editor_mode == GameMode::Edit ? "PlayMode" : "EditorMode"))
+	{
+		ToggleMode(objects, sprites);
+	}
+
+	ImGui::Separator();
+
+	if (ImGui::Button("3D Model"))mode = EditorModel::Model3D;
 
 	ImGui::SameLine();
 
-	if (ImGui::Button("2D Mode"))mode = EditorModel::Model2D;
+	if (ImGui::Button("2D Model"))mode = EditorModel::Model2D;
 
 	ImGui::Separator();
 
@@ -231,15 +243,16 @@ void editor::render(
 
 void editor::AddObject(
 	std::vector<std::unique_ptr<GameObject>>& objects,
+	const std::string& class_name,
 	const std::string& baseName,
 	int mesh_index
-	 )
+)
 {
 	std::string name = MakeUniqueName(objects, baseName);//objects中に重複しない名前を生成
-	
+
 	//各クラスと紐づけ
-	std::unique_ptr<GameObject> obj = Factory::Create(baseName);
-	
+	std::unique_ptr<GameObject> obj = Factory::Create(class_name);
+
 	//auto obj = std::make_unique<GameObject>();
 	obj->name = name;//新しいオブジェクトの name メンバに代入
 	obj->mesh_index = mesh_index;
@@ -296,6 +309,32 @@ void editor::Draw3DEditor(
 	else
 		ImGui::TextDisabled("No models loaded.");
 
+	ImGui::Separator();
+	ImGui::Text("Select Class type");
+
+	auto classNames = Factory::GetRegisteredClassNames();
+
+	static std::vector<const char*> className;
+	className.clear();
+
+	for (auto& c : classNames)
+	{
+		className.push_back(c.c_str());
+	}
+
+	static int select_class_index = 0;
+	if (!className.empty())
+	{
+		ImGui::Combo("Class", &select_class_index, className.data(),
+			static_cast<int>(className.size()));
+		select_class = classNames[select_class_index];
+	}
+	else
+	{
+		ImGui::TextDisabled("No registered classes");
+	}
+
+	ImGui::Separator();
 
 	if (ImGui::Button("Add"))
 	{
@@ -304,6 +343,7 @@ void editor::Draw3DEditor(
 			int modelIndex = static_index;
 			AddObject(
 				objects,
+				select_class,
 				models[modelIndex]->name,
 				modelIndex);
 		}
@@ -337,6 +377,23 @@ void editor::Draw3DEditor(
 	if (select_index >= 0 && select_index < (int)objects.size())
 	{
 		GameObject* sel = objects[select_index].get();
+
+		//Deleteボタン
+		if (ImGui::Button("Delete"))
+		{
+			delete_index = select_index;
+		}
+
+		ImGui::SameLine();
+
+		//Resetボタン(初期化する)
+		if (ImGui::Button("Reset Transform"))
+		{
+			sel->position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+			sel->angle = XMFLOAT3(0.0f, 0.0f, 0.0f);
+			sel->scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+			ApplyTransform(*sel);
+		}
 
 		//名前編集用の入力欄
 		char buf[128];
@@ -372,25 +429,11 @@ void editor::Draw3DEditor(
 
 		ImGui::ColorEdit4("Color", &sel->color.x);
 
-
 		ImGui::Separator();//区切り線
 
-		//Deleteボタン
-		if (ImGui::Button("Delete"))
-		{
-			delete_index = select_index;
-		}
+		sel->OnImGui();
 
-		ImGui::SameLine();
-
-		//Resetボタン(初期化する)
-		if (ImGui::Button("Reset Transform"))
-		{
-			sel->position = XMFLOAT3(0.0f, 0.0f, 0.0f);
-			sel->angle = XMFLOAT3(0.0f, 0.0f, 0.0f);
-			sel->scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
-			ApplyTransform(*sel);
-		}
+		ImGui::Separator();//区切り線
 
 		//デバッグ用にワールド行列を折りたたみヘッダで表示
 		ImGui::Separator();
@@ -522,6 +565,25 @@ void editor::Draw2DEditor(
 			sprites.erase(sprites.begin() + delete_index2D);
 		delete_index2D = -1;
 		select_index2D = -1;
+	}
+}
+
+void editor::ToggleMode(
+	std::vector<std::unique_ptr<GameObject>>& objects,
+	std::vector<std::unique_ptr<SpriteObject>>& sprites
+)
+{
+	if (editor_mode == GameMode::Edit)
+	{
+		editor_mode = GameMode::Play;
+		play = true;
+		SaveScene(objects, sprites, "scene.json");
+	}
+	else
+	{
+		editor_mode = GameMode::Edit;
+		play = false;
+		LoadScene(objects, sprites, "scene.json");
 	}
 }
 

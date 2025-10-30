@@ -3,6 +3,7 @@
 //
 
 #include "AllySlime.h"
+#include "Character.h"   // ← ここで入れる（ヘッダからは外した）
 #include "Player.h"              // プレイヤー位置・角度を取得して編隊アンカーを出す
 #include "EnemyManager.h"        // 敵の取得
 #include "ProjectileStraite.h"   // 直進弾（プレイヤーと同じものを使用）

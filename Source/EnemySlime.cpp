@@ -7,9 +7,12 @@
 // コンストラクタ
 EnemySlime::EnemySlime()
 {
+	class_name = "EnemySlime";
+
 	// ModelManager からスライムモデル取得
-	slimeModel = ModelManager::Instance().Load("Data/Model/Slime/Slime.mdl");
+	model = ModelManager::Instance().Load("Data/Model/Slime/Slime.mdl");
 	//models.push_back(std::make_unique<Model>("Data/Model/Slime/Slime.mdl"));
+
 
 	// モデルが大きいのでスケーリング
 	scale.x = scale.y = scale.z = 0.01f;
@@ -93,19 +96,16 @@ void EnemySlime::Update(float elapsedTime)
 // 描画処理
 void EnemySlime::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
-	// Editor に ModelManager の全モデルを渡す
-	game_editor.render(objects,sprites2d, ModelManager::Instance().GetModels(), renderer);
-
 	// モデル描画
 	
-	for (auto& obj : objects)
-	{
-		if (!obj || !obj->model) continue;
-		renderer->Render(rc, obj->transform, obj->model, ShaderId::Lambert);
-	}
+	//for (auto& obj : objects)
+	//{
+	//	if (!obj || !obj->model) continue;
+	//	renderer->Render(rc, transform, model, ShaderId::Lambert);
+	//}
 	
 
-	renderer->Render(rc, transform, slimeModel, ShaderId::Lambert);
+	renderer->Render(rc, transform, model, ShaderId::Lambert);
 
 	//弾丸描画処理
 	projectileManager.Render(rc, renderer);
@@ -315,4 +315,5 @@ void EnemySlime::OnDead()
 	Destroy();
 }
 
+REGISTER_GAMEOBJECT(EnemySlime);
 

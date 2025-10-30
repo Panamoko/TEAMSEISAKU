@@ -3,6 +3,7 @@
 #include <vector>
 #include <set>
 #include "Enemy.h"
+#include "GameObject.h"
 
 // エネミーマネージャー
 class EnemyManager
@@ -51,4 +52,5 @@ private:
 	std::vector<Enemy*>		enemies;
 	std::set<Enemy*>		removes;
 
+	std::vector<std::unique_ptr<GameObject>> objects;
 };
