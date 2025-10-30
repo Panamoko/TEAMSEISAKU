@@ -58,6 +58,9 @@
     <Filter Include="Source\Factory">
       <UniqueIdentifier>{8ca9ee16-2341-4ee8-97f0-45dc58529a67}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\RayCast">
+      <UniqueIdentifier>{6ff02063-d460-464e-acc7-32b8fdebd934}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui-docking\imconfig.h">
@@ -221,6 +224,9 @@
     <ClInclude Include="Source\Factory.h">
       <Filter>Source\Factory</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RayCast.h">
+      <Filter>Source\RayCast</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -366,6 +372,9 @@
     </ClCompile>
     <ClCompile Include="Factory.cpp">
       <Filter>Source\Factory</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RayCast.cpp">
+      <Filter>Source\RayCast</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
