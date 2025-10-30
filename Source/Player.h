@@ -3,6 +3,8 @@
 #include "System/ModelRenderer.h"
 #include "character.h"
 #include "ProjectileManager.h"
+#include <vector>
+#include <memory>
 
 class Enemy;// ← 追記（前方宣言）ほぼ引数用のポインタ取得
 
@@ -38,11 +40,38 @@ public:
 	void InputJump();
 
 	//デバッグプリミティブ描画
-	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer);
+	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) override;
 
 	// 自分がアクティブか判定
 	bool IsActive() const;        
 
+	// ★ 描画に使われたビューポートを内部にキャッシュ（TopLeftX/Y, Width/Height）
+	static void SetPickViewport(float topLeftX, float topLeftY, float width, float height);
+
+	// ★ D3DのRSからビューポートを取得してキャッシュ（Renderの最初で1回呼ぶ）
+	static void CapturePickViewportFromRS();
+
+	// ★ クリック座標(px)から最寄りプレイヤーを取得（見つからなければnullptr）
+	static Player* PickNearestByScreenCircle(
+		float mouseX, float mouseY,
+		const std::vector<std::unique_ptr<Player>>& players,
+		float pixelRadius = 120.0f);
+
+	// ★ “クリックしたらアクティブ入れ替え”をまとめてやる（座標は呼び出し側が渡す）
+	static bool SelectActiveByScreenClick(
+		float mouseX, float mouseY,
+		const std::vector<std::unique_ptr<Player>>& players,
+		float pixelRadius = 120.0f);
+
+	// ★ ImGui / Input / Mouse を中で読む “ぜんぶお任せ版”
+	// Update でこれを1行呼ぶだけでOK
+	static bool UpdateSelectionFromMouse(
+		const std::vector<std::unique_ptr<Player>>& players,
+		float pixelRadius = 120.0f);
+	static void DebugDrawSelectionOverlay(
+		const std::vector<std::unique_ptr<Player>>& players,
+		float pixelRadius = 120.0f,
+		bool highlightActive = true);
 protected:
 	//着地したときに呼ばれる
 	void OnLanding() override;

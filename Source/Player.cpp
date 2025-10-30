@@ -9,22 +9,190 @@
 #include <imgui.h>
 #include <cfloat>          // FLT_MAX
 #include <cmath>           // sqrtf
-
-
+#include "System/Graphics.h"   // 画面サイズフォールバック用（ビューポート未設定時）
+#include <DirectXMath.h>
+#include <d3d11.h>
+#include "System/Mouse.h"
+using namespace DirectX;
 
 
 Player* Player::sActive = nullptr;
-
 Player& Player::Instance() { return *sActive; }
 void Player::SetActive(Player* p) { sActive = p; }
 Player* Player::GetActivePtr() { return sActive; }
 
+namespace {
+	struct PickViewport { float x = 0, y = 0, w = 0, h = 0; };
+	static PickViewport gPV;
+
+	// NDC → 「ビューポートのピクセル座標」へ（TopLeftX/Y考慮）
+	static bool WorldToViewportPixel(const XMFLOAT3& world, float& outX, float& outY)
+	{
+		Camera& cam = Camera::Instance();
+		XMMATRIX view = XMLoadFloat4x4(&cam.GetView());
+		XMMATRIX proj = XMLoadFloat4x4(&cam.GetProjection());
+		XMVECTOR p = XMLoadFloat3(&world);
+
+		XMVECTOR clip = XMVector4Transform(XMVectorSetW(p, 1.0f), XMMatrixMultiply(view, proj));
+		const float cx = XMVectorGetX(clip);
+		const float cy = XMVectorGetY(clip);
+		const float cw = XMVectorGetW(clip);
+		if (cw <= 0.0f) return false;
+
+		const float ndcX = cx / cw;
+		const float ndcY = cy / cw;
+
+		const float W = (gPV.w > 0 ? gPV.w : (float)Graphics::Instance().GetScreenWidth());
+		const float H = (gPV.h > 0 ? gPV.h : (float)Graphics::Instance().GetScreenHeight());
+		outX = gPV.x + (ndcX * 0.5f + 0.5f) * W;
+		outY = gPV.y + (1.0f - (ndcY * 0.5f + 0.5f)) * H;
+		return true;
+	}
+}
+
+// ========= Player の static 実装 =========
+void Player::SetPickViewport(float topLeftX, float topLeftY, float width, float height)
+{
+	gPV.x = topLeftX; gPV.y = topLeftY; gPV.w = width; gPV.h = height;
+}
+
+void Player::CapturePickViewportFromRS()
+{
+	ID3D11DeviceContext* dc = Graphics::Instance().GetDeviceContext();
+	UINT n = 1;
+	D3D11_VIEWPORT vp{};
+	dc->RSGetViewports(&n, &vp);
+	if (n == 1 && vp.Width > 0.0f && vp.Height > 0.0f) {
+		SetPickViewport(vp.TopLeftX, vp.TopLeftY, vp.Width, vp.Height);
+	}
+	else {
+		SetPickViewport(0.0f, 0.0f,
+			(float)Graphics::Instance().GetScreenWidth(),
+			(float)Graphics::Instance().GetScreenHeight());
+	}
+}
+
+Player* Player::PickNearestByScreenCircle(
+	float mouseX, float mouseY,
+	const std::vector<std::unique_ptr<Player>>& players,
+	float pixelRadius)
+{
+	Player* best = nullptr;
+	float bestD2 = FLT_MAX;
+
+	for (auto& up : players)
+	{
+		Player* p = up.get();
+		XMFLOAT3 pos = p->GetPosition();
+		// pos.y += 0.8f; // クリックしやすく少し上げたい場合
+
+		float sx, sy;
+		if (!WorldToViewportPixel(pos, sx, sy)) continue;
+
+		const float dx = sx - mouseX;
+		const float dy = sy - mouseY;
+		const float d2 = dx * dx + dy * dy;
+		if (d2 <= pixelRadius * pixelRadius && d2 < bestD2) {
+			bestD2 = d2; best = p;
+		}
+	}
+	return best;
+}
+
+bool Player::SelectActiveByScreenClick(
+	float mouseX, float mouseY,
+	const std::vector<std::unique_ptr<Player>>& players,
+	float pixelRadius)
+{
+	if (Player* p = PickNearestByScreenCircle(mouseX, mouseY, players, pixelRadius)) {
+		Player::SetActive(p);     // sActive に直接代入しない
+		return true;
+	}
+	return false;
+}
+
+bool Player::UpdateSelectionFromMouse(
+	const std::vector<std::unique_ptr<Player>>& players,
+	float pixelRadius)
+{
+	ImGuiIO& io = ImGui::GetIO();
+	if (io.WantCaptureMouse) return false;  // UI上の操作は無視
+
+	Input& input = Input::Instance();
+	Mouse& mouse = input.GetMouse();
+
+	static unsigned int prevButtons = 0;
+	const unsigned int buttons = mouse.GetButton();
+	const bool leftTriggered = ((buttons & Mouse::BTN_LEFT) && !(prevButtons & Mouse::BTN_LEFT));
+	prevButtons = buttons;
+
+	if (!leftTriggered) return false;
+
+	// ImGui座標 → DPIを掛けてフレームバッファ座標へ
+	const float mx = io.MousePos.x * io.DisplayFramebufferScale.x;
+	const float my = io.MousePos.y * io.DisplayFramebufferScale.y;
+
+	return SelectActiveByScreenClick(mx, my, players, pixelRadius);
+}
+void Player::DebugDrawSelectionOverlay(
+	const std::vector<std::unique_ptr<Player>>& players,
+	float pixelRadius,
+	bool highlightActive)
+{
+	ImGuiIO& io = ImGui::GetIO();
+	ImDrawList* dl = ImGui::GetForegroundDrawList();
+
+	// マウス座標（フレームバッファpx）※選択判定と同じ座標系に合わせる
+	const float mx_fb = io.MousePos.x * io.DisplayFramebufferScale.x;
+	const float my_fb = io.MousePos.y * io.DisplayFramebufferScale.y;
+
+	// 描画座標は ImGui座標系なので、FB→ImGui へ逆変換して渡す
+	const float inv_scale_x = (io.DisplayFramebufferScale.x != 0.f) ? (1.0f / io.DisplayFramebufferScale.x) : 1.0f;
+	const float inv_scale_y = (io.DisplayFramebufferScale.y != 0.f) ? (1.0f / io.DisplayFramebufferScale.y) : 1.0f;
+
+	// 半径も ImGui座標系に合わせる（基本はXスケールで十分。非等方DPIなら平均やminでも可）
+	const float radius_imgui = pixelRadius * inv_scale_x;
+
+	Player* active = Player::GetActivePtr();
+
+	for (auto& up : players)
+	{
+		Player* p = up.get();
+		DirectX::XMFLOAT3 pos = p->GetPosition();
+		// pos.y += 0.8f; // 円の中心を少し上へずらしたい場合
+
+		float sx_fb, sy_fb; // フレームバッファpx
+		if (!WorldToViewportPixel(pos, sx_fb, sy_fb)) continue;
+
+		// ImGui座標系へ変換して描画
+		const ImVec2 center_imgui(sx_fb * inv_scale_x, sy_fb * inv_scale_y);
+
+		// ホバー判定はFB座標で（選択ロジックと同じ計算）
+		const float dx = sx_fb - mx_fb;
+		const float dy = sy_fb - my_fb;
+		const bool hovered = (dx * dx + dy * dy) <= (pixelRadius * pixelRadius);
+
+		// 色・太さ
+		ImU32 col = IM_COL32(255, 255, 0, 180);  // 基本：黄
+		float thickness = 2.0f;
+		if (hovered) { col = IM_COL32(0, 255, 255, 220); thickness = 3.0f; } // ホバー：シアン
+		if (highlightActive && p == active) { col = IM_COL32(0, 255, 0, 220); thickness = 3.0f; } // アクティブ：緑
+
+		// 円（当たり判定そのもの）
+		dl->AddCircle(center_imgui, radius_imgui, col, 48, thickness);
+
+		// 中心の小点（見やすさ用）
+		dl->AddCircleFilled(center_imgui, 3.0f, IM_COL32(255, 255, 255, 200));
+
+		// ラベル（任意）
+		// dl->AddText(ImVec2(center_imgui.x + 8, center_imgui.y + 8), IM_COL32(255,255,255,200), "Pick");
+	}
+}
 
 //初期化
 void Player::Initialize()
 {
-	model = new Model("Data/Model/Mr.Incredible/Mr.Incredible.mdl");
-
+	model = ModelManager::Instance().Load("Data/Model/Mr.Incredible/Mr.Incredible.mdl");
 	// モデルが大きいのでスケーリング
 	scale.x = scale.y = scale.z = 0.01f;
 }
@@ -32,7 +200,7 @@ void Player::Initialize()
 //終了化
 void Player::Finalize()
 {
-	delete model;
+	//delete model;
 }
 
 void Player::Update(float elapsedTime)
@@ -263,6 +431,12 @@ void Player::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* render
 	//弾丸デバッグプリミティブ描画
 	projectileManager.RenderDebugPrimitive(rc, renderer);
 
+	renderer->RenderCylinder(
+		rc,
+		GetPosition(),                           // 中心
+		/*radius=*/GetRadius() + 0.2f,                         // 半径（ワールド単位：調整可）
+		/*height=*/0.05f,                        // 薄い円柱でOK
+		DirectX::XMFLOAT4(1, 1, 0, 0.5f));       // 色（半透明の黄）
 	 // --- 自動攻撃範囲の可視化 ---
     if (autoAttackEnabled)
     {
