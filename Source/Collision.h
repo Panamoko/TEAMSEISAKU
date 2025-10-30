@@ -1,6 +1,7 @@
 #pragma once
 
 #include <DirectXMath.h>
+#include <algorithm>
 
 // コリジョン
 class Collision
@@ -35,4 +36,13 @@ public:
 		float cylinderHeight,
 		DirectX::XMFLOAT3& outCylinderPosition
 	);
+
+	//四角形と球の交差判定
+	static bool IntersectSphereVsBox(
+		const DirectX::XMFLOAT3& spherePosition,//球の中心座標
+		float sphereRadius,//球の半径
+		const DirectX::XMFLOAT3& boxMin,//四角形の最小座標
+		const DirectX::XMFLOAT3& boxMax//四角形の最大座標
+	);
+
 };
