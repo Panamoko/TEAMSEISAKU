@@ -24,4 +24,5 @@ private:
 	Model* model = nullptr;
 	float		speed = 10.0f;
 	float lifeTimer = 3.0f;
+	int damage = 10; // Žb’è
 };

@@ -1,4 +1,5 @@
 #include "ProjectileStraite.h"
+#include "BuildingManager.h"
 
 //ProjectileStraite::ProjectileStraite()
 //{
@@ -46,6 +47,18 @@ void ProjectileStraite::Update(float elapsedTime)
 
 	// ƒ‚ƒfƒ‹s—ñXV
 	model->UpdateTransform();
+
+	if (auto th = BuildingManager::Instance().GetTownHall(); th && th->IsAlive()) {
+		const auto& c = th->GetPosition();
+		const float dx = position.x - c.x; // Ž©’e‚ÌŒ»ÝˆÊ’u
+		const float dz = position.z - c.z;
+		const float sumR = radius + th->GetRadius(); // ’e‚Ì”¼Œa + Œš•¨‚Ì”¼Œa
+		if (dx * dx + dz * dz <= sumR * sumR) {
+			th->TakeDamage(GetDamage());
+			Destroy(); // Šù‘¶‚ÌŽ©‰óƒnƒ“ƒhƒ‰
+			return;
+		}
+	}
 }
 
 void ProjectileStraite::Render(const RenderContext& rc, ModelRenderer* renderer)

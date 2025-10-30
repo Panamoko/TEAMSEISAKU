@@ -5,6 +5,7 @@
 #include "EnemyManager.h"
 #include "EnemySlime.h"
 #include "Player.h"
+#include "BuildingManager.h"
 #include <cmath>
 #include <DirectXMath.h>
 using namespace DirectX;
@@ -126,6 +127,8 @@ void SceneGame::Initialize()
          allies.emplace_back(std::move(s));
      }
 
+	 BuildingManager::Instance().Initialize();
+
 	 LoadScene(objects, sprites2d, "scene.json");
 }
 
@@ -184,6 +187,14 @@ void SceneGame::Update(float elapsedTime)
 	target.y += 0.5f;
 	cameraController->SetTarget(target);
 	cameraController->Update(elapsedTime);
+
+	BuildingManager::Instance().Update(elapsedTime);
+
+	if (auto th = BuildingManager::Instance().GetTownHall(); th && th->IsDestroyed()) {
+		// TODO: ここでゲームクリア遷移
+		// FadeManager::LoadScene(SceneType::GameClear);
+		// あるいはフラグを立てて UI 表示 → 入力で遷移
+	}
 
 	if (game_editor.PlayGame())
 	{
@@ -253,6 +264,8 @@ void SceneGame::Render()
 		// エネミー描画
 		EnemyManager::Instance().Render(rc, modelRenderer);
 
+		BuildingManager::Instance().Render();
+
 	}
 
 	// 3Dデバッグ描画
@@ -271,6 +284,8 @@ void SceneGame::Render()
 		{
 			obj->RenderDebugPrimitive(rc, shapeRenderer);
 		}
+
+		BuildingManager::Instance().DebugDraw(rc, shapeRenderer);
 	}
 
 	// 2Dスプライト描画
@@ -285,4 +300,12 @@ void SceneGame::Render()
 void SceneGame::DrawGUI()
 {
 	//Player::Instance().DrawDebugGUI();
+
+	// HP を簡易表示するなら（ImGui 等）：
+ ImGui::Begin("TownHall");
+ if (auto th = BuildingManager::Instance().GetTownHall()) {
+ float ratio = (float)th->GetHP() / (float)th->GetMaxHP();
+ ImGui::ProgressBar(ratio, ImVec2(200, 16));
+ }
+ ImGui::End();
 }
