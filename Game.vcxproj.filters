@@ -61,6 +61,9 @@
     <Filter Include="Source\RayCast">
       <UniqueIdentifier>{6ff02063-d460-464e-acc7-32b8fdebd934}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Gimmic">
+      <UniqueIdentifier>{466b00e3-6e28-4990-8e43-da357ecddda9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui-docking\imconfig.h">
@@ -236,6 +239,12 @@
     <ClInclude Include="Source\TownHall.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Gimmic_BreakWall.h">
+      <Filter>Source\Gimmic</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GimmicBase.h">
+      <Filter>Source\Gimmic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -390,6 +399,12 @@
     </ClCompile>
     <ClCompile Include="Source\TownHall.cpp">
       <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Gimmic_BreakWall.cpp">
+      <Filter>Source\Gimmic</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GimmicBase.cpp">
+      <Filter>Source\Gimmic</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

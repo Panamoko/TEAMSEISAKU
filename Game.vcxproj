@@ -133,6 +133,8 @@
     <ClInclude Include="Source\Factory.h" />
     <ClInclude Include="Source\Framework.h" />
     <ClInclude Include="Source\GameObject.h" />
+    <ClInclude Include="Source\GimmicBase.h" />
+    <ClInclude Include="Source\Gimmic_BreakWall.h" />
     <ClInclude Include="Source\ITargetable.h" />
     <ClInclude Include="Source\MathUtils.h" />
     <ClInclude Include="Source\ModelManager.h" />
@@ -191,6 +193,8 @@
     <ClCompile Include="Source\EnemySlime.cpp" />
     <ClCompile Include="Source\Framework.cpp" />
     <ClCompile Include="Source\GameObject.cpp" />
+    <ClCompile Include="Source\GimmicBase.cpp" />
+    <ClCompile Include="Source\Gimmic_BreakWall.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\MathUtils.cpp" />
     <ClCompile Include="Source\ModelManager.cpp" />
