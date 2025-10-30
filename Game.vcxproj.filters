@@ -245,6 +245,9 @@
     <ClInclude Include="Source\GimmicBase.h">
       <Filter>Source\Gimmic</Filter>
     </ClInclude>
+    <ClInclude Include="Source\GimmicManager.h">
+      <Filter>Source\Gimmic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -404,6 +407,9 @@
       <Filter>Source\Gimmic</Filter>
     </ClCompile>
     <ClCompile Include="Source\GimmicBase.cpp">
+      <Filter>Source\Gimmic</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GimmicManager.cpp">
       <Filter>Source\Gimmic</Filter>
     </ClCompile>
   </ItemGroup>

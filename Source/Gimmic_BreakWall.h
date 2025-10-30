@@ -1,5 +1,6 @@
 #pragma once
 #include "GimmicBase.h"
+#include "GimmicManager.h"
 
 class Gimmic_BreakWall : public GimmicBase
 {

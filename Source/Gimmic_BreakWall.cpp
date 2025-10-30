@@ -3,8 +3,10 @@
 
 Gimmic_BreakWall::Gimmic_BreakWall()
 {
+    auto wall = std::make_unique<Gimmic_BreakWall>();
 	class_name = "Gimmic_BreakWall";
-	model = ModelManager::Instance().Load("Data/Model/bilud/saku.mdl");
+	wall->model = ModelManager::Instance().Load("Data/Model/bilud/saku.mdl");
+    GimmicManager::Instance().Add(std::move(wall));
 }
 
 void Gimmic_BreakWall::OnTrigger(GameObject* objects)
