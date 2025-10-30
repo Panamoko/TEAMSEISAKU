@@ -2,6 +2,8 @@
 
 #include "GameObject.h"
 
+class GameObject;
+
 enum class ColliderType { Sphere, Box, Cylinder };
 
 struct Collider
