@@ -61,6 +61,9 @@
     <Filter Include="Source\RayCast">
       <UniqueIdentifier>{6ff02063-d460-464e-acc7-32b8fdebd934}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Gimmic">
+      <UniqueIdentifier>{bdff7478-b4c4-43e0-9ad6-01de0e0ade80}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui-docking\imconfig.h">
@@ -214,7 +217,6 @@
     <ClInclude Include="Source\ModelManager.h">
       <Filter>Source\Model</Filter>
     </ClInclude>
-    <ClInclude Include="GameObjectManager.h" />
     <ClInclude Include="Source\AllySlime.h">
       <Filter>Source\Character\Player</Filter>
     </ClInclude>
@@ -226,6 +228,15 @@
     </ClInclude>
     <ClInclude Include="Source\RayCast.h">
       <Filter>Source\RayCast</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GimmicBase.h">
+      <Filter>Source\Gimmic</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObjectManager.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Gimmic_BreakWall.h">
+      <Filter>Source\Gimmic</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -375,6 +386,12 @@
     </ClCompile>
     <ClCompile Include="Source\RayCast.cpp">
       <Filter>Source\RayCast</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GimmicBase.cpp">
+      <Filter>Source\Gimmic</Filter>
+    </ClCompile>
+    <ClCompile Include="Gimmic_BreakWall.cpp">
+      <Filter>Source\Gimmic</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

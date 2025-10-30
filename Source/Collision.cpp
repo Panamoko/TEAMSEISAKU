@@ -100,3 +100,43 @@ bool Collision::IntersectSphereVsCylinder(
 
 	return true;
 }
+
+/*
+ 	球の中心座標
+	const DirectX::XMFLOAT3& spherePosition
+	球の半径
+	float sphereRadius
+	四角形の最小座標
+	const DirectX::XMFLOAT3& boxMin
+	四角形の最大座標
+	const DirectX::XMFLOAT3& boxMax
+	押し出し後の球の位置
+	DirectX::XMFLOAT3& outSpherPosition
+*/
+bool Collision::IntersectSphereVsBox(
+	const DirectX::XMFLOAT3& spherePosition,
+	float sphereRadius,
+	const DirectX::XMFLOAT3& boxMin,
+	const DirectX::XMFLOAT3& boxMax)
+{
+	using namespace DirectX;
+
+	//球の中心からAABB内で一番近い点を求める
+	XMFLOAT3 closestPoint;
+	closestPoint.x = std::max(boxMin.x, std::min(spherePosition.x, boxMax.x));
+	closestPoint.y = std::max(boxMin.y, std::min(spherePosition.y, boxMax.y));
+	closestPoint.z = std::max(boxMin.z, std::min(spherePosition.z, boxMax.z));
+
+	//球の中心と最近接点の距離ベクトルを計算
+	float dx = spherePosition.x - closestPoint.x;
+	float dy = spherePosition.y - closestPoint.y;
+	float dz = spherePosition.z - closestPoint.z;
+	float distSq = (dx * dx) + (dy * dy) + (dz * dz);
+
+	if (distSq > sphereRadius * sphereRadius)
+	{
+		return true;
+	}
+
+	return false;
+}
