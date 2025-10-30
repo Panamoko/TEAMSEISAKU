@@ -4,6 +4,7 @@
 Gimmic_BreakWall::Gimmic_BreakWall()
 {
 	class_name = "Gimmic_BreakWall";
+	model = ModelManager::Instance().Load("Data/Model/bilud/saku.mdl");
 }
 
 //UŒ‚‚ª“–‚½‚Á‚½‚Æ‚«‚ÉŒÄ‚Î‚ê‚é

@@ -1,5 +1,6 @@
 #pragma once
 #include "GameObject.h"
+#include "ModelManager.h"
 
 class GimmicBase :public GameObject
 {
