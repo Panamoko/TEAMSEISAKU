@@ -64,6 +64,9 @@
     <Filter Include="Source\Gimmic">
       <UniqueIdentifier>{466b00e3-6e28-4990-8e43-da357ecddda9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Collision\Collider">
+      <UniqueIdentifier>{cf744a00-a40a-4416-9889-9ba4c96286ea}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui-docking\imconfig.h">
@@ -248,6 +251,12 @@
     <ClInclude Include="Source\GimmicManager.h">
       <Filter>Source\Gimmic</Filter>
     </ClInclude>
+    <ClInclude Include="Source\CollisionManager.h">
+      <Filter>Source\Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Collider.h">
+      <Filter>Source\Collision\Collider</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -411,6 +420,9 @@
     </ClCompile>
     <ClCompile Include="Source\GimmicManager.cpp">
       <Filter>Source\Gimmic</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\CollisionManager.cpp">
+      <Filter>Source\Collision</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

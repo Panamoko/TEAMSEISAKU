@@ -8,6 +8,7 @@
 
 class CollisionManager
 {
+public:
 	//インスタンス取得
 	static CollisionManager& Instance()
 	{
