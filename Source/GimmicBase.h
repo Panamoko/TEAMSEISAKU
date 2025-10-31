@@ -11,8 +11,7 @@ public:
 	}
 
 	//イベント関数
-	virtual void OnTrigger(GameObject* objcts) {};
-
+	virtual void OnCollision(GameObject* objcts) override {};
 	//ギミック更新処理
 	virtual void Update(float elaspdTime) override {};
 

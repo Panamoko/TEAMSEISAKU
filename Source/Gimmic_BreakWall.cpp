@@ -3,20 +3,25 @@
 
 Gimmic_BreakWall::Gimmic_BreakWall()
 {
-    auto wall = std::make_unique<Gimmic_BreakWall>();
 	class_name = "Gimmic_BreakWall";
-	wall->model = ModelManager::Instance().Load("Data/Model/bilud/saku.mdl");
+	model = ModelManager::Instance().Load("Data/Model/bilud/saku.mdl");
 
     collider->type = ColliderType::Box;
     box = static_cast<BoxCollider*>(collider);
 }
 
-void Gimmic_BreakWall::OnTrigger(GameObject* objects)
+//è’ìÀåãâ 
+void Gimmic_BreakWall::OnCollision(GameObject* objects)
 {
     hp--;
-    if (hp <= 0.0f) delete model;
+    if (hp <= 0.0f)
+    {
+        isActive = false;
+        GimmicManager::Instance().RemoveInactive();
+    }
 }
 
+//çXêVèàóù
 void Gimmic_BreakWall::Update(float elapsedTime)
 {
     if (!collider)return;

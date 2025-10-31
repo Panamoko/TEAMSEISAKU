@@ -126,6 +126,7 @@
     <ClInclude Include="Source\Camera.h" />
     <ClInclude Include="Source\CameraController.h" />
     <ClInclude Include="Source\Character.h" />
+    <ClInclude Include="Source\Collider.h" />
     <ClInclude Include="Source\Collision.h" />
     <ClInclude Include="Source\CollisionManager.h" />
     <ClInclude Include="Source\Enemy.h" />

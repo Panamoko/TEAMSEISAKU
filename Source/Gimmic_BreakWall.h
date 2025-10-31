@@ -9,8 +9,8 @@ class Gimmic_BreakWall : public GimmicBase
 public:
 	Gimmic_BreakWall();
 
-	//イベント処理
-	void OnTrigger(GameObject* objects) override;
+	//衝突結果
+	void OnCollision(GameObject* objects) override;
 
 	//ギミック更新処理
 	void Update(float elapsedTime)override;

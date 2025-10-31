@@ -15,7 +15,6 @@
 
 using json = nlohmann::json;
 
-//a
 struct SpriteObject
 {
 	std::string name;
