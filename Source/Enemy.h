@@ -7,7 +7,7 @@
 class Enemy : public Character
 {
 public:
-	Enemy() { type = Type::Enemy; }
+	Enemy() {}
 	~Enemy() override {}
 
 	// XVˆ—
