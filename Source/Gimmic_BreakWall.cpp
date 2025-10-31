@@ -14,8 +14,8 @@ Gimmic_BreakWall::Gimmic_BreakWall()
 //è’ìÀåãâ 
 void Gimmic_BreakWall::OnCollision(GameObject* objects)
 {
-    hp--;
-    if (hp <= 0.0f)
+    if (objects->type == Type::Player)hp--;
+    else if (hp <= 0.0f && objects->type == Type::Player)
     {
         isActive = false;
         GimmicManager::Instance().RemoveInactive();
