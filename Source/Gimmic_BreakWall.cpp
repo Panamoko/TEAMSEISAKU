@@ -6,6 +6,7 @@ Gimmic_BreakWall::Gimmic_BreakWall()
 	class_name = "Gimmic_BreakWall";
 	model = ModelManager::Instance().Load("Data/Model/bilud/saku.mdl");
 
+    collider = new BoxCollider();
     collider->type = ColliderType::Box;
     box = static_cast<BoxCollider*>(collider);
 }
