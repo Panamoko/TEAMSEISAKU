@@ -3,32 +3,53 @@
 
 Gimmic_BreakWall::Gimmic_BreakWall()
 {
-    auto wall = std::make_unique<Gimmic_BreakWall>();
 	class_name = "Gimmic_BreakWall";
-	wall->model = ModelManager::Instance().Load("Data/Model/bilud/saku.mdl");
-    GimmicManager::Instance().Add(std::move(wall));
+	model = ModelManager::Instance().Load("Data/Model/bilud/saku.mdl");
+
+    collider = new BoxCollider();
+    collider->type = ColliderType::Box;
+    box = static_cast<BoxCollider*>(collider);
 }
 
-void Gimmic_BreakWall::OnTrigger(GameObject* objects)
+//衝突結果
+void Gimmic_BreakWall::OnCollision(GameObject* objects)
 {
-    hp--;
-    if (hp <= 0.0f) delete model;
+    if (objects->type == Type::Player)hp--;
+    else if (hp <= 0.0f && objects->type == Type::Player)
+    {
+        isActive = false;
+        GimmicManager::Instance().RemoveInactive();
+    }
 }
 
+//更新処理
 void Gimmic_BreakWall::Update(float elapsedTime)
 {
+    if (!collider)return;
+
     // ① 壁のAABB（軸平行境界ボックス）を求める
-    halfSize = { scale.x * 0.5f, scale.y * 0.5f, scale.z * 0.5f };
-    boxMin = {
+    halfSize = { 
+        scale.x * 0.5f,
+        scale.y * 0.5f,
+        scale.z * 0.5f };
+
+    box->box_min = {
         position.x - halfSize.x,
         position.y - halfSize.y,
         position.z - halfSize.z
     };
-    boxMax = {
+    box->box_max = {
         position.x + halfSize.x,
         position.y + halfSize.y,
         position.z + halfSize.z
     };
+
+}
+
+void Gimmic_BreakWall::RenderDebugPrimitive(
+    const RenderContext& rc, ShapeRenderer* renderer)
+{
+
 }
 
 REGISTER_GAMEOBJECT(Gimmic_BreakWall);

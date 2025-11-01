@@ -1,4 +1,6 @@
 #include "Factory.h"
+#include "GimmicManager.h"
+#include "EnemyManager.h"
 
 std::unordered_map<std::string, Factory::CreateFunc>& Factory::Registry()
 {
@@ -14,13 +16,33 @@ void Factory::Register(const std::string& className, CreateFunc func)
 std::unique_ptr<GameObject> Factory::Create(const std::string& className)
 {
     auto it = Registry().find(className);
-    if (it != Registry().end())
+    std::unique_ptr<GameObject> object;
+
+    if (it != Registry().end())object = it->second();
+    else object = std::make_unique<GameObject>();
+
+    switch (object->type)
     {
-        return it->second();
+        case GameObject::Type::Gimmic:
+            if (auto gimmic = dynamic_cast<GimmicBase*>(object.get()))
+            {
+                GimmicManager::Instance().Add(std::unique_ptr<GimmicBase>(gimmic));
+                object.release();//所有権を移す
+            }
+            break;
+
+        case GameObject::Type::Enemy:
+            if (auto enemy = dynamic_cast<Enemy*>(object.get()))
+            {
+                EnemyManager::Instance().Register(enemy);
+                object.release();
+            }
+            break;
+
+        default: break;
     }
 
-    //登録されていない場合はデフォルト
-    return std::make_unique<GameObject>();
+    return object;
 }
 
 std::vector<std::string> Factory::GetRegisteredClassNames()

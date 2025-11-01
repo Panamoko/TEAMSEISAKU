@@ -9,6 +9,7 @@
 #include "BuildingManager.h"
 #include <cfloat>          // ★ FLT_MAX 用
 #include "System/Mouse.h"  // ★ Mouse::BTN_LEFT / GetX()/GetY() を使うなら明示的に
+#include "CollisionManager.h"
 #include <cmath>
 #include <DirectXMath.h>
 using namespace DirectX;
@@ -193,11 +194,19 @@ void SceneGame::Update(float elapsedTime)
 
 	if (game_editor.PlayGame())
 	{
+		CollisionManager::Instance().Clear();
+		for (auto& obj : objects)
+		{
+			CollisionManager::Instance().AddObject(obj.get());
+		}
+
 		//ステージ更新処理
 		stage->Update(elapsedTime);
 
 		// 全プレイヤー更新（入力は Player 側で“アクティブのみ”にガード）
 		for (auto& up : players) up->Update(elapsedTime);
+
+
 
 		//エネミー更新処理
 		EnemyManager::Instance().Update(elapsedTime);
@@ -212,6 +221,8 @@ void SceneGame::Update(float elapsedTime)
 		for (auto& a : allies) {
 			a->Update(elapsedTime);
 		}
+
+		CollisionManager::Instance().CheckAllCollision();
 	}
 	Player::UpdateSelectionFromMouse(players, 120.0f);
 

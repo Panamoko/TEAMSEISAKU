@@ -15,7 +15,6 @@
 
 using json = nlohmann::json;
 
-//a
 struct SpriteObject
 {
 	std::string name;
@@ -119,7 +118,7 @@ private:
 	int skinned_index = 0;
 	int sprite_index = 0;
 	std::string select_class;
-	bool play = false;
+	bool play = true;
 
 	Model* model = nullptr;
 
