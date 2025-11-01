@@ -30,8 +30,8 @@ void BuildingManager::Update(float dt) {
 }
 
 
-void BuildingManager::Render() {
-	if (townHall) townHall->Render();
+void BuildingManager::Render(const RenderContext& rc, ModelRenderer* renderer) {
+	if (townHall) townHall->Render(rc, renderer);
 }
 
 

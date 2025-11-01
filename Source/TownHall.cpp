@@ -1,6 +1,7 @@
 #include "TownHall.h"
 #include "System/ShapeRenderer.h"
 #include "System/RenderContext.h"
+
 //#include "static_mesh.h"
 //#include "texture.h"
 //#include "misc.h" // デバッグ描画ヘルパなどがあるなら
@@ -13,21 +14,46 @@ TownHall::TownHall(const XMFLOAT3& pos, float radius, int maxHP)
 
 
 void TownHall::Initialize() {
+
 	// 必要ならモデル読み込みなど。
 	// mesh = new StaticMesh("assets/townhall.fbx");
 	// tex = new Texture("assets/townhall_albedo.dds");
+
+	model = ModelManager::Instance().Load("Data/Model/bilud/Core.mdl");
+
+	// Animator にモデルを渡して Idle ループ
+	animator.SetModel(model /* or model.get() */);
+	animator.SetBlendSeconds(0.2f);
+	animator.Play("Take 001", true);
+
+	scale = { 0.3f, 0.3f, 0.3f };
+
+	
 }
 
 
-void TownHall::Update(float /*dt*/) {
-	// 静的オブジェクトなので基本は何もしない。
+void TownHall::Update(float elapsedtime) {
+	animator.Update(elapsedtime);
 }
 
 
-void TownHall::Render() {
+void TownHall::Render(const RenderContext& rc, ModelRenderer* renderer) {
 	if (IsDestroyed()) return;
+
+	using namespace DirectX;
+	XMMATRIX S = XMMatrixScaling(scale.x, scale.y, scale.z);
+	XMMATRIX R = XMMatrixRotationRollPitchYaw(angle.x, angle.y, angle.z); // rotationを持っていなければ省略
+	XMMATRIX T = XMMatrixTranslation(position.x, position.y, position.z);
+
+	XMFLOAT4X4 transform;
+	XMStoreFloat4x4(&transform, S * R * T);
+
+	renderer->Render(rc, transform, model, ShaderId::Lambert);
 	// モデルを持っている場合は描画。
-	// if (mesh) mesh->Draw(position, /*rotation*/{}, /*scale*/{1,1,1}, tex);
+	 //if (model) model->Draw(position, /*rotation*/{}, /*scale*/{1,1,1}, tex);
+	for (auto& a : model->GetResource()->GetAnimations()) {
+		printf("anim: %s (%.3fs)\n", a.name.c_str(), a.secondsLength);
+	}
 }
 
 

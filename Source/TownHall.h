@@ -1,6 +1,8 @@
 #pragma once
 #include <DirectXMath.h>
 #include "ITargetable.h"
+#include "ModelManager.h"
+#include "Animator.h"
 
 struct RenderContext;    
 class ShapeRenderer;     
@@ -17,7 +19,7 @@ public:
 
 	void Initialize();
 	void Update(float dt);
-	void Render();
+	void Render(const RenderContext& rc, ModelRenderer* renderer);
 	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer);
 
 
@@ -41,7 +43,9 @@ private:
 	int maxHP{};
 	int hp{};
 
-
+	Model* model = nullptr;
+	Animator animator;               // 追加
+	bool     playingDeath = false;   // 破壊演出中フラグ
 	// モデルを使うならここに保持（例）
 	// StaticMesh* mesh{nullptr};
 	// Texture* tex{nullptr};
