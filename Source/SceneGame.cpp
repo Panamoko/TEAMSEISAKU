@@ -10,6 +10,7 @@
 #include <cfloat>          // ★ FLT_MAX 用
 #include "System/Mouse.h"  // ★ Mouse::BTN_LEFT / GetX()/GetY() を使うなら明示的に
 #include "CollisionManager.h"
+#include "GimmicManager.h"
 #include <cmath>
 #include <DirectXMath.h>
 using namespace DirectX;
@@ -128,16 +129,11 @@ void SceneGame::Update(float elapsedTime)
 		// 全プレイヤー更新（入力は Player 側で“アクティブのみ”にガード）
 		for (auto& up : players) up->Update(elapsedTime);
 
-
-
 		//エネミー更新処理
 		EnemyManager::Instance().Update(elapsedTime);
 
-		////エディタモデル更新
-		//for (auto& obj : objects)
-		//{
-		//	obj->Update(elapsedTime);
-		//}
+		//ギミック更新処理
+		GimmicManager::Instance().Update(elapsedTime);
 
 		// 味方スライム更新
 		for (auto& a : allies) {
@@ -191,16 +187,21 @@ void SceneGame::Render()
 	        a->Render(rc, modelRenderer);
 	    }
 
-		//エディタモデル描画
-		for (auto& obj : objects)
-		{
-			obj->Render(rc, modelRenderer);
-		}
+		////エディタモデル描画
+		//for (auto& obj : objects)
+		//{
+		//	obj->Render(rc, modelRenderer);
+		//}
 
 		// エネミー描画
 		EnemyManager::Instance().Render(rc, modelRenderer);
 
 		BuildingManager::Instance().Render(rc, modelRenderer);
+
+		//ギミック描画
+		GimmicManager::Instance().Render(rc, modelRenderer);
+
+		
 
 	}
 
