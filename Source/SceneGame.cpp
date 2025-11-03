@@ -15,86 +15,8 @@
 using namespace DirectX;
 
 #include "Editor.h"
-static float gSelectPixelRadius = 120.0f; // ←好みで 80～160 に調整可
-static D3D11_VIEWPORT gPickViewport = { 0,0,0,0,0,1 };
 
-// 画面→ビューポートの情報を取得
-static D3D11_VIEWPORT GetMainViewport()
-{
-	D3D11_VIEWPORT vp{};
-	UINT n = 1;
-	Graphics::Instance().GetDeviceContext()->RSGetViewports(&n, &vp);
-	return vp;
-}
-static bool WorldToViewportPixel(const DirectX::XMFLOAT3& world, float& outX, float& outY)
-{
-	Camera& cam = Camera::Instance();
 
-	XMMATRIX view = XMLoadFloat4x4(&cam.GetView());
-	XMMATRIX proj = XMLoadFloat4x4(&cam.GetProjection());
-	XMVECTOR p = XMLoadFloat3(&world);
-
-	XMVECTOR clip = XMVector4Transform(XMVectorSetW(p, 1.0f), XMMatrixMultiply(view, proj));
-	float cx = XMVectorGetX(clip);
-	float cy = XMVectorGetY(clip);
-	float cw = XMVectorGetW(clip);
-	if (cw <= 0.0f) return false;
-
-	float ndcX = cx / cw;
-	float ndcY = cy / cw;
-
-	// ★ キャッシュしたビューポートでピクセル化（TopLeftX/Yを必ず考慮）
-	outX = gPickViewport.TopLeftX + (ndcX * 0.5f + 0.5f) * gPickViewport.Width;
-	outY = gPickViewport.TopLeftY + (1.0f - (ndcY * 0.5f + 0.5f)) * gPickViewport.Height;
-	return true;
-}
-
-// マウス位置(px)からの距離が gSelectPixelRadius 未満の Player を最短距離で選ぶ
-// players は SceneGame 内のプレイヤー配列を想定
-static Player* PickPlayerByScreenCircle(float mouseX, float mouseY,const std::vector<std::unique_ptr<Player>>& players)
-{
-	Player* best = nullptr;
-	float bestDist2 = FLT_MAX;
-
-	for (auto& up : players)
-	{
-		Player* p = up.get();
-		DirectX::XMFLOAT3 pos = p->GetPosition();
-		// pos.y += 0.8f; // 必要ならクリックしやすい高さへ
-
-		float sx, sy;
-		if (!WorldToViewportPixel(pos, sx, sy)) continue;
-
-		float dx = sx - mouseX;
-		float dy = sy - mouseY;
-		float d2 = dx * dx + dy * dy;
-		if (d2 <= gSelectPixelRadius * gSelectPixelRadius && d2 < bestDist2)
-		{
-			bestDist2 = d2;
-			best = p;
-		}
-	}
-	return best;
-}
-static void CapturePickViewportFromRS()
-{
-	ID3D11DeviceContext* dc = Graphics::Instance().GetDeviceContext();
-	UINT n = 1;
-	D3D11_VIEWPORT vp{};
-	dc->RSGetViewports(&n, &vp);
-	if (n == 1 && vp.Width > 0.0f && vp.Height > 0.0f) {
-		gPickViewport = vp;
-	}
-	else {
-		// フォールバック：画面サイズを使用
-		gPickViewport.TopLeftX = 0.0f;
-		gPickViewport.TopLeftY = 0.0f;
-		gPickViewport.Width = (float)Graphics::Instance().GetScreenWidth();
-		gPickViewport.Height = (float)Graphics::Instance().GetScreenHeight();
-		gPickViewport.MinDepth = 0.0f;
-		gPickViewport.MaxDepth = 1.0f;
-	}
-}
 // 初期化
 void SceneGame::Initialize()
 {
@@ -242,7 +164,6 @@ void SceneGame::Render()
 	Player::CapturePickViewportFromRS();
 	ShapeRenderer* shapeRenderer = graphics.GetShapeRenderer();
 	ModelRenderer* modelRenderer = graphics.GetModelRenderer();
-	CapturePickViewportFromRS();
 	// 描画準備
 	RenderContext rc;
 	rc.deviceContext = dc;
