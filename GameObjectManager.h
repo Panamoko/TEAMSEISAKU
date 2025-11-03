@@ -33,7 +33,7 @@ public:
 	std::shared_ptr<GameObject> CreateObjects(const std::string& name)
 	{
 		auto obj = std::make_shared<GameObject>();
-		obj->id = next_id++;
+		//obj->id = next_id++;
 	}
 
 	//“o˜^‚³‚ê‚Ä‚¢‚é‘S‚Ä‚ÌGameObject‚ðŽæ“¾

@@ -45,7 +45,7 @@ public:
 	bool dirty = false;
 	bool is_active = true;
 
-	enum class Type { Object, Gimmic, Player, Enemy } type = Type::Object;
+	enum class Type { Object, Gimmic, Player, Enemy, Stage } type = Type::Object;
 public:
 	void SetType(Type t) { type = t; }
 

@@ -4,6 +4,7 @@
 //コンストラクタ
 Stage::Stage()
 {
+    type = Type::Stage;
     class_name = "Stage";
 
     //ステージモデルを読み込み
