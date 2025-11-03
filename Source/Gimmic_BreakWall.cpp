@@ -1,6 +1,8 @@
 #include "Gimmic_BreakWall.h"
 #include "Factory.h"
 
+//a
+
 Gimmic_BreakWall::Gimmic_BreakWall()
 {
 	class_name = "Gimmic_BreakWall";
