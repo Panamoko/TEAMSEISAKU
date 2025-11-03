@@ -11,6 +11,7 @@
 #include "System/Mouse.h"  // ★ Mouse::BTN_LEFT / GetX()/GetY() を使うなら明示的に
 #include "CollisionManager.h"
 #include "GimmicManager.h"
+#include "StageManager.h"
 #include <cmath>
 #include <DirectXMath.h>
 using namespace DirectX;
@@ -126,6 +127,8 @@ void SceneGame::Update(float elapsedTime)
 		//ステージ更新処理
 		stage->Update(elapsedTime);
 
+		StageManager::Instance().Update(elapsedTime);
+
 		// 全プレイヤー更新（入力は Player 側で“アクティブのみ”にガード）
 		for (auto& up : players) up->Update(elapsedTime);
 
@@ -175,6 +178,8 @@ void SceneGame::Render()
 
 	// 3Dモデル描画
 	{
+		StageManager::Instance().Render(rc, modelRenderer);
+
 		//ステージ描画
 		stage->Render(rc, modelRenderer);
 

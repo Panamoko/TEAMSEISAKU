@@ -35,7 +35,7 @@ void Stage::Render(const RenderContext& rc, ModelRenderer* renderer)
     //    if (!obj || !obj->model) continue;
     //    renderer->Render(rc, transform, model, ShaderId::Lambert);
     //}
-    //renderer->Render(rc, transform, model, ShaderId::Lambert);
+    renderer->Render(rc, transform, model, ShaderId::Lambert);
 }
 
 REGISTER_GAMEOBJECT(Stage);
