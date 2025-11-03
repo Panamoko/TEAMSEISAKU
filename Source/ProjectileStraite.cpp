@@ -1,5 +1,6 @@
 #include "ProjectileStraite.h"
 #include "BuildingManager.h"
+#include "Collision.h"
 
 //ProjectileStraite::ProjectileStraite()
 //{
@@ -47,6 +48,23 @@ void ProjectileStraite::Update(float elapsedTime)
 
 	// モデル行列更新
 	model->UpdateTransform();
+
+	{
+		auto& bm = BuildingManager::Instance();
+		const int n = bm.GetFenceCount();
+		for (int i = 0; i < n; ++i) {
+			Fence* f = bm.GetFence(i);
+			if (!f || !f->IsAlive()) continue;
+			const OBB& box = f->GetOBB();
+			DirectX::XMFLOAT3 mtd;
+			if (Collision::IntersectSphereVsOBB(position, GetRadius(), box, &mtd)) {
+				// 仕様に応じて：消滅 / 反射 / 刺さる 等
+				f->TakeDamage(GetDamage());
+				Destroy();
+				return;
+			}
+		}
+	}
 
 	if (auto th = BuildingManager::Instance().GetTownHall(); th && th->IsAlive()) {
 		const auto& c = th->GetPosition();

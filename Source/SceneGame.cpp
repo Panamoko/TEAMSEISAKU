@@ -35,8 +35,8 @@ void SceneGame::Initialize()
 	players[1]->Initialize();
 
 	// 配置
-	players[0]->SetPosition(DirectX::XMFLOAT3(-2, 0, 0));
-	players[1]->SetPosition(DirectX::XMFLOAT3(2, 0, 0));
+	players[0]->SetPosition(DirectX::XMFLOAT3(-2, 0, -5));
+	players[1]->SetPosition(DirectX::XMFLOAT3(2, 0, -5));
 
 	// 最初は 0 番をアクティブに
 	Player::SetActive(players[0].get());
@@ -62,12 +62,23 @@ void SceneGame::Initialize()
 	for (int i = 0; i < 2; ++i)
 	{
 		EnemySlime* slime = new EnemySlime();
-		slime->SetPosition(DirectX::XMFLOAT3(i * 2.0f, 0, 5));
+		slime->SetPosition(DirectX::XMFLOAT3(i * 2.0f, 0, -5));
 		slime->SetTerritory(slime->GetPosition(), 10.0f);
 		//enemyManager.Register(slime);
 	}
 
 	 BuildingManager::Instance().Initialize();
+
+	 BuildingManager& bm = BuildingManager::Instance();
+
+	 // 例：(3, 0, 3) の位置に柵を1つ生成
+	 bm.SpawnFence(DirectX::XMFLOAT3(3.0f, 0, 10.0f), 1.0f, 1.2f, /*maxHP=*/150, DirectX::XM_PIDIV2);
+
+	 // 例：(-3, 0, 3) の位置に柵を1つ生成
+	 bm.SpawnFence(DirectX::XMFLOAT3(-3.0f, 0, 10.0f));
+
+	 // 例：(3, 0, 5) の位置に別の設定で生成 (半径とHPを変更)
+	 //bm.SpawnFence(DirectX::XMFLOAT3(6.0f, 0, 10.0f), 1.0f, 1.2f, /*maxHP=*/150);
 
 	 LoadScene(objects, sprites2d, "scene.json");
 }
@@ -251,12 +262,51 @@ void SceneGame::DrawGUI()
 {
 	//Player::Instance().DrawDebugGUI();
 
-	// HP を簡易表示するなら（ImGui 等）：
- ImGui::Begin("TownHall");
- if (auto th = BuildingManager::Instance().GetTownHall()) {
- float ratio = (float)th->GetHP() / (float)th->GetMaxHP();
- ImGui::ProgressBar(ratio, ImVec2(200, 16));
- }
+	// === 建物ステータスウィンドウ ===
+	ImGui::Begin("Buildings Status");
+
+	// --- タウンホールのHP ---
+	if (auto th = BuildingManager::Instance().GetTownHall())
+	{
+		ImGui::Text("TownHall HP:");
+		int currentHP = th->GetHP();
+		int maxHP = th->GetMaxHP();
+		float ratio = (maxHP > 0) ? ((float)currentHP / (float)maxHP) : 0.0f;
+
+		// HPを "1300/1500" のようにテキストで表示
+		std::string hp_text = std::to_string(currentHP) + "/" + std::to_string(maxHP);
+		ImGui::ProgressBar(ratio, ImVec2(200, 16), hp_text.c_str());
+	}
+
+	ImGui::Separator(); // 区切り線
+
+	// --- 柵のHP ---
+	BuildingManager& bm = BuildingManager::Instance();
+	int fenceCount = bm.GetFenceCount(); // 柵の総数を取得
+	if (fenceCount > 0)
+	{
+		ImGui::Text("Fences HP:");
+		// 登録されている全ての柵をループ
+		for (int i = 0; i < fenceCount; ++i)
+		{
+			Fence* f = bm.GetFence(i); // i番目の柵を取得
+			if (!f || !f->IsAlive()) continue; // 取得失敗か、すでにHP 0 ならスキップ
+
+			int currentHP = f->GetHP(); // ステップ1で追加した関数
+			int maxHP = f->GetMaxHP();  // ステップ1で追加した関数
+			float ratio = (maxHP > 0) ? ((float)currentHP / (float)maxHP) : 0.0f;
+
+			// ラベル（"Fence 0: 150/200" のように表示）
+			std::string label = "Fence " + std::to_string(i) + ": " +
+				std::to_string(currentHP) + "/" + std::to_string(maxHP);
+
+			// 各プログレスバーにユニークIDを設定 (ImGuiのお作法)
+			ImGui::PushID(f);
+			ImGui::ProgressBar(ratio, ImVec2(180, 16), label.c_str());
+			ImGui::PopID();
+		}
+	}
+
  Player::DebugDrawSelectionOverlay(players, /*pixelRadius=*/120.0f, /*highlightActive=*/true);
  ImGui::End();
 }

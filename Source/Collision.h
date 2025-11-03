@@ -3,6 +3,12 @@
 #include <DirectXMath.h>
 #include <algorithm>
 
+struct OBB {
+	DirectX::XMFLOAT3 center; // 中心座標
+	DirectX::XMFLOAT3 half;   // ハーフサイズ（X,Y,Z）
+	float yaw;                // Y軸回転（ラジアン）
+};
+
 // コリジョン
 class Collision
 {
@@ -43,6 +49,23 @@ public:
 		float sphereRadius,//球の半径
 		const DirectX::XMFLOAT3& boxMin,//四角形の最小座標
 		const DirectX::XMFLOAT3& boxMax//四角形の最大座標
+	);
+
+	// 球 vs OBB（MTD=最小押し出しベクトルを任意で返す）
+	static bool IntersectSphereVsOBB(
+		const DirectX::XMFLOAT3& sphereCenter,
+		float sphereRadius,
+		const OBB& box,
+		DirectX::XMFLOAT3* outMTD = nullptr
+	);
+
+	// 円柱 vs OBB（円柱はXZ円＋高さ。MTD任意）
+	static bool IntersectCylinderVsOBB(
+		const DirectX::XMFLOAT3& cylCenter,
+		float cylRadius,
+		float cylHeight,
+		const OBB& box,
+		DirectX::XMFLOAT3* outMTD = nullptr
 	);
 
 };
