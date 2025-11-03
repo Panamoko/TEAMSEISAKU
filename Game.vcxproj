@@ -134,6 +134,7 @@
     <ClInclude Include="Source\EnemyManager.h" />
     <ClInclude Include="Source\EnemySlime.h" />
     <ClInclude Include="Source\Factory.h" />
+    <ClInclude Include="Source\Fence.h" />
     <ClInclude Include="Source\Framework.h" />
     <ClInclude Include="Source\GameObject.h" />
     <ClInclude Include="Source\GimmicBase.h" />
@@ -197,6 +198,7 @@
     <ClCompile Include="Source\Enemy.cpp" />
     <ClCompile Include="Source\EnemyManager.cpp" />
     <ClCompile Include="Source\EnemySlime.cpp" />
+    <ClCompile Include="Source\Fence.cpp" />
     <ClCompile Include="Source\Framework.cpp" />
     <ClCompile Include="Source\GameObject.cpp" />
     <ClCompile Include="Source\GimmicBase.cpp" />

@@ -13,6 +13,7 @@
 #include <DirectXMath.h>
 #include <d3d11.h>
 #include "System/Mouse.h"
+#include "BuildingManager.h"
 using namespace DirectX;
 
 
@@ -231,6 +232,9 @@ void Player::Update(float elapsedTime)
 	//プレイヤーと敵との衝突処理
 	CollisionPlayerVsEnemies();
 
+	//プレイヤーと柵との衝突処理
+	CollisionPlayerVsFences();
+
 	//弾丸と敵の衝突処理
 	CollisionProjectilesVsEnemies();
 
@@ -405,7 +409,23 @@ void Player::CollisionPlayerVsEnemies()
 	}
 }
 
-
+void Player::CollisionPlayerVsFences()
+{
+	// Fence一覧の取得はプロジェクトの実装に合わせて：
+	// 例）BuildingManager::Instance().GetFenceCount()/GetFence(i)->GetOBB()
+	auto& bm = BuildingManager::Instance();
+	const int n = bm.GetFenceCount();
+	for (int i = 0; i < n; ++i) {
+		const Fence* f = bm.GetFence(i);
+		if (!f || !f->IsAlive()) continue;
+		const OBB& box = bm.GetFence(i)->GetOBB();
+		DirectX::XMFLOAT3 mtd;
+		if (Collision::IntersectCylinderVsOBB(position, radius, height, box, &mtd)) {
+			position.x += mtd.x; position.y += mtd.y; position.z += mtd.z;
+			// 速度も反発/減衰したい場合はここで velocity += ... / 減速 等
+		}
+	}
+}
 
 void Player::InputJump()
 {

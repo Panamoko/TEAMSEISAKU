@@ -92,6 +92,9 @@ private:
 	//プレイヤーとエネミーとの衝突処理
 	void CollisionPlayerVsEnemies();
 
+	//プレイヤーと柵との衝突処理
+	void CollisionPlayerVsFences();
+
 	//弾丸入力処理
 	void InputProjectile();
 
