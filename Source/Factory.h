@@ -30,7 +30,7 @@ public:
 namespace { \
     struct ClassType##Register { \
         ClassType##Register() { \
-            Factory::Register(#ClassType, []() { return std::make_unique<ClassType>(); }); \
+            Factory::Register(#ClassType, []() { return std::make_shared<ClassType>(); }); \
         } \
     }; \
     static ClassType##Register global_##ClassType##Register; \

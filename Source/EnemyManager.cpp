@@ -111,6 +111,15 @@ void EnemyManager::CollisionEnemyVsEnemies()
 
 void EnemyManager::Remove(Enemy* enemy)
 {
+	auto it = std::find_if(enemies.begin(), enemies.end(),
+		[enemy](const std::shared_ptr<Enemy>& e) {
+			return e.get() == enemy; // 生ポインタを比較
+		});
+
+	if (it != enemies.end())
+	{
+		enemies.erase(it);
+	}
 	// 破棄リストに追加
-	removes.insert(enemy);
+	//removes.insert(enemy);
 }
