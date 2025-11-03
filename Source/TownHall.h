@@ -29,6 +29,8 @@ public:
 	bool IsAlive() const override { return hp > 0; }
 	void TakeDamage(int amount) override;
 
+	// ★ これを追加（publicに1つだけ）
+	float GetHeight() const { return height; }
 
 	// 追加ユーティリティ
 	bool IsDestroyed() const { return hp <= 0; }
@@ -36,10 +38,14 @@ public:
 	int GetMaxHP() const { return maxHP; }
 
 
+
+
 private:
 	DirectX::XMFLOAT3 position{}; // 中心（地面上）
+
 	float radius{}; // 円柱の半径（XZ判定）
 	float height{ 6.0f }; // デバッグ用の可視高さ（必要に応じて）
+
 	int maxHP{};
 	int hp{};
 
