@@ -234,6 +234,9 @@ void Player::Update(float elapsedTime)
 	//プレイヤーと敵との衝突処理
 	CollisionPlayerVsEnemies();
 
+	//プレイヤーと柵との衝突処理
+	CollisionPlayerVsFences();
+
 	//弾丸と敵の衝突処理
 	CollisionProjectilesVsEnemies();
 
@@ -407,6 +410,22 @@ void Player::CollisionPlayerVsEnemies()
 	}
 }
 
+void Player::CollisionPlayerVsFences()
+{
+	{
+		auto& bm = BuildingManager::Instance();
+		const int n = bm.GetFenceCount();
+		for (int i = 0; i < n; ++i) {
+			const Fence* f = bm.GetFence(i);
+			if (!f || !f->IsAlive()) continue;
+			const OBB& box = bm.GetFence(i)->GetOBB();
+			DirectX::XMFLOAT3 mtd;
+			if (Collision::IntersectCylinderVsOBB(position, radius, height, box, &mtd)) {
+				position.x += mtd.x; position.y += mtd.y; position.z += mtd.z;
+			}
+		}
+	}
+}
 
 
 void Player::InputJump()
