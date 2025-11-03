@@ -7,6 +7,7 @@
 #include <memory>
 #include <vector>
 #include "AllySlime.h"
+#include "System/ModelRenderer.h"
 #include <cfloat>   // ← 追加（FLT_MAX 用）
 // ゲームシーン
 //class SceneGame
@@ -38,6 +39,7 @@ public:
 	void DrawGUI() override;
 
 private:
+
 	editor game_editor;
 	std::vector<std::unique_ptr<Model>> models;
 

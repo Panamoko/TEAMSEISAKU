@@ -12,7 +12,7 @@ public:
 
 	void Initialize();
 	void Update(float dt);
-	void Render();
+	void Render(const RenderContext& rc, ModelRenderer* renderer);
 	void DebugDraw(const RenderContext& rc, ShapeRenderer* renderer);
 
 

@@ -103,6 +103,7 @@ void SceneGame::Initialize()
 	//カメラコントローラー初期化
 	cameraController = new CameraController();
 
+
 	// 2体のプレイヤーを生成
 	players.emplace_back(std::make_unique<Player>());
 	players.emplace_back(std::make_unique<Player>());
@@ -230,7 +231,7 @@ void SceneGame::Update(float elapsedTime)
 	if (gamePad.GetButtonDown() & GamePad::BTN_Y) {
 		AddAllyFor(Player::GetActivePtr());
 	}
-	
+
 }
 
 // 描画処理
@@ -278,7 +279,7 @@ void SceneGame::Render()
 		// エネミー描画
 		EnemyManager::Instance().Render(rc, modelRenderer);
 
-		BuildingManager::Instance().Render();
+		BuildingManager::Instance().Render(rc, modelRenderer);
 
 	}
 
