@@ -136,7 +136,7 @@ void LoadScene(
 		for (auto& item : j["objects"])
 		{
 			std::string className = item.value("class_name", "GameObject");
-			std::unique_ptr<GameObject> obj = Factory::Create(className);
+			std::shared_ptr<GameObject> obj = Factory::Create(className);
 			if (!obj) obj = std::make_unique<GameObject>();
 			*obj = item.get<GameObject>();
 			objects.push_back(std::move(obj));
@@ -251,7 +251,7 @@ void editor::AddObject(
 	std::string name = MakeUniqueName(objects, baseName);//objects中に重複しない名前を生成
 
 	//各クラスと紐づけ
-	std::unique_ptr<GameObject> obj = Factory::Create(class_name);
+	std::shared_ptr<GameObject> obj = Factory::Create(class_name);
 
 	//auto obj = std::make_unique<GameObject>();
 	obj->name = name;//新しいオブジェクトの name メンバに代入

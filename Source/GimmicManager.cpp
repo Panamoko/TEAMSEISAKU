@@ -1,7 +1,7 @@
 #include "GimmicManager.h"
 
 //ギミック登録
-void GimmicManager::Add(std::unique_ptr<GimmicBase> gimmic)
+void GimmicManager::Add(std::shared_ptr<GimmicBase> gimmic)
 {
 	gimmicks.push_back(std::move(gimmic));
 }
@@ -52,9 +52,10 @@ void GimmicManager::RemoveInactive()
 	*/
 	gimmicks.erase(
 		std::remove_if(gimmicks.begin(), gimmicks.end(),
-			[](const std::unique_ptr<GimmicBase>& gimmic)
+			[](const std::shared_ptr<GimmicBase>& gimmic)
 			{
-				return !gimmic->IsActive();
+				//nullまたは非アクティブなら削除対象
+				return !gimmic || !gimmic->IsActive();
 			}),
 		gimmicks.end());
 }

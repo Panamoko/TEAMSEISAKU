@@ -82,13 +82,13 @@ public:
 		const std::string& baseName,
 		int texture_index);
 
-	void editor::Draw3DEditor(
+	void Draw3DEditor(
 		std::vector<std::shared_ptr<GameObject>>& objects,
 		const std::vector<std::unique_ptr<Model>>& models,
 		ModelRenderer* renderer                       // © ƒŒƒ“ƒ_ƒ‰[
 	);
 
-	void editor::Draw2DEditor(
+	void Draw2DEditor(
 		std::vector<std::unique_ptr<SpriteObject>>& sprites);
 
 private:
