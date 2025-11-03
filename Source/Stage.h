@@ -20,7 +20,7 @@ public:
 
 private:
     //std::vector<std::unique_ptr<Model>> models;
-    Model* model = nullptr;
+    //Model* model = nullptr;
     editor game_editor;
     std::vector<std::unique_ptr<GameObject>> objects;
     std::vector<std::unique_ptr<SpriteObject>> sprites2d;

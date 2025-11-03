@@ -1,6 +1,8 @@
 #include "Gimmic_BreakWall.h"
 #include "Factory.h"
 
+//a
+
 Gimmic_BreakWall::Gimmic_BreakWall()
 {
 	class_name = "Gimmic_BreakWall";
@@ -9,6 +11,10 @@ Gimmic_BreakWall::Gimmic_BreakWall()
     collider = new BoxCollider();
     collider->type = ColliderType::Box;
     box = static_cast<BoxCollider*>(collider);
+
+    scale.x = 0.1f;
+    scale.y = 0.05f;
+    scale.z = 0.1f;
 }
 
 //Õ“ËŒ‹‰Ê

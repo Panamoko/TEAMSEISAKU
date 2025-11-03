@@ -39,7 +39,14 @@ public:
 	int GetEnemyCount() const { return static_cast<int>(enemies.size()); }
 
 	//エネミー取得
-	std::shared_ptr<Enemy> GetEnemy(int index) { return enemies.at(index); }
+	std::shared_ptr<Enemy> GetEnemy(int index)
+	{ 
+		if (index < 0 || index >= static_cast<int>(enemies.size()))
+		{
+			return nullptr;
+		}
+		return enemies.at(index); 
+	}
 
 	// エネミー削除
 	void Remove(Enemy* enemy);

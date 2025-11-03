@@ -1,6 +1,7 @@
 #include "Factory.h"
 #include "GimmicManager.h"
 #include "EnemyManager.h"
+#include "StageManager.h"
 
 std::unordered_map<std::string, Factory::CreateFunc>& Factory::Registry()
 {
@@ -36,6 +37,13 @@ std::shared_ptr<GameObject> Factory::Create(const std::string& className)
                 EnemyManager::Instance().Register(enemy);
             }
             break;
+
+        case GameObject::Type::Stage:
+           if (auto stage = std::dynamic_pointer_cast<Stage>(object))
+           {
+               StageManager::Instance().Add(stage);
+           }
+           break;
 
         default: break;
     }
