@@ -357,6 +357,9 @@ void editor::Draw3DEditor(
 	//選択可能なリストアイテムを表示
 	for (size_t i = 0; i < objects.size(); i++)
 	{
+		auto& sp = objects[i];
+		if (!sp) continue;
+
 		GameObject* obj = objects[i].get();
 		if (ImGui::Selectable(obj->name.c_str(), select_index == (int)i))
 		{

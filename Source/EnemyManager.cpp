@@ -12,10 +12,13 @@ void EnemyManager::Update(float elapsedTime)
 	// 破棄処理
 	// ※enemiesの範囲for文中でerase()すると不具合が発生してしまうため、
 	// 　更新処理が終わった後に破棄リストに積まれたオブジェクトを削除する。
-	for (Enemy* enemy : removes)
+	for (auto enemy : removes)
 	{
 		// std::vectorから要素を削除する場合はイテレーターで削除しなければならない
-		auto it = std::find(enemies.begin(), enemies.end(), enemy);
+		auto it = std::find_if(enemies.begin(), enemies.end(),
+			[enemy](const std::shared_ptr<Enemy>& e) {
+				return e.get() == enemy;
+			});
 		if (it != enemies.end())
 		{
 			enemies.erase(it);
@@ -47,6 +50,8 @@ void EnemyManager::Register(const std::shared_ptr<Enemy>& enemy)
 
 void EnemyManager::Clear()
 {
+	enemies.clear();
+	removes.clear();
 	//for (auto enemy : enemies)
 	//{
 	//	delete enemy;

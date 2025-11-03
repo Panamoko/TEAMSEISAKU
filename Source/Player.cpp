@@ -349,7 +349,7 @@ void Player::CollisionPlayerVsEnemies()
 	int enemyCount = enemyManager.GetEnemyCount();
 	for (int i = 0; i < enemyCount; ++i)
 	{
-		Enemy* enemy = enemyManager.GetEnemy(i);
+		std::shared_ptr<Enemy> enemy = enemyManager.GetEnemy(i);
 
 		// 衝突処理
 		DirectX::XMFLOAT3 outPosition;
@@ -520,7 +520,7 @@ void Player::InputProjectile()
 		for (int i = 0; i < enemyCount; ++i)
 		{
 			// 敵との距離判定
-			Enemy* enemy = EnemyManager::Instance().GetEnemy(i);
+			std::shared_ptr<Enemy> enemy = EnemyManager::Instance().GetEnemy(i);
 			DirectX::XMVECTOR P = DirectX::XMLoadFloat3(&position);
 			DirectX::XMVECTOR E = DirectX::XMLoadFloat3(&enemy->GetPosition());
 			DirectX::XMVECTOR V = DirectX::XMVectorSubtract(E, P);
@@ -556,7 +556,7 @@ void Player::CollisionProjectilesVsEnemies()
 
 		for (int j = 0; j < enemyCount; ++j)
 		{
-			Enemy* enemy = enemyManager.GetEnemy(j);
+			std::shared_ptr<Enemy> enemy = enemyManager.GetEnemy(j);
 
 			// 衝突処理
 			DirectX::XMFLOAT3 outPosition;
@@ -616,11 +616,11 @@ void Player::AutoAttackUpdate(float elapsedTime)
     if (enemyCount <= 0) return;
 
     float bestDistSq = FLT_MAX;
-    Enemy* bestEnemy = nullptr;
+	std::shared_ptr<Enemy> bestEnemy = nullptr;
 
     for (int i = 0; i < enemyCount; ++i)
     {
-        Enemy* enemy = enemyManager.GetEnemy(i);
+		std::shared_ptr<Enemy> enemy = enemyManager.GetEnemy(i);
 
         // 3D距離（中心対中心）
         const DirectX::XMFLOAT3& epos = enemy->GetPosition();
@@ -673,14 +673,14 @@ bool Player::IsActive() const
 }
 
 // 最寄りの敵を取得（XZ 平面距離）
-Enemy* Player::FindNearestEnemy() const 
+std::shared_ptr<Enemy> Player::FindNearestEnemy() const 
 {
 	int count = EnemyManager::Instance().GetEnemyCount();
-	Enemy* nearest = nullptr;
+	std::shared_ptr<Enemy> nearest = nullptr;
 	float bestDist2 = FLT_MAX;
 
 	for (int i = 0; i < count; ++i) {
-		Enemy* e = EnemyManager::Instance().GetEnemy(i);
+		std::shared_ptr<Enemy> e = EnemyManager::Instance().GetEnemy(i);
 		if (!e) continue;
 		const auto ep = e->GetPosition();
 		float dx = ep.x - position.x;
@@ -697,7 +697,7 @@ Enemy* Player::FindNearestEnemy() const
 // 非アクティブ時の自動移動（敵に向かい、近づきすぎたら停止）
 void Player::UpdateAutoMoveToEnemy(float dt) 
 {
-	Enemy* target = FindNearestEnemy();
+	std::shared_ptr<Enemy> target = FindNearestEnemy();
 	if (!target) return;
 
 	const auto tp = target->GetPosition();
