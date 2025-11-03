@@ -26,8 +26,8 @@ std::unique_ptr<GameObject> Factory::Create(const std::string& className)
         case GameObject::Type::Gimmic:
             if (auto gimmic = dynamic_cast<GimmicBase*>(object.get()))
             {
-                GimmicManager::Instance().Add(std::unique_ptr<GimmicBase>(gimmic));
-                object.release();//Š—LŒ ‚ğˆÚ‚·
+                GimmicManager::Instance().Add(
+                    std::unique_ptr<GimmicBase>(static_cast<GimmicBase*>(object.release())));
             }
             break;
 
@@ -35,7 +35,6 @@ std::unique_ptr<GameObject> Factory::Create(const std::string& className)
             if (auto enemy = dynamic_cast<Enemy*>(object.get()))
             {
                 EnemyManager::Instance().Register(enemy);
-                object.release();
             }
             break;
 

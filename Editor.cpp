@@ -7,6 +7,10 @@
 #include <cstring>
 #include <fstream>
 #include <unordered_set>
+#include <Enemy.h>
+#include <GimmicBase.h>
+#include "EnemyManager.h"
+#include "GimmicManager.h"
 
 using namespace DirectX;
 
@@ -101,7 +105,7 @@ void from_json(const json& j, SpriteObject& sp)
 
 //現在の情報を保存
 void SaveScene(
-	const std::vector<std::unique_ptr<GameObject>>& objects,
+	const std::vector<std::shared_ptr<GameObject>>& objects,
 	const std::vector<std::unique_ptr<SpriteObject>>& sprites,
 	const std::string& filename)
 {
@@ -121,7 +125,7 @@ void SaveScene(
 
 //保存した情報を復元
 void LoadScene(
-	std::vector<std::unique_ptr<GameObject>>& objects,
+	std::vector<std::shared_ptr<GameObject>>& objects,
 	std::vector<std::unique_ptr<SpriteObject>>& sprites,
 	const std::string& filename)
 {
@@ -188,7 +192,7 @@ editor::~editor()
 }
 
 void editor::render(
-	std::vector<std::unique_ptr<GameObject>>& objects,
+	std::vector < std::shared_ptr <GameObject >> &objects,
 	std::vector<std::unique_ptr<SpriteObject>>& sprites,
 	const std::vector<std::unique_ptr<Model>>& models,
 	ModelRenderer* renderer)
@@ -242,7 +246,7 @@ void editor::render(
 }
 
 void editor::AddObject(
-	std::vector<std::unique_ptr<GameObject>>& objects,
+	std::vector<std::shared_ptr<GameObject>>& objects,
 	const std::string& class_name,
 	const std::string& baseName,
 	int mesh_index
@@ -286,7 +290,7 @@ void editor::AddSprite(
 }
 
 void editor::Draw3DEditor(
-	std::vector<std::unique_ptr<GameObject>>& objects,
+	std::vector<std::shared_ptr<GameObject>>& objects,
 	const std::vector<std::unique_ptr<Model>>& models,
 	ModelRenderer* renderer                       // ← レンダラー
 )
@@ -461,7 +465,34 @@ void editor::Draw3DEditor(
 	{
 		if (delete_index < static_cast<int>(objects.size()))
 		{
+			// --- ① 削除前に Manager からも解除する ---
+			GameObject* obj = objects[delete_index].get();
+
+			switch (obj->type)
+			{
+			case GameObject::Type::Enemy:
+				if (auto enemy = dynamic_cast<Enemy*>(obj))
+				{
+					EnemyManager::Instance().Remove(enemy);
+				}
+				break;
+
+			case GameObject::Type::Gimmic:
+				if (auto gimmic = dynamic_cast<GimmicBase*>(obj))
+				{
+					gimmic->is_active = false;
+					GimmicManager::Instance().RemoveInactive();
+				}
+				break;
+
+			default:
+				break;
+			}
+
+			// --- ② 実際に削除 ---
 			objects.erase(objects.begin() + delete_index);
+
+			// --- ③ 選択インデックスを更新 ---
 			if (!objects.empty())
 			{
 				select_index = (std::min)(delete_index, static_cast<int>(objects.size() - 1));
@@ -569,7 +600,7 @@ void editor::Draw2DEditor(
 }
 
 void editor::ToggleMode(
-	std::vector<std::unique_ptr<GameObject>>& objects,
+	std::vector<std::shared_ptr<GameObject>>& objects,
 	std::vector<std::unique_ptr<SpriteObject>>& sprites
 )
 {
@@ -587,7 +618,9 @@ void editor::ToggleMode(
 	}
 }
 
-std::string editor::MakeUniqueName(const std::vector<std::unique_ptr<GameObject>>& objects, const std::string& base)
+std::string editor::MakeUniqueName(
+	const std::vector<std::shared_ptr<GameObject>>& objects,
+	const std::string& base)
 {
 	int i = 1;
 	std::string cand = base;

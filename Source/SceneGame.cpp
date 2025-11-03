@@ -211,10 +211,10 @@ void SceneGame::Update(float elapsedTime)
 		EnemyManager::Instance().Update(elapsedTime);
 
 		//エディタモデル更新
-		for (auto& obj : objects)
-		{
-			obj->Update(elapsedTime);
-		}
+		//for (auto& obj : objects)
+		//{
+		//	obj->Update(elapsedTime);
+		//}
 
 		// 味方スライム更新
 		for (auto& a : allies) {
