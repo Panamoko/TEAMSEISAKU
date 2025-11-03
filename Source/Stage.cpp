@@ -1,4 +1,5 @@
 #include "Stage.h"
+#include "Factory.h"
 
 //コンストラクタ
 Stage::Stage()

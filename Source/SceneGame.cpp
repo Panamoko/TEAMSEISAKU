@@ -62,7 +62,7 @@ void SceneGame::Initialize()
 		EnemySlime* slime = new EnemySlime();
 		slime->SetPosition(DirectX::XMFLOAT3(i * 2.0f, 0, 5));
 		slime->SetTerritory(slime->GetPosition(), 10.0f);
-		enemyManager.Register(slime);
+		//enemyManager.Register(slime);
 	}
 
 	 BuildingManager::Instance().Initialize();
@@ -133,11 +133,11 @@ void SceneGame::Update(float elapsedTime)
 		//エネミー更新処理
 		EnemyManager::Instance().Update(elapsedTime);
 
-		//エディタモデル更新
-		for (auto& obj : objects)
-		{
-			obj->Update(elapsedTime);
-		}
+		////エディタモデル更新
+		//for (auto& obj : objects)
+		//{
+		//	obj->Update(elapsedTime);
+		//}
 
 		// 味方スライム更新
 		for (auto& a : allies) {

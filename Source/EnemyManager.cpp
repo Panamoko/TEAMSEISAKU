@@ -4,7 +4,7 @@
 // 更新処理
 void EnemyManager::Update(float elapsedTime)
 {
-	for (Enemy* enemy : enemies)
+	for (auto enemy : enemies)
 	{
 		enemy->Update(elapsedTime);
 	}
@@ -15,7 +15,7 @@ void EnemyManager::Update(float elapsedTime)
 	for (Enemy* enemy : removes)
 	{
 		// std::vectorから要素を削除する場合はイテレーターで削除しなければならない
-		std::vector<Enemy*>::iterator it = std::find(enemies.begin(), enemies.end(), enemy);
+		auto it = std::find(enemies.begin(), enemies.end(), enemy);
 		if (it != enemies.end())
 		{
 			enemies.erase(it);
@@ -33,30 +33,30 @@ void EnemyManager::Update(float elapsedTime)
 // 描画処理
 void EnemyManager::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
-	for (Enemy* enemy : enemies)
+	for (auto enemy : enemies)
 	{
 		enemy->Render(rc, renderer);
 	}
 }
 
 //エネミー登録
-void EnemyManager::Register(Enemy* enemy)
+void EnemyManager::Register(const std::shared_ptr<Enemy>& enemy)
 {
-	enemies.emplace_back(enemy);
+	enemies.push_back(enemy);
 }
 
 void EnemyManager::Clear()
 {
-	for (Enemy* enemy : enemies)
-	{
-		delete enemy;
-	}
-	enemies.clear();
+	//for (auto enemy : enemies)
+	//{
+	//	delete enemy;
+	//}
+	//enemies.clear();
 }
 
 void EnemyManager::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer)
 {
-	for (Enemy* enemy : enemies)
+	for (auto enemy : enemies)
 	{
 		enemy->RenderDebugPrimitive(rc, renderer);
 	}
@@ -72,10 +72,10 @@ void EnemyManager::CollisionEnemyVsEnemies()
 	size_t enemyCount = enemies.size();
 	for (int i = 0; i < enemyCount; ++i)
 	{
-		Enemy* enemyA = enemies.at(i);
+		auto enemyA = enemies.at(i);
 		for (int j = i + 1; j < enemyCount; ++j)
 		{
-			Enemy* enemyB = enemies.at(j);
+			auto enemyB = enemies.at(j);
 
 			DirectX::XMFLOAT3 outPosition;
 			//if (Collision::IntersectSphereVsSphere(

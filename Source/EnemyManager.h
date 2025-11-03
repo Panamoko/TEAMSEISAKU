@@ -27,7 +27,7 @@ public:
 	void Render(const RenderContext& rc, ModelRenderer* renderer);
 
 	//エネミー登録
-	void Register(Enemy* enemy);
+	void Register(const std::shared_ptr<Enemy>& enemy);
 
 	//エネミー全削除
 	void Clear();
@@ -39,7 +39,7 @@ public:
 	int GetEnemyCount() const { return static_cast<int>(enemies.size()); }
 
 	//エネミー取得
-	Enemy* GetEnemy(int index) { return enemies.at(index); }
+	std::shared_ptr<Enemy> GetEnemy(int index) { return enemies.at(index); }
 
 	// エネミー削除
 	void Remove(Enemy* enemy);
@@ -49,8 +49,8 @@ private:
 	void CollisionEnemyVsEnemies();
 
 private:
-	std::vector<Enemy*>		enemies;
+	std::vector<std::shared_ptr<Enemy>>	enemies;
 	std::set<Enemy*>		removes;
 
-	std::vector<std::unique_ptr<GameObject>> objects;
+	std::vector<std::shared_ptr<GameObject>> objects;
 };
