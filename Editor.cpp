@@ -101,7 +101,7 @@ void from_json(const json& j, SpriteObject& sp)
 
 //現在の情報を保存
 void SaveScene(
-	const std::vector<std::unique_ptr<GameObject>>& objects,
+	const std::vector<std::shared_ptr<GameObject>>& objects,
 	const std::vector<std::unique_ptr<SpriteObject>>& sprites,
 	const std::string& filename)
 {
@@ -121,7 +121,7 @@ void SaveScene(
 
 //保存した情報を復元
 void LoadScene(
-	std::vector<std::unique_ptr<GameObject>>& objects,
+	std::vector<std::shared_ptr<GameObject>>& objects,
 	std::vector<std::unique_ptr<SpriteObject>>& sprites,
 	const std::string& filename)
 {
@@ -188,7 +188,7 @@ editor::~editor()
 }
 
 void editor::render(
-	std::vector<std::unique_ptr<GameObject>>& objects,
+	std::vector<std::shared_ptr<GameObject>>& objects,
 	std::vector<std::unique_ptr<SpriteObject>>& sprites,
 	const std::vector<std::unique_ptr<Model>>& models,
 	ModelRenderer* renderer)
@@ -242,7 +242,7 @@ void editor::render(
 }
 
 void editor::AddObject(
-	std::vector<std::unique_ptr<GameObject>>& objects,
+	std::vector<std::shared_ptr<GameObject>>& objects,
 	const std::string& class_name,
 	const std::string& baseName,
 	int mesh_index
@@ -286,7 +286,7 @@ void editor::AddSprite(
 }
 
 void editor::Draw3DEditor(
-	std::vector<std::unique_ptr<GameObject>>& objects,
+	std::vector<std::shared_ptr<GameObject>>& objects,
 	const std::vector<std::unique_ptr<Model>>& models,
 	ModelRenderer* renderer                       // ← レンダラー
 )
@@ -569,7 +569,7 @@ void editor::Draw2DEditor(
 }
 
 void editor::ToggleMode(
-	std::vector<std::unique_ptr<GameObject>>& objects,
+	std::vector<std::shared_ptr<GameObject>>& objects,
 	std::vector<std::unique_ptr<SpriteObject>>& sprites
 )
 {
@@ -587,7 +587,7 @@ void editor::ToggleMode(
 	}
 }
 
-std::string editor::MakeUniqueName(const std::vector<std::unique_ptr<GameObject>>& objects, const std::string& base)
+std::string editor::MakeUniqueName(const std::vector<std::shared_ptr<GameObject>>& objects, const std::string& base)
 {
 	int i = 1;
 	std::string cand = base;

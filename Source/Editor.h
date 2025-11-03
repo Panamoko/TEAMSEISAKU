@@ -50,7 +50,7 @@ void SaveScene(
 
 //保存したデータを復元
 void LoadScene(
-	std::vector<std::unique_ptr<GameObject>>& objects,
+	std::vector<std::shared_ptr<GameObject>>& objects,
 	std::vector<std::unique_ptr<SpriteObject>>& sprites,
 	const std::string& filename);
 
@@ -64,13 +64,13 @@ public:
 	~editor();//終了処理
 	//ImGui描画
 	void render(
-		std::vector<std::unique_ptr<GameObject>>& objects,
+		std::vector<std::shared_ptr<GameObject>>& objects,
 		std::vector<std::unique_ptr<SpriteObject>>& sprites,
 		const std::vector<std::unique_ptr<Model>>& models,
 		ModelRenderer* model);
 	//オブジェクト追加
 	void AddObject(
-		std::vector<std::unique_ptr<GameObject>>& objects,
+		std::vector<std::shared_ptr<GameObject>>& objects,
 		const std::string& class_name,
 		const std::string& baseName,
 		int mesh_index = -1
@@ -83,7 +83,7 @@ public:
 		int texture_index);
 
 	void editor::Draw3DEditor(
-		std::vector<std::unique_ptr<GameObject>>& objects,
+		std::vector<std::shared_ptr<GameObject>>& objects,
 		const std::vector<std::unique_ptr<Model>>& models,
 		ModelRenderer* renderer                       // ← レンダラー
 	);
@@ -98,7 +98,7 @@ private:
 public:
 	//モード切替
 	void ToggleMode(
-		std::vector<std::unique_ptr<GameObject>>& objects,
+		std::vector<std::shared_ptr<GameObject>>& objects,
 		std::vector<std::unique_ptr<SpriteObject>>& sprites);
 	GameMode GetMode()const { return editor_mode; }
 	bool PlayGame()const { return play; };
@@ -126,7 +126,7 @@ private:
 	std::vector<const char*> names;
 
 	//同じ名前が存在しないように、新しいオブジェクト名を自動生成
-	std::string MakeUniqueName(const std::vector<std::unique_ptr<GameObject>>& objects, const std::string& base);
+	std::string MakeUniqueName(const std::vector<std::shared_ptr<GameObject>>& objects, const std::string& base);
 	std::string MakeUniqueSpriteName(const std::vector<std::unique_ptr<SpriteObject>>& sprites, const std::string& base);
 };
 
