@@ -12,7 +12,7 @@
 #include "System/Graphics.h"   // 画面サイズフォールバック用（ビューポート未設定時）
 #include <DirectXMath.h>
 #include <d3d11.h>
-#include "System/Mouse.h"
+
 #include "BuildingManager.h"
 #include "TownHall.h"
 using namespace DirectX;
@@ -210,6 +210,7 @@ void Player::Update(float elapsedTime)
      const bool isActive = (this == GetActivePtr());
      if (isActive) {
          // 入力は“選択された個体のみ”
+		 InputToggleAttackPriority();
          InputMove(elapsedTime);
          InputJump();
          InputProjectile();
@@ -292,6 +293,16 @@ void Player::DrawDebugGUI()
              ImGui::DragFloat("Interval (sec)", &autoAttackInterval, 0.01f, 0.1f, 10.0f);
              // 現在のタイマー表示
              ImGui::Text("Timer: %.2f", autoAttackTimer);
+			 // ★ 優先度切り替えボタン
+			 const char* modeLabel = (attackPriority == AttackPriority::CoreFirst)
+				 ? "Core → Enemy"
+				 : "Enemy → Core";
+			 if (ImGui::Button(modeLabel, ImVec2(150, 0))) 
+			 {
+				 attackPriority = (attackPriority == AttackPriority::CoreFirst)
+					 ? AttackPriority::EnemyFirst
+					 : AttackPriority::CoreFirst;
+			 }
          }
 	}
 
@@ -623,65 +634,74 @@ void Player::AutoAttackUpdate(float elapsedTime)
 	const float rangeSq = autoAttackRange * autoAttackRange;
 
 	// ==============================
-	// 1) TownHall を最優先で狙う
+	// 1) ターゲット候補を検索
 	// ==============================
-	DirectX::XMFLOAT3 target{};
-	bool hasTarget = false;
-
-	if (TownHall* th = BuildingManager::Instance().GetTownHall()) {
-		if (th->IsAlive()) {
-			DirectX::XMFLOAT3 thPos = th->GetPosition();
-			thPos.y += th->GetHeight() * 0.5f;   // 胴体中心あたり
-			float dx = thPos.x - pos.x;
-			float dy = thPos.y - pos.y;
-			float dz = thPos.z - pos.z;
-			const float d2 = dx * dx + dy * dy + dz * dz;
-			if (d2 <= rangeSq) {
-				target = thPos;
-				hasTarget = true;
-			}
-		}
-	}
-
-	// =======================================
-	// 2) TownHall が射程外/無し → 最寄りの敵
-	// =======================================
-	if (!hasTarget) {
-		EnemyManager& em = EnemyManager::Instance();
-		const int enemyCount = em.GetEnemyCount();
-
-		float bestDistSq = FLT_MAX;
-		std::shared_ptr<Enemy> bestEnemy = nullptr;
-
-		for (int i = 0; i < enemyCount; ++i) {
-			std::shared_ptr<Enemy> enemy = em.GetEnemy(i);
-			if (!enemy) continue;
-
-			const DirectX::XMFLOAT3& epos = enemy->GetPosition();
-			float dx = epos.x - pos.x;
-			float dy = (epos.y + enemy->GetHeight() * 0.5f) - pos.y; // 胴体中心狙い
-			float dz = epos.z - pos.z;
-			const float distSq = dx * dx + dy * dy + dz * dz;
-
-			if (distSq <= rangeSq && distSq < bestDistSq) {
-				bestDistSq = distSq;
-				bestEnemy = enemy;
-			}
-		}
-
-		if (bestEnemy) {
-			target = bestEnemy->GetPosition();
-			target.y += bestEnemy->GetHeight() * 0.5f;
-			hasTarget = true;
-		}
-	}
-
-	// ========= 発射 =========
+		TownHall* townHall = BuildingManager::Instance().GetTownHall();
+    	std::shared_ptr<Enemy> nearestEnemy = FindNearestEnemy(); // XZ平面での最寄り
+    
+    	// 射程内のターゲットの「狙うべき座標」を格納
+    	DirectX::XMFLOAT3 coreTargetPos{};
+    	bool coreInRange = false;
+    	if (townHall && townHall->IsAlive())
+    	{
+    		coreTargetPos = townHall->GetPosition();
+    		coreTargetPos.y += townHall->GetHeight() * 0.5f; // 中心の高さを狙う
+    		float dx = coreTargetPos.x - pos.x;
+    		float dy = coreTargetPos.y - pos.y;
+    		float dz = coreTargetPos.z - pos.z;
+    		if (dx * dx + dy * dy + dz * dz <= rangeSq) {
+    			coreInRange = true;
+    		}
+    	}
+    
+    	DirectX::XMFLOAT3 enemyTargetPos{};
+    	bool enemyInRange = false;
+    	if (nearestEnemy)
+    	{
+    		enemyTargetPos = nearestEnemy->GetPosition();
+    		enemyTargetPos.y += nearestEnemy->GetHeight() * 0.5f; // 中心の高さを狙う
+    		float dx = enemyTargetPos.x - pos.x;
+    		float dy = enemyTargetPos.y - pos.y;
+    		float dz = enemyTargetPos.z - pos.z;
+    		// ※ FindNearestEnemy は XZ 距離なので、Yも含めた射程を再計算
+    		if (dx * dx + dy * dy + dz * dz <= rangeSq) {
+    			enemyInRange = true;
+    		}
+    	}
+    
+    	// ==============================
+    	// 2) 優先度に基づいて最終ターゲットを決定
+    	// ==============================
+    	DirectX::XMFLOAT3 finalTargetPos{};
+    	bool hasTarget = false;
+    
+    	if (attackPriority == AttackPriority::CoreFirst)
+    	{
+    		if (coreInRange) {
+    			finalTargetPos = coreTargetPos;
+    			hasTarget = true;
+    		} else if (enemyInRange) {
+    			finalTargetPos = enemyTargetPos;
+    			hasTarget = true;
+    		}
+    	}
+    	else // (attackPriority == AttackPriority::EnemyFirst)
+    	{
+    		if (enemyInRange) {
+    			finalTargetPos = enemyTargetPos;
+    			hasTarget = true;
+    		} else if (coreInRange) {
+    			finalTargetPos = coreTargetPos;
+    			hasTarget = true;
+    		}
+    	}
+    
+    	// ========= 3) 発射 =========
 	if (hasTarget) {
 		DirectX::XMFLOAT3 dir{
-			target.x - pos.x,
-			target.y - pos.y,
-			target.z - pos.z
+			finalTargetPos.x - pos.x,
+			finalTargetPos.y - pos.y,
+			finalTargetPos.z - pos.z
 		};
 		float len = std::sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
 		if (len < 1e-3f) return;
@@ -745,5 +765,24 @@ void Player::UpdateAutoMoveToEnemy(float dt)
 	}
 	else {
 		Move(dt, 0.0f, 0.0f, 0.0f);
+	}
+}
+
+// ★関数を丸ごと追加
+// 攻撃優先度切り替え入力
+void Player::InputToggleAttackPriority()
+{
+	// Input.h から GamePad インスタンスを取得
+	Input& input = Input::Instance();
+	GamePad& gamePad = input.GetGamePad();
+
+	// 'X'キー（GamePad::BTN_B としてエミュレートされている）が押された瞬間
+	if (gamePad.GetButtonDown() & GamePad::BTN_B)
+	{
+		if (attackPriority == AttackPriority::CoreFirst) {
+			attackPriority = AttackPriority::EnemyFirst;
+		} else {
+			attackPriority = AttackPriority::CoreFirst;
+		}
 	}
 }
