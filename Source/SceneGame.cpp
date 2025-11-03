@@ -181,7 +181,7 @@ void SceneGame::Render()
 		StageManager::Instance().Render(rc, modelRenderer);
 
 		//ステージ描画
-		stage->Render(rc, modelRenderer);
+		//stage->Render(rc, modelRenderer);
 
 		// 全プレイヤー描画
 		for (auto& up : players) up->Render(rc, modelRenderer);

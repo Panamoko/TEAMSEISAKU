@@ -1,34 +1,6 @@
 {
     "objects": [
         {
-            "class_name": "",
-            "color": [
-                1.0,
-                1.0,
-                1.0,
-                1.0
-            ],
-            "mesh_index": 0,
-            "model_path": "Data/Model/Stage/ExampleStage.mdl",
-            "name": "ExampleStage",
-            "position": [
-                0.0,
-                0.0,
-                0.0
-            ],
-            "rotation": [
-                0.0,
-                0.0,
-                0.0
-            ],
-            "scale": [
-                1.0,
-                1.0,
-                1.0
-            ],
-            "type": -842150451
-        },
-        {
             "class_name": "EnemySlime",
             "color": [
                 1.0,
@@ -42,11 +14,11 @@
             "position": [
                 0.0,
                 0.0,
-                -10.0
+                0.0
             ],
             "rotation": [
                 0.0,
-                8.933835983276367,
+                7.356320381164551,
                 0.0
             ],
             "scale": [
@@ -83,6 +55,34 @@
                 0.10000000149011612
             ],
             "type": 1
+        },
+        {
+            "class_name": "Stage",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "mesh_index": 0,
+            "model_path": "Data/Model/Stage/ExampleStage.mdl",
+            "name": "ExampleStage",
+            "position": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": 4
         }
     ]
 }
