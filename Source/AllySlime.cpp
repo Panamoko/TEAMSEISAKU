@@ -76,10 +76,10 @@ void AllySlime::AutoAttackUpdate(float elapsedTime)
     if (enemyCount <= 0) return;
 
     float bestDistSq = FLT_MAX;
-    Enemy* bestEnemy = nullptr;
+    std::shared_ptr<Enemy> bestEnemy = nullptr;
 
     for (int i = 0; i < enemyCount; ++i) {
-        Enemy* enemy = em.GetEnemy(i);
+        std::shared_ptr<Enemy> enemy = em.GetEnemy(i);
         if (!enemy) continue;
 
         // 自分中心→敵上半身あたりまでの距離（Yは上半身同士で合わせる）
@@ -128,7 +128,7 @@ void AllySlime::CollisionProjectilesVsEnemies()
         if (!projectile) continue; // 既に破棄済みスロットなど
 
         for (int j = 0; j < enemyCount; ++j) {
-            Enemy* enemy = em.GetEnemy(j);
+            std::shared_ptr<Enemy> enemy = em.GetEnemy(j);
             if (!enemy) continue;
 
             XMFLOAT3 outPos;

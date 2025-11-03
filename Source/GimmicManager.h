@@ -18,7 +18,7 @@ public:
     }
 
     //ギミックを登録
-    void Add(std::unique_ptr<GimmicBase> gimmic);
+    void Add(std::shared_ptr<GimmicBase> gimmic);
 
     //更新・描画
     void Update(float elapsedTime);
@@ -29,10 +29,10 @@ public:
     void RemoveInactive();
 
     //全ギミックへのアクセス
-    std::vector<std::unique_ptr<GimmicBase>>& GetAll(){ return gimmicks; }
+    std::vector<std::shared_ptr<GimmicBase>>& GetAll(){ return gimmicks; }
 
 private:
     GimmicManager() = default;
-    std::vector < std::unique_ptr<GimmicBase>> gimmicks;
+    std::vector < std::shared_ptr<GimmicBase>> gimmicks;
 };
 

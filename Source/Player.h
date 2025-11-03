@@ -112,7 +112,7 @@ private:
 	float		moveSpeed = 5.0f;
 	float		turnSpeed = DirectX::XMConvertToRadians(720);
 
-	Enemy* FindNearestEnemy() const;         // ← 追記：最寄り敵の検索
+	std::shared_ptr<Enemy> FindNearestEnemy() const;         // ← 追記：最寄り敵の検索
 	
 
 	float jumpSpeed = 12.0f;

@@ -202,11 +202,11 @@ bool RayCast::PickEnemy(
 
     bool any = false;
     Hit best;
-    Enemy* picked = nullptr;
+    std::shared_ptr<Enemy> picked = nullptr;
 
     for (int i = 0; i < count; ++i)
     {
-        Enemy* e = enemyManager.GetEnemy(i); // :contentReference[oaicite:6]{index=6}
+        std::shared_ptr<Enemy> e = enemyManager.GetEnemy(i); // :contentReference[oaicite:6]{index=6}
         const XMFLOAT3& c = e->GetPosition(); // :contentReference[oaicite:7]{index=7}
         float r = e->GetRadius();             // :contentReference[oaicite:8]{index=8}
         float h = e->GetHeight();             // :contentReference[oaicite:9]{index=9}
@@ -226,7 +226,7 @@ bool RayCast::PickEnemy(
     if (any)
     {
         if (outHit)  *outHit = best;
-        if (outEnemy)*outEnemy = picked;
+        if (outEnemy)*outEnemy = picked.get();
     }
     return any;
 }

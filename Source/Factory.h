@@ -10,7 +10,7 @@
 class Factory
 {
 public:
-	using CreateFunc = std::function<std::unique_ptr<GameObject>()>;
+	using CreateFunc = std::function<std::shared_ptr<GameObject>()>;
 
 	//クラス名→生成関数のマップ
 	static std::unordered_map<std::string, CreateFunc>& Registry();
@@ -19,7 +19,7 @@ public:
 	static void Register(const std::string& className, CreateFunc func);
 
 	//生成関数
-	static std::unique_ptr<GameObject> Create(const std::string& className);
+	static std::shared_ptr<GameObject> Create(const std::string& className);
 
 	//登録済みクラス一括取得
 	static std::vector<std::string> GetRegisteredClassNames();
@@ -30,7 +30,7 @@ public:
 namespace { \
     struct ClassType##Register { \
         ClassType##Register() { \
-            Factory::Register(#ClassType, []() { return std::make_unique<ClassType>(); }); \
+            Factory::Register(#ClassType, []() { return std::make_shared<ClassType>(); }); \
         } \
     }; \
     static ClassType##Register global_##ClassType##Register; \

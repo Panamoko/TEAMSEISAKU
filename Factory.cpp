@@ -1,6 +1,7 @@
 #include "Factory.h"
 #include "GimmicManager.h"
 #include "EnemyManager.h"
+#include "StageManager.h"
 
 std::unordered_map<std::string, Factory::CreateFunc>& Factory::Registry()
 {
@@ -13,31 +14,36 @@ void Factory::Register(const std::string& className, CreateFunc func)
     Registry()[className] = func;
 }
 
-std::unique_ptr<GameObject> Factory::Create(const std::string& className)
+std::shared_ptr<GameObject> Factory::Create(const std::string& className)
 {
     auto it = Registry().find(className);
-    std::unique_ptr<GameObject> object;
+   std::shared_ptr<GameObject> object;
 
     if (it != Registry().end())object = it->second();
-    else object = std::make_unique<GameObject>();
+    else object = std::make_shared<GameObject>();
 
     switch (object->type)
     {
         case GameObject::Type::Gimmic:
-            if (auto gimmic = dynamic_cast<GimmicBase*>(object.get()))
+            if (auto gimmic = std::dynamic_pointer_cast<GimmicBase>(object))
             {
-                GimmicManager::Instance().Add(std::unique_ptr<GimmicBase>(gimmic));
-                object.release();//èäóLå†Çà⁄Ç∑
+                GimmicManager::Instance().Add(gimmic);
             }
             break;
 
         case GameObject::Type::Enemy:
-            if (auto enemy = dynamic_cast<Enemy*>(object.get()))
+            if (auto enemy = std::dynamic_pointer_cast<Enemy>(object))
             {
                 EnemyManager::Instance().Register(enemy);
-                object.release();
             }
             break;
+
+        case GameObject::Type::Stage:
+           if (auto stage = std::dynamic_pointer_cast<Stage>(object))
+           {
+               StageManager::Instance().Add(stage);
+           }
+           break;
 
         default: break;
     }

@@ -43,7 +43,7 @@ private:
 	editor game_editor;
 	std::vector<std::unique_ptr<Model>> models;
 
-	std::vector<std::unique_ptr<GameObject>> objects;
+	std::vector<std::shared_ptr<GameObject>> objects;
 	std::vector<std::unique_ptr<SpriteObject>> sprites2d;
 
 	Stage* stage = nullptr;

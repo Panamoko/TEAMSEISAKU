@@ -258,7 +258,9 @@
       <Filter>Source\Collision\Collider</Filter>
     </ClInclude>
     <ClInclude Include="Source\Animator.h" />
-    <ClInclude Include="Source\Fence.h" />
+    <ClInclude Include="Source\StageManager.h">
+      <Filter>Source\Stage</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -429,8 +431,8 @@
     <ClCompile Include="Source\Animator.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Fence.cpp">
-      <Filter>Source</Filter>
+    <ClCompile Include="Source\StageManager.cpp">
+      <Filter>Source\Stage</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
