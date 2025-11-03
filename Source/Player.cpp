@@ -12,8 +12,9 @@
 #include "System/Graphics.h"   // 画面サイズフォールバック用（ビューポート未設定時）
 #include <DirectXMath.h>
 #include <d3d11.h>
-#include "System/Mouse.h"
+
 #include "BuildingManager.h"
+#include "TownHall.h"
 using namespace DirectX;
 
 
@@ -209,6 +210,7 @@ void Player::Update(float elapsedTime)
      const bool isActive = (this == GetActivePtr());
      if (isActive) {
          // 入力は“選択された個体のみ”
+		 InputToggleAttackPriority();
          InputMove(elapsedTime);
          InputJump();
          InputProjectile();
@@ -231,9 +233,6 @@ void Player::Update(float elapsedTime)
 
 	//プレイヤーと敵との衝突処理
 	CollisionPlayerVsEnemies();
-
-	//プレイヤーと柵との衝突処理
-	CollisionPlayerVsFences();
 
 	//弾丸と敵の衝突処理
 	CollisionProjectilesVsEnemies();
@@ -294,6 +293,16 @@ void Player::DrawDebugGUI()
              ImGui::DragFloat("Interval (sec)", &autoAttackInterval, 0.01f, 0.1f, 10.0f);
              // 現在のタイマー表示
              ImGui::Text("Timer: %.2f", autoAttackTimer);
+			 // ★ 優先度切り替えボタン
+			 const char* modeLabel = (attackPriority == AttackPriority::CoreFirst)
+				 ? "Core → Enemy"
+				 : "Enemy → Core";
+			 if (ImGui::Button(modeLabel, ImVec2(150, 0))) 
+			 {
+				 attackPriority = (attackPriority == AttackPriority::CoreFirst)
+					 ? AttackPriority::EnemyFirst
+					 : AttackPriority::CoreFirst;
+			 }
          }
 	}
 
@@ -353,21 +362,10 @@ void Player::CollisionPlayerVsEnemies()
 	int enemyCount = enemyManager.GetEnemyCount();
 	for (int i = 0; i < enemyCount; ++i)
 	{
-		Enemy* enemy = enemyManager.GetEnemy(i);
+		std::shared_ptr<Enemy> enemy = enemyManager.GetEnemy(i);
 
 		// 衝突処理
 		DirectX::XMFLOAT3 outPosition;
-/*
-		if (Collision::IntersectSphereVsSphere(
-			position, radius,
-			enemy->GetPosition(),
-			enemy->GetRadius(),
-			outPosition))
-		{
-			// 押し出し後の位置設定
-			enemy->SetPosition(outPosition);
-		}
-*/
 
 		if (Collision::IntersectCylinderVsCylinder(
 			position, 
@@ -409,23 +407,7 @@ void Player::CollisionPlayerVsEnemies()
 	}
 }
 
-void Player::CollisionPlayerVsFences()
-{
-	// Fence一覧の取得はプロジェクトの実装に合わせて：
-	// 例）BuildingManager::Instance().GetFenceCount()/GetFence(i)->GetOBB()
-	auto& bm = BuildingManager::Instance();
-	const int n = bm.GetFenceCount();
-	for (int i = 0; i < n; ++i) {
-		const Fence* f = bm.GetFence(i);
-		if (!f || !f->IsAlive()) continue;
-		const OBB& box = bm.GetFence(i)->GetOBB();
-		DirectX::XMFLOAT3 mtd;
-		if (Collision::IntersectCylinderVsOBB(position, radius, height, box, &mtd)) {
-			position.x += mtd.x; position.y += mtd.y; position.z += mtd.z;
-			// 速度も反発/減衰したい場合はここで velocity += ... / 減速 等
-		}
-	}
-}
+
 
 void Player::InputJump()
 {
@@ -540,7 +522,7 @@ void Player::InputProjectile()
 		for (int i = 0; i < enemyCount; ++i)
 		{
 			// 敵との距離判定
-			Enemy* enemy = EnemyManager::Instance().GetEnemy(i);
+			std::shared_ptr<Enemy> enemy = EnemyManager::Instance().GetEnemy(i);
 			DirectX::XMVECTOR P = DirectX::XMLoadFloat3(&position);
 			DirectX::XMVECTOR E = DirectX::XMLoadFloat3(&enemy->GetPosition());
 			DirectX::XMVECTOR V = DirectX::XMVectorSubtract(E, P);
@@ -566,21 +548,44 @@ void Player::InputProjectile()
 void Player::CollisionProjectilesVsEnemies()
 {
 	EnemyManager& enemyManager = EnemyManager::Instance();
+	TownHall* townHall = BuildingManager::Instance().GetTownHall();
 
-	// 全ての弾丸と全ての敵を総当たりで衝突処理
-	int projectileCount = projectileManager.GetProjectileCount();
-	int enemyCount = enemyManager.GetEnemyCount();
+	const int projectileCount = projectileManager.GetProjectileCount();
+	const int enemyCount = enemyManager.GetEnemyCount();
+
 	for (int i = 0; i < projectileCount; ++i)
 	{
 		Projectile* projectile = projectileManager.GetProjectile(i);
+		if (!projectile) continue;
 
+		bool destroyed = false;
+
+		// 1) まず TownHall との衝突
+		if (townHall && townHall->IsAlive())
+		{
+			DirectX::XMFLOAT3 outPos;
+			if (Collision::IntersectSphereVsCylinder(
+				projectile->GetPosition(),
+				projectile->GetRadius(),
+				townHall->GetPosition(),
+				townHall->GetRadius(),
+				townHall->GetHeight(),
+				outPos))
+			{
+				townHall->TakeDamage(1);
+				projectile->Destroy();
+				destroyed = true;
+			}
+		}
+		if (destroyed) continue;
+
+		// 2) つぎに「弾 × 敵」
 		for (int j = 0; j < enemyCount; ++j)
 		{
-			Enemy* enemy = enemyManager.GetEnemy(j);
+			std::shared_ptr<Enemy> enemy = enemyManager.GetEnemy(j);
+			if (!enemy) continue;
 
-			// 衝突処理
 			DirectX::XMFLOAT3 outPosition;
-
 			if (Collision::IntersectSphereVsCylinder(
 				projectile->GetPosition(),
 				projectile->GetRadius(),
@@ -591,101 +596,124 @@ void Player::CollisionProjectilesVsEnemies()
 			{
 				if (enemy->ApplyDamage(1, 0.5f))
 				{
-					// 吹き飛ばす
-					{
-						DirectX::XMFLOAT3 impulse;
-						
-						const float power = 10.0f;
-						const DirectX::XMFLOAT3& e = enemy->GetPosition();
-						const DirectX::XMFLOAT3& p = projectile->GetPosition();
-						float vx = e.x - p.x;
-						float vz = e.z - p.z;
-						float lengthXZ = sqrtf(vx * vx + vz * vz);
-						vx /= lengthXZ;
-						vz /= lengthXZ;
-
-						impulse.x = vx * power;
-						impulse.y = power * 0.5f;
-						impulse.z = vz * power;
-
-						enemy->AddImpulse(impulse);
-					}
-
-					//弾丸破棄
-					projectile->Destroy();
+					// 軽いノックバック（XZ）
+					DirectX::XMFLOAT3 impulse{};
+					const float power = 10.0f;
+					const auto& e = enemy->GetPosition();
+					const auto& p = projectile->GetPosition();
+					float vx = e.x - p.x;
+					float vz = e.z - p.z;
+					float lenXZ = std::sqrt(vx * vx + vz * vz);
+					if (lenXZ > 1e-4f) { vx /= lenXZ; vz /= lenXZ; }
+					impulse.x = vx * power;
+					impulse.y = power * 0.5f;
+					impulse.z = vz * power;
+					enemy->AddImpulse(impulse);
 				}
+				projectile->Destroy();
+				break;
 			}
 		}
 	}
 }
+
 
 // 自動攻撃（スライムのように一定間隔で自動発射）
 void Player::AutoAttackUpdate(float elapsedTime)
 {
 	if (!autoAttackEnabled) return;
 
-    // タイマー更新
-    if (autoAttackTimer > 0.0f) {
-        autoAttackTimer -= elapsedTime;
-        return;
-    }
+	// クールダウン
+	if (autoAttackTimer > 0.0f) {
+		autoAttackTimer -= elapsedTime;
+		return;
+	}
 
-    // 一番近い敵を探索（既存のYボタン追尾弾のロジックと同様の探索を流用）:contentReference[oaicite:5]{index=5}
-    EnemyManager& enemyManager = EnemyManager::Instance();
-    int enemyCount = enemyManager.GetEnemyCount();
-    if (enemyCount <= 0) return;
+	// 発射位置（腰あたり）
+	DirectX::XMFLOAT3 pos{ position.x, position.y + height * 0.5f, position.z };
+	const float rangeSq = autoAttackRange * autoAttackRange;
 
-    float bestDistSq = FLT_MAX;
-    Enemy* bestEnemy = nullptr;
+	// ==============================
+	// 1) ターゲット候補を検索
+	// ==============================
+		TownHall* townHall = BuildingManager::Instance().GetTownHall();
+    	std::shared_ptr<Enemy> nearestEnemy = FindNearestEnemy(); // XZ平面での最寄り
+    
+    	// 射程内のターゲットの「狙うべき座標」を格納
+    	DirectX::XMFLOAT3 coreTargetPos{};
+    	bool coreInRange = false;
+    	if (townHall && townHall->IsAlive())
+    	{
+    		coreTargetPos = townHall->GetPosition();
+    		coreTargetPos.y += townHall->GetHeight() * 0.5f; // 中心の高さを狙う
+    		float dx = coreTargetPos.x - pos.x;
+    		float dy = coreTargetPos.y - pos.y;
+    		float dz = coreTargetPos.z - pos.z;
+    		if (dx * dx + dy * dy + dz * dz <= rangeSq) {
+    			coreInRange = true;
+    		}
+    	}
+    
+    	DirectX::XMFLOAT3 enemyTargetPos{};
+    	bool enemyInRange = false;
+    	if (nearestEnemy)
+    	{
+    		enemyTargetPos = nearestEnemy->GetPosition();
+    		enemyTargetPos.y += nearestEnemy->GetHeight() * 0.5f; // 中心の高さを狙う
+    		float dx = enemyTargetPos.x - pos.x;
+    		float dy = enemyTargetPos.y - pos.y;
+    		float dz = enemyTargetPos.z - pos.z;
+    		// ※ FindNearestEnemy は XZ 距離なので、Yも含めた射程を再計算
+    		if (dx * dx + dy * dy + dz * dz <= rangeSq) {
+    			enemyInRange = true;
+    		}
+    	}
+    
+    	// ==============================
+    	// 2) 優先度に基づいて最終ターゲットを決定
+    	// ==============================
+    	DirectX::XMFLOAT3 finalTargetPos{};
+    	bool hasTarget = false;
+    
+    	if (attackPriority == AttackPriority::CoreFirst)
+    	{
+    		if (coreInRange) {
+    			finalTargetPos = coreTargetPos;
+    			hasTarget = true;
+    		} else if (enemyInRange) {
+    			finalTargetPos = enemyTargetPos;
+    			hasTarget = true;
+    		}
+    	}
+    	else // (attackPriority == AttackPriority::EnemyFirst)
+    	{
+    		if (enemyInRange) {
+    			finalTargetPos = enemyTargetPos;
+    			hasTarget = true;
+    		} else if (coreInRange) {
+    			finalTargetPos = coreTargetPos;
+    			hasTarget = true;
+    		}
+    	}
+    
+    	// ========= 3) 発射 =========
+	if (hasTarget) {
+		DirectX::XMFLOAT3 dir{
+			finalTargetPos.x - pos.x,
+			finalTargetPos.y - pos.y,
+			finalTargetPos.z - pos.z
+		};
+		float len = std::sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
+		if (len < 1e-3f) return;
+		dir.x /= len; dir.y /= len; dir.z /= len;
 
-    for (int i = 0; i < enemyCount; ++i)
-    {
-        Enemy* enemy = enemyManager.GetEnemy(i);
+		auto* projectile = new ProjectileStraite(&projectileManager);
+		projectile->Launch(dir, pos);
 
-        // 3D距離（中心対中心）
-        const DirectX::XMFLOAT3& epos = enemy->GetPosition();
-        float dx = epos.x - position.x;
-        float dy = epos.y - position.y;
-        float dz = epos.z - position.z;
-        float distSq = dx * dx + dy * dy + dz * dz;
-
-        // 索敵半径内のみ対象
-        if (distSq <= (autoAttackRange * autoAttackRange))
-        {
-            if (distSq < bestDistSq) {
-                bestDistSq = distSq;
-                bestEnemy = enemy;
-            }
-        }
-    }
-
-    if (!bestEnemy) return;
-
-    // 発射方向：腰位置から敵の胴体中心（高さの 0.5）を狙う（スライムの発射実装と整合）:contentReference[oaicite:6]{index=6}:contentReference[oaicite:7]{index=7}
-    DirectX::XMFLOAT3 pos;  // 発射位置（プレイヤーの腰あたり）
-    pos.x = position.x;
-    pos.y = position.y + height * 0.5f;
-    pos.z = position.z;
-
-    DirectX::XMFLOAT3 target = bestEnemy->GetPosition();
-    target.y += bestEnemy->GetHeight() * 0.5f;
-
-    // 方向ベクトル計算＆正規化
-    DirectX::XMFLOAT3 dir;
-    dir.x = target.x - pos.x;
-    dir.y = target.y - pos.y;
-    dir.z = target.z - pos.z;
-    float len = sqrtf(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
-    if (len < 0.001f) return;
-    dir.x /= len; dir.y /= len; dir.z /= len;
-
-    // 直進弾を発射（Swordモデルを使う既存弾）:contentReference[oaicite:8]{index=8}
-    auto* projectile = new ProjectileStraite(&projectileManager);
-    projectile->Launch(dir, pos);
-
-    // 次回までのインターバル再設定（スライム攻撃ステートのタイマー挙動に近い考え方）:contentReference[oaicite:9]{index=9}
-    autoAttackTimer = autoAttackInterval;
+		autoAttackTimer = autoAttackInterval;
+	}
 }
+
 
 bool Player::IsActive() const
 {
@@ -693,14 +721,14 @@ bool Player::IsActive() const
 }
 
 // 最寄りの敵を取得（XZ 平面距離）
-Enemy* Player::FindNearestEnemy() const 
+std::shared_ptr<Enemy> Player::FindNearestEnemy() const
 {
 	int count = EnemyManager::Instance().GetEnemyCount();
-	Enemy* nearest = nullptr;
+	std::shared_ptr<Enemy> nearest = nullptr;
 	float bestDist2 = FLT_MAX;
 
 	for (int i = 0; i < count; ++i) {
-		Enemy* e = EnemyManager::Instance().GetEnemy(i);
+		std::shared_ptr<Enemy> e = EnemyManager::Instance().GetEnemy(i);
 		if (!e) continue;
 		const auto ep = e->GetPosition();
 		float dx = ep.x - position.x;
@@ -717,7 +745,7 @@ Enemy* Player::FindNearestEnemy() const
 // 非アクティブ時の自動移動（敵に向かい、近づきすぎたら停止）
 void Player::UpdateAutoMoveToEnemy(float dt) 
 {
-	Enemy* target = FindNearestEnemy();
+	std::shared_ptr<Enemy> target = FindNearestEnemy();
 	if (!target) return;
 
 	const auto tp = target->GetPosition();
@@ -737,5 +765,24 @@ void Player::UpdateAutoMoveToEnemy(float dt)
 	}
 	else {
 		Move(dt, 0.0f, 0.0f, 0.0f);
+	}
+}
+
+// ★関数を丸ごと追加
+// 攻撃優先度切り替え入力
+void Player::InputToggleAttackPriority()
+{
+	// Input.h から GamePad インスタンスを取得
+	Input& input = Input::Instance();
+	GamePad& gamePad = input.GetGamePad();
+
+	// 'X'キー（GamePad::BTN_B としてエミュレートされている）が押された瞬間
+	if (gamePad.GetButtonDown() & GamePad::BTN_B)
+	{
+		if (attackPriority == AttackPriority::CoreFirst) {
+			attackPriority = AttackPriority::EnemyFirst;
+		} else {
+			attackPriority = AttackPriority::CoreFirst;
+		}
 	}
 }

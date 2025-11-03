@@ -8,7 +8,6 @@
 
 class Enemy;// ← 追記（前方宣言）ほぼ引数用のポインタ取得
 
-
 // プレイヤー
 class Player : public Character
 {
@@ -104,9 +103,14 @@ private:
 	// 自動攻撃の更新処理
 	void AutoAttackUpdate(float elapsedTime);
 
+	//攻撃の優先度
+	void InputToggleAttackPriority();
+
 	// 自動移動更新
 	void UpdateAutoMoveToEnemy(float dt);  
 
+
+	
 private:
 	Model* model = nullptr;
 	float		moveSpeed = 5.0f;
@@ -114,6 +118,11 @@ private:
 
 	std::shared_ptr<Enemy> FindNearestEnemy() const;         // ← 追記：最寄り敵の検索
 	
+	enum class AttackPriority {
+		CoreFirst,  // コア優先（現在の動作）
+		EnemyFirst  // スライム優先
+	};
+	AttackPriority attackPriority = AttackPriority::CoreFirst;
 
 	float jumpSpeed = 12.0f;
 	//float gravity = -30.0f;
