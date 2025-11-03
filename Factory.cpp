@@ -26,7 +26,7 @@ std::shared_ptr<GameObject> Factory::Create(const std::string& className)
         case GameObject::Type::Gimmic:
             if (auto gimmic = std::dynamic_pointer_cast<GimmicBase>(object))
             {
-                GimmicManager::Instance().Add(std::shared_ptr<GimmicBase>(gimmic));
+                GimmicManager::Instance().Add(gimmic);
             }
             break;
 
