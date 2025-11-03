@@ -31,7 +31,7 @@ std::shared_ptr<GameObject> Factory::Create(const std::string& className)
             break;
 
         case GameObject::Type::Enemy:
-            if (auto enemy = dynamic_cast<Enemy*>(object.get()))
+            if (auto enemy = std::dynamic_pointer_cast<Enemy>(object))
             {
                 EnemyManager::Instance().Register(enemy);
             }

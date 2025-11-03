@@ -140,7 +140,7 @@ void SceneGame::Initialize()
 		EnemySlime* slime = new EnemySlime();
 		slime->SetPosition(DirectX::XMFLOAT3(i * 2.0f, 0, 5));
 		slime->SetTerritory(slime->GetPosition(), 10.0f);
-		enemyManager.Register(slime);
+		//enemyManager.Register(slime);
 	}
 
 	 BuildingManager::Instance().Initialize();
