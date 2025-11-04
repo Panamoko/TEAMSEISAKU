@@ -50,7 +50,7 @@ public:
 	}
 
 	// エネミー削除
-	//void Remove(Enemy* enemy);
+	void Remove(Enemy* enemy);
 
 private:
 	// エネミー同士の衝突処理
