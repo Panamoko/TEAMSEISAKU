@@ -29,7 +29,7 @@ public:
 	bool IsAlive() const override { return hp > 0; }
 	void TakeDamage(int amount) override;
 
-	// ★ これを追加（publicに1つだけ）
+	// これを追加（publicに1つだけ）
 	float GetHeight() const { return height; }
 
 	// 追加ユーティリティ

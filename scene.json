@@ -1,34 +1,6 @@
 {
     "objects": [
         {
-            "class_name": "Stage",
-            "color": [
-                1.0,
-                1.0,
-                1.0,
-                1.0
-            ],
-            "mesh_index": 0,
-            "model_path": "Data/Model/Stage/ExampleStage.mdl",
-            "name": "ExampleStage",
-            "position": [
-                0.0,
-                0.0,
-                0.0
-            ],
-            "rotation": [
-                0.0,
-                0.0,
-                0.0
-            ],
-            "scale": [
-                1.0,
-                1.0,
-                1.0
-            ],
-            "type": 4
-        },
-        {
             "class_name": "Gimmic_BreakWall",
             "color": [
                 1.0,
@@ -68,13 +40,13 @@
             "model_path": "Data/Model/Slime/Slime.mdl",
             "name": "Slime",
             "position": [
-                -0.0044684517197310925,
+                -0.0038000945933163166,
                 0.0,
-                -0.5683658719062805
+                -0.5670827031135559
             ],
             "rotation": [
                 0.0,
-                -2.6976349353790283,
+                -2.719170093536377,
                 0.0
             ],
             "scale": [
@@ -83,6 +55,34 @@
                 0.009999999776482582
             ],
             "type": 3
+        },
+        {
+            "class_name": "Stage",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "mesh_index": 0,
+            "model_path": "Data/Model/Stage/Zimensi.mdl",
+            "name": "Zimensi",
+            "position": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                0.05000000074505806,
+                0.05000000074505806,
+                0.05000000074505806
+            ],
+            "type": 4
         }
     ]
 }
