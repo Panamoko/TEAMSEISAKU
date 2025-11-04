@@ -144,7 +144,7 @@ void LoadScene(
 			std::string className = item.value("class_name", "GameObject");
 			std::shared_ptr<GameObject> obj = Factory::Create(className);
 			if (!obj) obj = std::make_unique<GameObject>();
-			*obj = item.get<GameObject>();
+			from_json(item, *obj);
 			objects.push_back(std::move(obj));
 		}
 

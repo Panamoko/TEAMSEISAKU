@@ -22,6 +22,6 @@ private:
 	bool isBroken = false;//‰ó‚ê‚½‚©‚Ç‚¤‚©
 	float hp = 2.0f;//‘Ï‹v“x
 	DirectX::XMFLOAT3 halfSize;
-	BoxCollider* box = static_cast<BoxCollider*>(collider);
+	BoxCollider* box = static_cast<BoxCollider*>(collider.get());
 };
 

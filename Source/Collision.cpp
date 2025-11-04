@@ -125,9 +125,9 @@ bool Collision::IntersectSphereVsBox(
 
 	//球の中心からAABB内で一番近い点を求める
 	XMFLOAT3 closestPoint;
-	closestPoint.x = std::max(boxMin.x, std::min(spherePosition.x, boxMax.x));
-	closestPoint.y = std::max(boxMin.y, std::min(spherePosition.y, boxMax.y));
-	closestPoint.z = std::max(boxMin.z, std::min(spherePosition.z, boxMax.z));
+	closestPoint.x = (std::max)(boxMin.x, (std::min)(spherePosition.x, boxMax.x));
+	closestPoint.y = (std::max)(boxMin.y, (std::min)(spherePosition.y, boxMax.y));
+	closestPoint.z = (std::max)(boxMin.z, (std::min)(spherePosition.z, boxMax.z));
 
 	//球の中心と最近接点の距離ベクトルを計算
 	float dx = spherePosition.x - closestPoint.x;

@@ -8,8 +8,11 @@
 #include "System/Model.h"
 #include <System/ModelRenderer.h>
 #include <System/ShapeRenderer.h>
+#include <iostream>
 
 #include "Collider.h"
+
+class Collider;
 
 class GameObject
 {
@@ -31,7 +34,7 @@ public:
 
 public:
 	Model* model = nullptr;//実際のモデルデータ
-	Collider* collider = nullptr;
+	std::unique_ptr<Collider> collider;
 	std::string name;//オブジェクトの名前
 	std::string class_name;//実クラス名
 	DirectX::XMFLOAT3 position;//位置
@@ -50,6 +53,10 @@ public:
 	void SetType(Type t) { type = t; }
 
 	GameObject();//デフォルトコンストラクタ
+	~GameObject()
+	{
+		std::cout << "Destroyed" << std::endl;
+	}
 
 };
 

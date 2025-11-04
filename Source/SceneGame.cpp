@@ -59,13 +59,13 @@ void SceneGame::Initialize()
 	// エネミー初期化
 	EnemyManager& enemyManager = EnemyManager::Instance();
 
-	for (int i = 0; i < 2; ++i)
-	{
-		EnemySlime* slime = new EnemySlime();
-		slime->SetPosition(DirectX::XMFLOAT3(i * 2.0f, 0, -5));
-		slime->SetTerritory(slime->GetPosition(), 10.0f);
+	//for (int i = 0; i < 2; ++i)
+	//{
+	//	EnemySlime* slime = new EnemySlime();
+	//	slime->SetPosition(DirectX::XMFLOAT3(i * 2.0f, 0, -5));
+	//	slime->SetTerritory(slime->GetPosition(), 10.0f);
 		//enemyManager.Register(slime);
-	}
+	//}
 
 	 BuildingManager::Instance().Initialize();
 

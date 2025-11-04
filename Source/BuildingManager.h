@@ -29,12 +29,13 @@ public:
 	);
 
 
-	TownHall* GetTownHall() const { return townHall; }
+	TownHall* GetTownHall() const { return townHall.get(); }
 
 	int     GetFenceCount() const;              // ò‚Ì”
 	Fence* GetFence(int index) const;          // index‚ª”ÍˆÍŠO‚È‚çnullptr
 private:
 	BuildingManager() = default;
-	TownHall* townHall{ nullptr };
+	std::unique_ptr<TownHall> townHall;
+	//TownHall* townHall{ nullptr };
 	std::vector<std::unique_ptr<Fence>> fences;
 };

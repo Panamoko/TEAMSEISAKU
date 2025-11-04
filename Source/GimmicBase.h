@@ -10,10 +10,12 @@ public:
 		type = Type::Gimmic;
 	}
 
+	virtual ~GimmicBase() = default;
+
 	//イベント関数
 	virtual void OnCollision(GameObject* objcts) override {};
 	//ギミック更新処理
-	virtual void Update(float elaspdTime) override {};
+	virtual void Update(float elapsedTime) override {};
 
 	//ゲッター
 	bool IsActive() const { return isActive; }

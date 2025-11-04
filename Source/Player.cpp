@@ -268,7 +268,7 @@ void Player::Update(float elapsedTime)
 	CollisionPlayerVsFences();
 
 	//弾丸と敵の衝突処理
-	//CollisionProjectilesVsEnemies();
+	CollisionProjectilesVsEnemies();
 
 	// オブジェクト行列を更新
 	UpdateTransform();
