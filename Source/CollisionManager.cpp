@@ -33,8 +33,8 @@ void CollisionManager::CheckAllCollision()
 			if (objectA->collider->type == ColliderType::Sphere &&
 				objectB->collider->type == ColliderType::Sphere)
 			{
-				auto* sphereA = static_cast<SphereCollider*>(objectA->collider);
-				auto* sphereB = static_cast<SphereCollider*>(objectB->collider);
+				SphereCollider* sphereA = static_cast<SphereCollider*>(objectA->collider);
+				SphereCollider* sphereB = static_cast<SphereCollider*>(objectB->collider);
 
 				DirectX::XMFLOAT3 contactPoint;
 				isCollisionDetected =
@@ -48,8 +48,8 @@ void CollisionManager::CheckAllCollision()
 			else if (objectA->collider->type == ColliderType::Sphere &&
 					 objectB->collider->type == ColliderType::Box)
 			{
-				auto* sphereA = static_cast<SphereCollider*>(objectA->collider);
-				auto* boxB = static_cast<BoxCollider*>(objectB->collider);
+				SphereCollider* sphereA = static_cast<SphereCollider*>(objectA->collider);
+				BoxCollider* boxB = static_cast<BoxCollider*>(objectB->collider);
 
 				isCollisionDetected =
 					Collision::IntersectSphereVsBox(
@@ -61,8 +61,8 @@ void CollisionManager::CheckAllCollision()
 			else if (objectA->collider->type == ColliderType::Sphere &&
 					 objectB->collider->type == ColliderType::Cylinder)
 			{
-				auto* sphereA = static_cast<SphereCollider*>(objectA->collider);
-				auto* cylinderB = static_cast<CylinderCollider*>(objectB->collider);
+				SphereCollider* sphereA = static_cast<SphereCollider*>(objectA->collider);
+				CylinderCollider* cylinderB = static_cast<CylinderCollider*>(objectB->collider);
 
 				DirectX::XMFLOAT3 contactPoint;
 				isCollisionDetected =
@@ -72,12 +72,12 @@ void CollisionManager::CheckAllCollision()
 						contactPoint);
 			}
 
-			//î† VS î†
-			else if (objectA->collider->type == ColliderType::Box &&
-					 objectB->collider->type == ColliderType::Box)
+			//ãÖ VS OBB
+			else if (objectA->collider->type == ColliderType::Sphere &&
+					 objectB->collider->type == ColliderType::OBB)
 			{
-				BoxCollider* boxA = static_cast<BoxCollider*>(objectA->collider);
-				BoxCollider* boxB = static_cast<BoxCollider*>(objectB->collider);
+				SphereCollider* boxA = static_cast<SphereCollider*>(objectA->collider);
+				OBB* boxB = static_cast<OBB*>(objectB->collider);
 			}
 
 			//è’ìÀÇµÇΩèÍçá
