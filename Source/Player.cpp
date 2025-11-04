@@ -805,5 +805,3 @@ void Player::InputToggleAttackPriority()
 		}
 	}
 }
-
-REGISTER_GAMEOBJECT(Player);
