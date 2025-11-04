@@ -28,6 +28,9 @@ public:
     //削除処理
     void RemoveInactive();
 
+    //個別削除用
+    void Remove(GimmicBase* gimmic);
+
     //全ギミックへのアクセス
     std::vector<std::shared_ptr<GimmicBase>>& GetAll(){ return gimmicks; }
 

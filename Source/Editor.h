@@ -91,6 +91,8 @@ public:
 	void Draw2DEditor(
 		std::vector<std::unique_ptr<SpriteObject>>& sprites);
 
+	void Delete3DModel(const std::shared_ptr<GameObject>& obj);
+
 private:
 
 	enum class EditorModel { Model3D, Model2D };

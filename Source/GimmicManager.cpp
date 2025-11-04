@@ -59,3 +59,19 @@ void GimmicManager::RemoveInactive()
 			}),
 		gimmicks.end());
 }
+
+void GimmicManager::Remove(GimmicBase* gimmic)
+{
+	if (!gimmic)return;
+
+	auto it = std::find_if(gimmicks.begin(), gimmicks.end(),
+		[gimmic](const std::shared_ptr<GimmicBase>& g)
+		{
+			return g.get() == gimmic;
+		});
+
+	if (it != gimmicks.end())
+	{
+		gimmicks.erase(it);
+	}
+}

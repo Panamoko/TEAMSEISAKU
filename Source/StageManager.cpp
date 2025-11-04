@@ -24,3 +24,20 @@ void StageManager::Render(const RenderContext& rc, ModelRenderer* renderer)
 void StageManager::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer)
 {
 }
+
+void StageManager::Remove(Stage* stage)
+{
+	if (!stage)return;
+
+	auto it = std::find_if(stages.begin(), stages.end(),
+		[stage](const std::shared_ptr<Stage>& g)
+		{
+			return g.get() == stage;
+		});
+
+	if (it != stages.end())
+	{
+		stages.erase(it);
+	}
+
+}

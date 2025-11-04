@@ -7,6 +7,12 @@
 #include <cstring>
 #include <fstream>
 #include <unordered_set>
+#include "Enemy.h"
+#include "EnemyManager.h"
+#include "GimmicBase.h"
+#include "GimmicManager.h"
+#include "Stage.h"
+#include "StageManager.h"
 
 using namespace DirectX;
 
@@ -460,20 +466,16 @@ void editor::Draw3DEditor(
 	ImGui::EndChild();
 
 	//削除処理
-	if (delete_index >= 0)
+	if (delete_index >= 0 && delete_index < static_cast<int>(objects.size()))
 	{
-		if (delete_index < static_cast<int>(objects.size()))
-		{
-			objects.erase(objects.begin() + delete_index);
-			if (!objects.empty())
-			{
-				select_index = (std::min)(delete_index, static_cast<int>(objects.size() - 1));
-			}
-			else
-			{
-				select_index = -1;
-			}
-		}
+		std::shared_ptr<GameObject> obj = objects[delete_index];
+
+		//ゲーム側のマネージャーから削除
+		Delete3DModel(obj);
+
+		objects.erase(objects.begin() + delete_index);
+
+		select_index = objects.empty() ? -1 : (std::min)(delete_index, static_cast<int>(objects.size() - 1));
 		delete_index = -1;
 	}
 }
@@ -568,6 +570,38 @@ void editor::Draw2DEditor(
 			sprites.erase(sprites.begin() + delete_index2D);
 		delete_index2D = -1;
 		select_index2D = -1;
+	}
+}
+
+void editor::Delete3DModel(const std::shared_ptr<GameObject>& obj)
+{
+	if (!obj)return;
+
+	switch (obj->type)
+	{
+	case GameObject::Type::Enemy:
+		if (auto enemy = std::dynamic_pointer_cast<Enemy>(obj))
+		{
+			EnemyManager::Instance().Remove(enemy.get());
+		}
+		break;
+
+	case GameObject::Type::Gimmic:
+		if (auto gimmic = std::dynamic_pointer_cast<GimmicBase>(obj))
+		{
+			GimmicManager::Instance().Remove(gimmic.get());
+		}
+		break;
+
+	case GameObject::Type::Stage:
+		if (auto stage = std::dynamic_pointer_cast<Stage>(obj))
+		{
+			StageManager::Instance().Remove(stage.get());
+		}
+		break;
+
+	default:
+		break;
 	}
 }
 
