@@ -9,7 +9,9 @@
 #include <System/ModelRenderer.h>
 #include <System/ShapeRenderer.h>
 
-#include "Collider.h"
+//#include "Collider.h"
+
+class Collider;
 
 class GameObject
 {
