@@ -31,3 +31,10 @@ struct CylinderCollider :public Collider
 	float radius;
 	float height;
 };
+
+struct OBB :public Collider
+{
+	DirectX::XMFLOAT3 center; // 中心座標
+	DirectX::XMFLOAT3 half;   // ハーフサイズ（X,Y,Z）
+	float yaw;                // Y軸回転（ラジアン）
+};

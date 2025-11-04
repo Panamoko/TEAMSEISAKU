@@ -72,6 +72,14 @@ void CollisionManager::CheckAllCollision()
 						contactPoint);
 			}
 
+			//î† VS î†
+			else if (objectA->collider->type == ColliderType::Box &&
+					 objectB->collider->type == ColliderType::Box)
+			{
+				BoxCollider* boxA = static_cast<BoxCollider*>(objectA->collider);
+				BoxCollider* boxB = static_cast<BoxCollider*>(objectB->collider);
+			}
+
 			//è’ìÀÇµÇΩèÍçá
 			if (isCollisionDetected)
 			{
