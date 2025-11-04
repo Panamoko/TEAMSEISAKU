@@ -8,6 +8,7 @@
 #include "System/Model.h"
 #include <System/ModelRenderer.h>
 #include <System/ShapeRenderer.h>
+#include <iostream>
 
 #include "Collider.h"
 
@@ -54,7 +55,7 @@ public:
 	GameObject();//デフォルトコンストラクタ
 	~GameObject()
 	{
-		//std::cout << "Destroyed" << std::endl;
+		std::cout << "Destroyed" << std::endl;
 	}
 
 };
