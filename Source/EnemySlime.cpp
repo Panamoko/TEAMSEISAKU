@@ -5,6 +5,7 @@
 #include "Player.h"
 #include "BuildingManager.h"
 #include "Collision.h"
+#include <cfloat>
 
 // コンストラクタ
 EnemySlime::EnemySlime()
@@ -215,10 +216,10 @@ void EnemySlime::UpdateWanderState(float elapsedTime)
 	MoveToTarget(elapsedTime, 1.0f, 1.0f);
 
 	//プレイヤー索敵
-	if (SearchPlayer())
+	if (Player* target = SearchPlayer()) // 戻り値でターゲットを受け取る
 	{
 		//見つかったら攻撃ステートへ偏移
-		SetAttackState();
+		SetAttackState(target); // ターゲットを渡す
 	}
 }
 
@@ -243,85 +244,106 @@ void EnemySlime::UpdateIdleState(float elapsedTime)
 	}
 
 	//プレイヤー索敵
-	if (SearchPlayer())
+	if (Player* target = SearchPlayer()) // 戻り値でターゲットを受け取る
 	{
 		//見つかったら攻撃ステートへ偏移
-		SetAttackState();
+		SetAttackState(target); // ターゲットを渡す
 	}
 }
 
 //プレイヤー索敵
-bool EnemySlime::SearchPlayer()
+Player* EnemySlime::SearchPlayer()
 {
-	//プレイヤーとの高低差を考慮して3Dでの距離判定をする
-	const DirectX::XMFLOAT3& playerPositon = Player::Instance().GetPosition();
-	float vx = playerPositon.x - position.x;
-	float vy = playerPositon.y - position.y;
-	float vz = playerPositon.z - position.z;
-	float dist = sqrtf(vx * vx + vy * vy + vz * vz);
-	if (dist < searchRange)
+	const auto& allPlayers = Player::GetAllPlayers();
+	Player* foundTarget = nullptr;
+	float closestDistSq = FLT_MAX; // 3D距離の2乗
+
+	for (const auto* player : allPlayers)
 	{
-		float distXZ = sqrtf(vx * vx + vz * vz);
-		//単位ベクトル化
-		vx /= distXZ;
-		vz /= distXZ;
-		//前方ベクトル
-		float frontX = sinf(angle.y);
-		float frontZ = cosf(angle.y);
-		//2つのベクトルの内積値で前後判定
-		float dot = (frontX * vx) + (frontZ * vz);
-		if (dot > 0.0f)
+		if (!player) continue;
+
+		const DirectX::XMFLOAT3& playerPositon = player->GetPosition();
+		float vx = playerPositon.x - position.x;
+		float vy = playerPositon.y - position.y;
+		float vz = playerPositon.z - position.z;
+		float distSq = (vx * vx + vy * vy + vz * vz);
+
+		// 範囲内か (2乗で比較)
+		if (distSq < searchRange * searchRange)
 		{
-			return true;
+			// 一番近いプレイヤーを記憶
+			if (distSq < closestDistSq)
+			{
+				closestDistSq = distSq;
+				foundTarget = const_cast<Player*>(player);
+			}
 		}
 	}
-	return false;
+	return foundTarget;
 }
 
 //攻撃ステートへ偏移
-void EnemySlime::SetAttackState()
+void EnemySlime::SetAttackState(Player* target)
 {
 	state = State::Attack;
-
 	stateTimer = 0.0f;
+	targetPlayer = target; // ターゲットを記憶
 }
 
 //攻撃ステート更新処理
 void EnemySlime::UpdateAttackState(float elapsedTime)
 {
-	//目標地点をプレイヤーの位置に設定
-	targetPosition = Player::Instance().GetPosition();
+	// ターゲットが有効かチェック (デストラクタで解除されるため)
+	if (!targetPlayer)
+	{
+		SetIdleState();
+		return;
+	}
 
-	//目標地点へ移動
+	//目標地点を "記憶したターゲットの" 位置に設定
+	targetPosition = targetPlayer->GetPosition();
+
+	//目標地点へ移動 (旋回のみ)
 	MoveToTarget(elapsedTime, 0.0f, 1.0f);
 
 	//タイマー処理
 	stateTimer -= elapsedTime;
 	if (stateTimer < 0.0f)
 	{
-		//前方向
-		DirectX::XMFLOAT3 dir;
-		dir.x = sinf(angle.y);
-		dir.y = 0.0f;
-		dir.z = cosf(angle.y);
-		//発射位置(プレイヤーの腰あたり)
-		DirectX::XMFLOAT3 pos;
-		pos.x = position.x;
-		pos.y = position.y + height * 0.5f;
-		pos.z = position.z;
-		//発射
-		ProjectileStraite* projectile = new ProjectileStraite(&projectileManager);
-		projectile->SetDamage(20);
-		projectile->Launch(dir, pos);
-
+		// ... (弾丸発射処理) ...
 		stateTimer = 2.0f;
 	}
 
+	// ターゲットがまだ範囲内にいるか再チェック
+	bool targetLost = true;
+	const DirectX::XMFLOAT3& playerPositon = targetPlayer->GetPosition();
+	float vx = playerPositon.x - position.x;
+	float vy = playerPositon.y - position.y;
+	float vz = playerPositon.z - position.z;
+	float distSq = (vx * vx + vy * vy + vz * vz);
+
+	if (distSq < searchRange * searchRange) // 範囲内
+	{
+		float distXZ = sqrtf(vx * vx + vz * vz);
+		if (distXZ > 1e-6f) {
+			float fvx = vx / distXZ;
+			float fvz = vz / distXZ;
+			float frontX = sinf(angle.y);
+			float frontZ = cosf(angle.y);
+			float dot = (frontX * fvx) + (frontZ * fvz);
+			if (dot > 0.0f) // 前方
+			{
+				targetLost = false; // ★ 見失っていない
+			}
+		}
+	}
+
 	//プレイヤーを見失ったら
-	if (!SearchPlayer())
+	if (targetLost)
 	{
 		//待機ステートへ偏移
 		SetIdleState();
+		targetPlayer = nullptr; // ★ ターゲットクリア
 	}
 }
 

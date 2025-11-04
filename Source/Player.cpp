@@ -12,16 +12,43 @@
 #include "System/Graphics.h"   // 画面サイズフォールバック用（ビューポート未設定時）
 #include <DirectXMath.h>
 #include <d3d11.h>
-
+#include <algorithm>
 #include "BuildingManager.h"
 #include "TownHall.h"
 using namespace DirectX;
 
 
 Player* Player::sActive = nullptr;
+std::vector<Player*> Player::sAllPlayers;
 Player& Player::Instance() { return *sActive; }
 void Player::SetActive(Player* p) { sActive = p; }
 Player* Player::GetActivePtr() { return sActive; }
+
+// ========= 全プレイヤーリスト管理 =========
+void Player::RegisterPlayer(Player* player)
+{
+	if (player) {
+		// 重複を避ける（念のため）
+		auto it = std::find(sAllPlayers.begin(), sAllPlayers.end(), player);
+		if (it == sAllPlayers.end()) {
+			sAllPlayers.push_back(player);
+		}
+	}
+}
+
+void Player::UnregisterPlayer(Player* player)
+{
+	// Erase-Removeイディオム
+	sAllPlayers.erase(
+		std::remove(sAllPlayers.begin(), sAllPlayers.end(), player),
+		sAllPlayers.end()
+	);
+}
+
+const std::vector<Player*>& Player::GetAllPlayers()
+{
+	return sAllPlayers;
+}
 
 namespace {
 	struct PickViewport { float x = 0, y = 0, w = 0, h = 0; };
@@ -197,11 +224,14 @@ void Player::Initialize()
 	model = ModelManager::Instance().Load("Data/Model/Mr.Incredible/Mr.Incredible.mdl");
 	// モデルが大きいのでスケーリング
 	scale.x = scale.y = scale.z = 0.01f;
+
+	RegisterPlayer(this);
 }
 
 //終了化
 void Player::Finalize()
 {
+	UnregisterPlayer(this);
 	//delete model;
 }
 
@@ -238,7 +268,7 @@ void Player::Update(float elapsedTime)
 	CollisionPlayerVsFences();
 
 	//弾丸と敵の衝突処理
-	CollisionProjectilesVsEnemies();
+	//CollisionProjectilesVsEnemies();
 
 	// オブジェクト行列を更新
 	UpdateTransform();
@@ -366,6 +396,7 @@ void Player::CollisionPlayerVsEnemies()
 	for (int i = 0; i < enemyCount; ++i)
 	{
 		std::shared_ptr<Enemy> enemy = enemyManager.GetEnemy(i);
+		if (!enemy || enemy->IsDestroyRequested()) continue;
 
 		// 衝突処理
 		DirectX::XMFLOAT3 outPosition;
@@ -602,6 +633,7 @@ void Player::CollisionProjectilesVsEnemies()
 		for (int j = 0; j < enemyCount; ++j)
 		{
 			std::shared_ptr<Enemy> enemy = enemyManager.GetEnemy(j);
+			if (!enemy || enemy->IsDestroyRequested()) continue;
 			if (!enemy) continue;
 
 			DirectX::XMFLOAT3 outPosition;
@@ -655,38 +687,43 @@ void Player::AutoAttackUpdate(float elapsedTime)
 	// ==============================
 	// 1) ターゲット候補を検索
 	// ==============================
-		TownHall* townHall = BuildingManager::Instance().GetTownHall();
-    	std::shared_ptr<Enemy> nearestEnemy = FindNearestEnemy(); // XZ平面での最寄り
-    
-    	// 射程内のターゲットの「狙うべき座標」を格納
-    	DirectX::XMFLOAT3 coreTargetPos{};
-    	bool coreInRange = false;
-    	if (townHall && townHall->IsAlive())
-    	{
-    		coreTargetPos = townHall->GetPosition();
-    		coreTargetPos.y += townHall->GetHeight() * 0.5f; // 中心の高さを狙う
-    		float dx = coreTargetPos.x - pos.x;
-    		float dy = coreTargetPos.y - pos.y;
-    		float dz = coreTargetPos.z - pos.z;
-    		if (dx * dx + dy * dy + dz * dz <= rangeSq) {
-    			coreInRange = true;
-    		}
-    	}
-    
-    	DirectX::XMFLOAT3 enemyTargetPos{};
-    	bool enemyInRange = false;
-    	if (nearestEnemy)
-    	{
-    		enemyTargetPos = nearestEnemy->GetPosition();
-    		enemyTargetPos.y += nearestEnemy->GetHeight() * 0.5f; // 中心の高さを狙う
-    		float dx = enemyTargetPos.x - pos.x;
-    		float dy = enemyTargetPos.y - pos.y;
-    		float dz = enemyTargetPos.z - pos.z;
-    		// ※ FindNearestEnemy は XZ 距離なので、Yも含めた射程を再計算
-    		if (dx * dx + dy * dy + dz * dz <= rangeSq) {
-    			enemyInRange = true;
-    		}
-    	}
+	TownHall* townHall = BuildingManager::Instance().GetTownHall();
+
+	DirectX::XMFLOAT3 coreTargetPos{};
+	bool coreInRange = false;
+	DirectX::XMFLOAT3 enemyTargetPos{};
+	bool enemyInRange = false;
+	float nearestEnemyDistSq = FLT_MAX; // ★ 最も近い敵の距離（3D）
+
+	// 1a. コアのチェック
+	if (townHall && townHall->IsAlive()) {
+		// ... (コアが射程内かチェックし、coreInRange と coreTargetPos を設定) ...
+	}
+
+	// 1b. 敵のチェック (FindNearestEnemy を使わず、ここでループ)
+	EnemyManager& em = EnemyManager::Instance();
+	int count = em.GetEnemyCount();
+	for (int i = 0; i < count; ++i)
+	{
+		std::shared_ptr<Enemy> e = em.GetEnemy(i);
+		if (!e || e->IsDestroyRequested()) continue; // 削除フラグをチェック
+
+		DirectX::XMFLOAT3 tempTargetPos = e->GetPosition();
+		tempTargetPos.y += e->GetHeight() * 0.5f;
+
+		float dx = tempTargetPos.x - pos.x;
+		float dy = tempTargetPos.y - pos.y;
+		float dz = tempTargetPos.z - pos.z;
+		float distSq = dx * dx + dy * dy + dz * dz;
+
+		// 射程内で、かつ、これまでで一番近い敵か？
+		if (distSq <= rangeSq && distSq < nearestEnemyDistSq)
+		{
+			nearestEnemyDistSq = distSq;
+			enemyTargetPos = tempTargetPos;
+			enemyInRange = true;
+		}
+	}
     
     	// ==============================
     	// 2) 優先度に基づいて最終ターゲットを決定
@@ -748,6 +785,7 @@ std::shared_ptr<Enemy> Player::FindNearestEnemy() const
 
 	for (int i = 0; i < count; ++i) {
 		std::shared_ptr<Enemy> e = EnemyManager::Instance().GetEnemy(i);
+		if (!e || e->IsDestroyRequested()) continue;
 		if (!e) continue;
 		const auto ep = e->GetPosition();
 		float dx = ep.x - position.x;

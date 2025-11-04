@@ -20,6 +20,11 @@ public:
     static void SetActive(Player* p);
     static Player* GetActivePtr();
 
+	// 全プレイヤーインスタンスの管理用
+	static void RegisterPlayer(Player* player);
+	static void UnregisterPlayer(Player* player);
+	static const std::vector<Player*>& GetAllPlayers();
+
 	//初期化
 	void Initialize();
 
@@ -146,4 +151,6 @@ private:
 	// 現在アクティブなプレイヤー（実体は Player.cpp で定義）
     static Player* sActive;
 
+	// 全プレイヤーのリスト (実体は Player.cpp で定義)
+	static std::vector<Player*> sAllPlayers;
 };

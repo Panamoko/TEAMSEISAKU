@@ -1,9 +1,10 @@
 #pragma once
 
 #include <vector>
-#include <set>
+//#include <set>
 #include "Enemy.h"
 #include "GameObject.h"
+#include <memory>
 
 // エネミーマネージャー
 class EnemyManager
@@ -49,7 +50,7 @@ public:
 	}
 
 	// エネミー削除
-	void Remove(Enemy* enemy);
+	//void Remove(Enemy* enemy);
 
 private:
 	// エネミー同士の衝突処理
@@ -57,7 +58,7 @@ private:
 
 private:
 	std::vector<std::shared_ptr<Enemy>>	enemies;
-	std::set<Enemy*>		removes;
+	//std::set<Enemy*>		removes;
 
 	std::vector<std::shared_ptr<GameObject>> objects;
 };
