@@ -2,13 +2,12 @@
 
 #include <DirectXMath.h>
 #include <algorithm>
-#include "Collider.h"
 
-//struct OBB {
-//	DirectX::XMFLOAT3 center; // 中心座標
-//	DirectX::XMFLOAT3 half;   // ハーフサイズ（X,Y,Z）
-//	float yaw;                // Y軸回転（ラジアン）
-//};
+struct OBB {
+	DirectX::XMFLOAT3 center; // 中心座標
+	DirectX::XMFLOAT3 half;   // ハーフサイズ（X,Y,Z）
+	float yaw;                // Y軸回転（ラジアン）
+};
 
 // コリジョン
 class Collision
