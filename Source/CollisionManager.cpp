@@ -77,7 +77,19 @@ void CollisionManager::CheckAllCollision()
 					 objectB->collider->type == ColliderType::OBB)
 			{
 				SphereCollider* boxA = static_cast<SphereCollider*>(objectA->collider);
-				OBB* boxB = static_cast<OBB*>(objectB->collider);
+				OBB* obb_B = static_cast<OBB*>(objectB->collider);
+				isCollisionDetected = Collision::IntersectSphereVsOBB(
+					boxA->center, boxA->radius, *obb_B);
+			}
+
+			//â~íåÅ@VS OBB
+			else if (objectA->collider->type == ColliderType::Cylinder &&
+					 objectB->collider->type == ColliderType::OBB)
+			{
+				CylinderCollider* cylinderA = static_cast<CylinderCollider*>(objectA->collider);
+				OBB* obb_B = static_cast<OBB*>(objectB->collider);
+				isCollisionDetected = Collision::IntersectCylinderVsOBB(
+					cylinderA->center, cylinderA->radius, cylinderA->height, *obb_B);
 			}
 
 			//è’ìÀÇµÇΩèÍçá
