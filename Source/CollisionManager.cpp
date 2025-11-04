@@ -72,12 +72,24 @@ void CollisionManager::CheckAllCollision()
 						contactPoint);
 			}
 
-			//î† VS î†
-			else if (objectA->collider->type == ColliderType::Box &&
-					 objectB->collider->type == ColliderType::Box)
+			//ãÖ VS OBB
+			else if (objectA->collider->type == ColliderType::Sphere &&
+					 objectB->collider->type == ColliderType::OBB)
 			{
-				BoxCollider* boxA = static_cast<BoxCollider*>(objectA->collider.get());
-				BoxCollider* boxB = static_cast<BoxCollider*>(objectB->collider.get());
+				SphereCollider* sphereA = static_cast<SphereCollider*>(objectA->collider.get());
+				OBB* obb_B = static_cast<OBB*>(objectB->collider.get());
+				isCollisionDetected = Collision::IntersectSphereVsOBB(
+					sphereA->center, sphereA->radius, *obb_B);
+			}
+
+			//â~íåÅ@VS OBB
+			else if (objectA->collider->type == ColliderType::Cylinder &&
+				objectB->collider->type == ColliderType::OBB)
+			{
+				CylinderCollider* cylinderA = static_cast<CylinderCollider*>(objectA->collider.get());
+				OBB* obb_B = static_cast<OBB*>(objectB->collider.get());
+				isCollisionDetected = Collision::IntersectCylinderVsOBB(
+					cylinderA->center, cylinderA->radius, cylinderA->height, *obb_B);
 			}
 
 			//è’ìÀÇµÇΩèÍçá

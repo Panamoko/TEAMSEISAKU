@@ -4,7 +4,7 @@
 
 class GameObject;
 
-enum class ColliderType { Sphere, Box, Cylinder };
+enum class ColliderType { Sphere, Box, Cylinder, OBB };
 
 struct Collider
 {
