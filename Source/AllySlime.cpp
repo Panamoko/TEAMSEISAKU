@@ -34,6 +34,7 @@ AllySlime::AllySlime(int formationIndex)
         const Player& ref = (leader ? *leader : Player::Instance());
         position = ref.GetPosition();
     }
+    UpdateTransform();
 }
 
 void AllySlime::UpdateAnchor()

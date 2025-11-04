@@ -5,6 +5,8 @@
 #include "ProjectileManager.h"
 #include "Editor.h"
 
+class Player;
+
 // スライム
 class EnemySlime : public Enemy
 {
@@ -44,10 +46,10 @@ private:
 	void UpdateIdleState(float elapsedTime);
 
 	//プレイヤー索敵
-	bool SearchPlayer();
+	Player* SearchPlayer();
 
 	//攻撃ステートへ偏移
-	void SetAttackState();
+	void SetAttackState(Player* target);
 
 	//攻撃ステート更新処理
 	void UpdateAttackState(float elapsedTime);
@@ -88,6 +90,9 @@ private:
 	float				stateTimer = 0.0f;
 	//索敵範囲
 	float				searchRange = 5.0f;
+
+	// ターゲット中のプレイヤー
+	Player* targetPlayer = nullptr;
 
 	ProjectileManager	projectileManager;
 

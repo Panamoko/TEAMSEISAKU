@@ -18,4 +18,10 @@ public:
 
 	//”jŠü
 	void Destroy();
+
+	// ”jŠü—\’è‚©Šm”F
+	bool IsDestroyRequested() const { return destroyRequested; }
+
+private:
+	bool destroyRequested = false; // íœƒtƒ‰ƒO
 };
