@@ -46,6 +46,6 @@ INT WINAPI wWinMain(HINSTANCE instance, HINSTANCE prev_instance, LPWSTR cmd_line
 
 #if defined(DEBUG) | defined(_DEBUG)
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	_CrtSetBreakAlloc(17389); // ← この番号にブレーク！
+	_CrtSetBreakAlloc(16025); // ← この番号にブレーク！
 #endif
 }

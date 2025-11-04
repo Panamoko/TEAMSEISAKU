@@ -52,6 +52,10 @@ public:
 	void SetType(Type t) { type = t; }
 
 	GameObject();//デフォルトコンストラクタ
+	~GameObject()
+	{
+		//std::cout << "Destroyed" << std::endl;
+	}
 
 };
 
