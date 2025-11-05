@@ -6,6 +6,7 @@
 //#include "texture.h"
 //#include "misc.h" // デバッグ描画ヘルパなどがあるなら
 #include <imgui.h> // HPバーを画面に出す場合
+#include <CollisionManager.h>
 using namespace DirectX;
 
 
@@ -19,6 +20,7 @@ void TownHall::Initialize() {
 	// mesh = new StaticMesh("assets/townhall.fbx");
 	// tex = new Texture("assets/townhall_albedo.dds");
 
+	class_name = "TownHall";
 	model = ModelManager::Instance().Load("Data/Model/bilud/Core.mdl");
 
 	// Animator にモデルを渡して Idle ループ
@@ -28,7 +30,15 @@ void TownHall::Initialize() {
 
 	scale = { 0.3f, 0.3f, 0.3f };
 
-	
+	collider = std::make_unique<CylinderCollider>();
+	collider->type = ColliderType::Cylinder;
+	cylinder = static_cast<CylinderCollider*>(collider.get());
+
+	cylinder->center = position;
+	cylinder->height = height;
+	cylinder->radius = radius;
+
+	//CollisionManager::Instance().AddObject(this);
 }
 
 
@@ -64,9 +74,9 @@ void TownHall::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* rend
 	// 建物の当たり（円柱）を可視化：赤
 	renderer->RenderCylinder(
 		rc,
-		position,    // 中心（地面に置く想定）
-		radius,      // 水平半径
-		height,      // 高さ
+		cylinder->center,    // 中心（地面に置く想定）
+		cylinder->radius,      // 水平半径
+		cylinder->height,      // 高さ
 		XMFLOAT4(1, 0, 0, 1)
 	);
 }
@@ -75,4 +85,9 @@ void TownHall::TakeDamage(int amount) {
 	if (hp <= 0) return;
 	hp -= amount;
 	if (hp < 0) hp = 0;
+}
+
+void TownHall::OnCollision(GameObject* object)
+{
+	//TakeDamage();
 }

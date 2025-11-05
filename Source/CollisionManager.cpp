@@ -12,6 +12,18 @@ void CollisionManager::Clear()
 	objects.clear();
 }
 
+//個別削除
+void CollisionManager::Remove(GameObject* obj)
+{
+	objects.erase(
+		std::remove_if(objects.begin(), objects.end(),
+			[obj](GameObject*object)
+			{
+				return object == obj;
+			}),
+		objects.end());
+}
+
 //全オブジェクト間の衝突判定
 void CollisionManager::CheckAllCollision()
 {

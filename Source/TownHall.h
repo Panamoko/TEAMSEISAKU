@@ -37,7 +37,7 @@ public:
 	int GetHP() const { return hp; }
 	int GetMaxHP() const { return maxHP; }
 
-
+	void OnCollision(GameObject* object)override;
 
 
 private:
@@ -52,6 +52,7 @@ private:
 	Model* model = nullptr;
 	Animator animator;               // 追加
 	bool     playingDeath = false;   // 破壊演出中フラグ
+	CylinderCollider* cylinder;
 	// モデルを使うならここに保持（例）
 	// StaticMesh* mesh{nullptr};
 	// Texture* tex{nullptr};

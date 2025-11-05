@@ -26,6 +26,9 @@ public:
 	//オブジェクトリストをクリア
 	void Clear();
 
+	////個別削除
+	void Remove(GameObject* obj);
+
 	//全オブジェクト間の衝突判定
 	void CheckAllCollision();
 

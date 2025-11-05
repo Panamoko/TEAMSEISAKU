@@ -129,12 +129,6 @@ void SceneGame::Update(float elapsedTime)
 
 	if (game_editor.PlayGame())
 	{
-		CollisionManager::Instance().Clear();
-		for (auto& obj : objects)
-		{
-			CollisionManager::Instance().AddObject(obj.get());
-		}
-
 		//ステージ更新処理
 		stage->Update(elapsedTime);
 
