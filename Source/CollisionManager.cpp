@@ -20,18 +20,27 @@ void CollisionManager::Clear()
 //ŒÂ•Êíœ
 void CollisionManager::Remove(GameObject* obj)
 {
-	if (!obj) return;
+	if (!obj || objects.empty()) return;
 
+	// ‚·‚Å‚É“o˜^‚³‚ê‚Ä‚¢‚È‚¢‚È‚ç‰½‚à‚µ‚È‚¢
+	auto it = std::find(objects.begin(), objects.end(), obj);
+	bool exists = (it != objects.end());
+
+	// XV’†‚Ííœ—\–ñ
 	if (inUpdate)
 	{
-		// ‘–¸’†‚Ííœ‚µ‚È‚¢ ¨ íœ—\–ñ
-		pendingRemovals.push_back(obj);
+		// “ñd’Ç‰Á‚ğ–h~
+		if (exists &&
+			std::find(pendingRemovals.begin(), pendingRemovals.end(), obj) == pendingRemovals.end())
+		{
+			pendingRemovals.push_back(obj);
+		}
 		return;
 	}
 
-	if (objects.size() > 0)
+	// XV’†‚Å‚È‚¢‚Ì‘¦íœ
+	if (exists)
 	{
-		// ‘–¸’†‚Å‚È‚¯‚ê‚Î•’Ê‚ÉÁ‚·
 		objects.erase(std::remove(objects.begin(), objects.end(), obj), objects.end());
 	}
 }
@@ -135,8 +144,16 @@ void CollisionManager::CheckAllCollision()
 
 void CollisionManager::ProcessPendingremovals()
 {
+	if (pendingRemovals.empty()) return;
+
 	for (auto obj : pendingRemovals)
-		objects.erase(std::remove(objects.begin(), objects.end(), obj), objects.end());
+	{
+		auto it = std::find(objects.begin(), objects.end(), obj);
+		if (it != objects.end())
+		{
+			objects.erase(std::remove(objects.begin(), objects.end(), obj), objects.end());
+		}
+	}
 
 	pendingRemovals.clear();
 }
