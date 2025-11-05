@@ -55,6 +55,7 @@ public:
 	GameObject();//デフォルトコンストラクタ
 	~GameObject()
 	{
+		CollisionManager::Instance().Remove(this);
 		std::cout << "Destroyed" << std::endl;
 	}
 

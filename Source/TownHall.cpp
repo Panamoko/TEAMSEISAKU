@@ -38,7 +38,7 @@ void TownHall::Initialize() {
 	cylinder->height = height;
 	cylinder->radius = radius;
 
-	//CollisionManager::Instance().AddObject(this);
+	CollisionManager::Instance().AddObject(this);
 }
 
 
