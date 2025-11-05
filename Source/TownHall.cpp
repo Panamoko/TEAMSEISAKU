@@ -13,6 +13,11 @@ using namespace DirectX;
 TownHall::TownHall(const XMFLOAT3& pos, float radius, int maxHP)
 	: position(pos), radius(radius), maxHP(maxHP), hp(maxHP) {}
 
+TownHall::~TownHall()
+{
+	CollisionManager::Instance().Remove(this);
+}
+
 
 void TownHall::Initialize() {
 
@@ -32,13 +37,14 @@ void TownHall::Initialize() {
 
 	collider = std::make_unique<CylinderCollider>();
 	collider->type = ColliderType::Cylinder;
+	collider->owner = this;
 	cylinder = static_cast<CylinderCollider*>(collider.get());
 
 	cylinder->center = position;
 	cylinder->height = height;
 	cylinder->radius = radius;
 
-	//CollisionManager::Instance().AddObject(this);
+	CollisionManager::Instance().AddObject(this);
 }
 
 

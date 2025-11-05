@@ -37,7 +37,11 @@ private:
 	CollisionManager() = default;
 	~CollisionManager() = default;
 
+	void ProcessPendingremovals();//衝突後に削除実行
+
 	//登録されたすべてのGameObjectへのポインタを保持
 	std::vector<GameObject*> objects;
+	std::vector<GameObject*> pendingRemovals;
+	bool inUpdate = false;
 };
 

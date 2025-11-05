@@ -4,7 +4,11 @@
 //オブジェクト登録
 void CollisionManager::AddObject(GameObject* obj)
 {
-	if (obj)objects.push_back(obj);
+	if (!obj) return;
+
+	// 重複登録回避
+	if (std::find(objects.begin(), objects.end(), obj) == objects.end())
+		objects.push_back(obj);
 }
 
 //登録リストをクリア
@@ -16,18 +20,28 @@ void CollisionManager::Clear()
 //個別削除
 void CollisionManager::Remove(GameObject* obj)
 {
-	objects.erase(
-		std::remove_if(objects.begin(), objects.end(),
-			[obj](GameObject*object)
-			{
-				return object == obj;
-			}),
-		objects.end());
+	if (!obj) return;
+
+	if (inUpdate)
+	{
+		// 走査中は削除しない → 削除予約
+		pendingRemovals.push_back(obj);
+		return;
+	}
+
+	if (objects.size() > 0)
+	{
+		// 走査中でなければ普通に消す
+		objects.erase(std::remove(objects.begin(), objects.end(), obj), objects.end());
+	}
 }
+
 
 //全オブジェクト間の衝突判定
 void CollisionManager::CheckAllCollision()
 {
+	inUpdate = true;
+
 	//登録されている全オブジェクト同士の組み合わせチェック
 	for (size_t i = 0; i < objects.size(); i++)
 	{
@@ -113,4 +127,16 @@ void CollisionManager::CheckAllCollision()
 			}
 		}
 	}
+	inUpdate = false;
+
+	//まとめて削除
+	ProcessPendingremovals();
+}
+
+void CollisionManager::ProcessPendingremovals()
+{
+	for (auto obj : pendingRemovals)
+		objects.erase(std::remove(objects.begin(), objects.end(), obj), objects.end());
+
+	pendingRemovals.clear();
 }
