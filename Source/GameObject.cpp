@@ -1,4 +1,5 @@
 #include "GameObject.h"
+#include "CollisionManager.h"
 
 void GameObject::UpdateTransform()
 {
@@ -30,4 +31,10 @@ GameObject::GameObject() :name("Empty")
 		0,0,1,0,
 		0,0,0,1
 	};
+}
+
+GameObject::~GameObject()
+{
+	CollisionManager::Instance().Remove(this);
+	std::cout << "Destroyed" << std::endl;
 }

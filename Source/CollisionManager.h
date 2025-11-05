@@ -3,8 +3,9 @@
 #include <vector>
 #include <memory>
 
-#include "GameObject.h"
 #include "Collision.h"
+
+class GameObject;
 
 class CollisionManager
 {

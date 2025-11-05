@@ -1,4 +1,5 @@
 #include "CollisionManager.h"
+#include "GameObject.h"
 
 //オブジェクト登録
 void CollisionManager::AddObject(GameObject* obj)

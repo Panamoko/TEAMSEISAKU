@@ -11,8 +11,10 @@
 #include <iostream>
 
 #include "Collider.h"
+#include "CollisionManager.h"
 
 class Collider;
+class CollisionManager;
 
 class GameObject
 {
@@ -48,16 +50,19 @@ public:
 	bool dirty = false;
 	bool is_active = true;
 
-	enum class Type { Object, Gimmic, Player, Enemy, Stage } type = Type::Object;
+	enum class Type {
+		Object,
+		Gimmic,
+		Player,
+		PlayerAttack,
+		Enemy,
+		Enemyattack,
+		Stage } type = Type::Object;
+
 public:
 	void SetType(Type t) { type = t; }
 
 	GameObject();//デフォルトコンストラクタ
-	~GameObject()
-	{
-		CollisionManager::Instance().Remove(this);
-		std::cout << "Destroyed" << std::endl;
-	}
-
+	~GameObject();
 };
 
