@@ -49,7 +49,7 @@ private:
 	int maxHP{};
 	int hp{};
 
-	Model* model = nullptr;
+	//Model* model = nullptr;
 	Animator animator;               // ’Ç‰Á
 	bool     playingDeath = false;   // ”j‰ó‰‰o’†ƒtƒ‰ƒO
 	CylinderCollider* cylinder;
