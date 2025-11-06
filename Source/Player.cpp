@@ -840,10 +840,7 @@ void Player::UpdateAutoMoveToEnemy(float dt)
 
 void Player::OnCollision(GameObject* object)
 {
-	position = object->position;
-	position.x -= 1.0f;
-	position.z -= 1.0f;
-	//angle = object->angle;
+	position.x += 0.01f; position.y += 0.01f; position.z += 0.01f;
 }
 
 // šŠÖ”‚ğŠÛ‚²‚Æ’Ç‰Á
