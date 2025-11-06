@@ -2,6 +2,7 @@
 #include "System/RenderContext.h"
 #include "System/ShapeRenderer.h"
 #include "System/ModelRenderer.h"
+#include "Factory.h"
 using namespace DirectX;
 
 void Fence::Render(const RenderContext& rc, ModelRenderer* renderer) {
@@ -19,3 +20,5 @@ void Fence::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* rendere
     // いったん円柱で近似（後で長方形コリジョンに置換）
     renderer->RenderBox(rc, position, { 0, angleY, 0 }, { halfX, halfY, halfZ }, { 0,1,1,1 });
 }
+
+//REGISTER_GAMEOBJECT(Fence);

@@ -14,10 +14,10 @@ class ShapeRenderer;
 
 class TownHall final : public ITargetable {
 public:
-	TownHall(const DirectX::XMFLOAT3& pos, float radius = 3.0f, int maxHP = 1500);
+	TownHall();
 	~TownHall();
 
-	void Initialize();
+	void Initialize(const DirectX::XMFLOAT3& pos, float radius = 3.0f, int maxHP = 1500);
 	void Update(float dt);
 	void Render(const RenderContext& rc, ModelRenderer* renderer);
 	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer);
