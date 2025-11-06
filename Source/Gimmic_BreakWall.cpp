@@ -1,5 +1,6 @@
 #include "Gimmic_BreakWall.h"
 #include "Factory.h"
+#include <imgui.h>
 
 //a
 
@@ -56,6 +57,14 @@ void Gimmic_BreakWall::RenderDebugPrimitive(
     const RenderContext& rc, ShapeRenderer* renderer)
 {
 
+}
+
+void Gimmic_BreakWall::OnImGui()
+{
+    if (ImGui::CollapsingHeader("BreakWall Settings"))
+    {
+        ImGui::DragFloat("HP", &hp, 0.1f, 0.0f, 1500.0f, "%.1f");
+    }
 }
 
 REGISTER_GAMEOBJECT(Gimmic_BreakWall);

@@ -18,6 +18,8 @@ public:
 	//デバッグ描画
 	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) override;
 
+	void OnImGui();
+
 private:
 	bool isBroken = false;//壊れたかどうか
 	float hp = 2.0f;//耐久度
