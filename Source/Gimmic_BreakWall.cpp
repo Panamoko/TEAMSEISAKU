@@ -16,13 +16,16 @@ Gimmic_BreakWall::Gimmic_BreakWall()
     scale.x = 0.1f;
     scale.y = 0.05f;
     scale.z = 0.1f;
+
+    CollisionManager::Instance().AddObject(this);
 }
 
 //Õ“ËŒ‹‰Ê
 void Gimmic_BreakWall::OnCollision(GameObject* objects)
 {
-    if (objects->type == Type::Player)hp--;
-    else if (hp <= 0.0f && objects->type == Type::Player)
+    if (objects->type == Type::Player)
+        hp--;
+    if (hp <= 0.0f)
     {
         isActive = false;
         GimmicManager::Instance().RemoveInactive();

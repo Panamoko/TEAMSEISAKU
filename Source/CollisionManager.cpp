@@ -120,12 +120,23 @@ void CollisionManager::CheckAllCollision()
 
 			//â~íåÅ@VS OBB
 			else if (objectA->collider->type == ColliderType::Cylinder &&
-				objectB->collider->type == ColliderType::OBB)
+					 objectB->collider->type == ColliderType::OBB)
 			{
 				CylinderCollider* cylinderA = static_cast<CylinderCollider*>(objectA->collider.get());
 				OBB* obb_B = static_cast<OBB*>(objectB->collider.get());
 				isCollisionDetected = Collision::IntersectCylinderVsOBB(
 					cylinderA->center, cylinderA->radius, cylinderA->height, *obb_B);
+			}
+
+			//â~íå VS AABB
+			else if (objectA->collider->type == ColliderType::Cylinder &&
+					 objectB->collider->type == ColliderType::Box)
+			{
+				CylinderCollider* cylinderA = static_cast<CylinderCollider*>(objectA->collider.get());
+				BoxCollider* boxB = static_cast<BoxCollider*>(objectB->collider.get());
+				isCollisionDetected = Collision::IntersectCylinderVsAABB(
+					cylinderA, boxB);
+
 			}
 
 			//è’ìÀÇµÇΩèÍçá
