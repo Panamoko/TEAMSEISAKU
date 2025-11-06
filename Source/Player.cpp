@@ -226,6 +226,17 @@ void Player::Initialize()
 	scale.x = scale.y = scale.z = 0.01f;
 
 	RegisterPlayer(this);
+
+	type = Type::Player;
+	collider = std::make_unique<CylinderCollider>();
+	collider->type = ColliderType::Cylinder;
+	collider->owner = this;
+	cylinder = static_cast<CylinderCollider*>(collider.get());
+
+	cylinder->height = height;
+	cylinder->radius = radius;
+
+	CollisionManager::Instance().AddObject(this);
 }
 
 //I—¹‰»
@@ -237,6 +248,8 @@ void Player::Finalize()
 
 void Player::Update(float elapsedTime)
 {
+	cylinder->center = position;
+
      const bool isActive = (this == GetActivePtr());
      if (isActive) {
          // “ü—Í‚Íg‘I‘ğ‚³‚ê‚½ŒÂ‘Ì‚Ì‚İh

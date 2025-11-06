@@ -153,4 +153,6 @@ private:
 
 	// 全プレイヤーのリスト (実体は Player.cpp で定義)
 	static std::vector<Player*> sAllPlayers;
+
+	CylinderCollider* cylinder;
 };
