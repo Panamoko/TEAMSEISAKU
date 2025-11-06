@@ -20,7 +20,7 @@ void BuildingManager::Initialize() {
 TownHall* BuildingManager::SpawnTownHall(const XMFLOAT3& pos, float radius, int maxHP) {
 	if (townHall) return townHall.get(); // 1棟制御（必要なら複数対応へ拡張）
 	townHall = std::make_unique<TownHall>();
-	townHall->Initialize(pos, radius, maxHP);
+	townHall->Initialize();
 	return townHall.get();
 }
 

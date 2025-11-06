@@ -21,10 +21,7 @@ TownHall::~TownHall()
 }
 
 
-void TownHall::Initialize(
-	const DirectX::XMFLOAT3& pos,
-	float rad,
-	int maxHP) 
+void TownHall::Initialize()
 {
 	// 必要ならモデル読み込みなど。
 	// mesh = new StaticMesh("assets/townhall.fbx");
@@ -40,9 +37,7 @@ void TownHall::Initialize(
 
 	scale = { 0.3f, 0.3f, 0.3f };
 
-	position = pos;
-	radius = rad;
-	hp = maxHP;
+	hp = 1500.0f;
 
 
 	collider = std::make_unique<CylinderCollider>();

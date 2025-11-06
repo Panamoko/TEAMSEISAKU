@@ -69,4 +69,10 @@ public:
 		DirectX::XMFLOAT3* outMTD = nullptr
 	);
 
+	//‰~’Œ VS ” 
+	static bool IntersectCylinderVsAABB(
+		const CylinderCollider* cylinder,
+		const BoxCollider* box
+	);
+
 };

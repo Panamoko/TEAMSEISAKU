@@ -259,3 +259,31 @@ bool Collision::IntersectCylinderVsOBB(
 	}
 	return true;
 }
+
+bool Collision::IntersectCylinderVsAABB(
+	const CylinderCollider* cylinder,
+	const BoxCollider* box)
+{
+	if (!cylinder || !box)return false;
+
+	//XZ•½–Ê‚Å‚ÌÅ‹ßÚ“_‚ğ‹‚ß‚é
+	float closestX = (std::clamp)(cylinder->center.x, box->box_min.x, box->box_max.x);
+	float closestZ = (std::clamp)(cylinder->center.z, box->box_min.z, box->box_max.z);
+
+	float dx = cylinder->center.x - closestX;
+	float dz = cylinder->center.z - closestZ;
+
+	float distSq = dx * dx + dz * dz;
+
+	// XZ•½–Ê‚Å‚Ì‹——£‚ª‰~’Œ‚Ì”¼Œa‚æ‚è‘å‚«‚¯‚ê‚ÎÕ“Ë‚µ‚Ä‚¢‚È‚¢
+	if (distSq > cylinder->radius * cylinder->radius) return false;
+
+	// --- Y²•ûŒü‚Ì”»’è ---
+	float cylMinY = cylinder->center.y;
+	float cylMaxY = cylinder->center.y + cylinder->height;
+
+	if (cylMaxY < box->box_min.y || cylMinY > box->box_max.y) return false;
+
+	// Õ“Ë‚µ‚Ä‚¢‚é
+	return true;
+}
