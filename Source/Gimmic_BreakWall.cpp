@@ -59,7 +59,20 @@ void Gimmic_BreakWall::Update(float elapsedTime)
 void Gimmic_BreakWall::RenderDebugPrimitive(
     const RenderContext& rc, ShapeRenderer* renderer)
 {
+    DirectX::XMFLOAT3 position = {
+                (box->box_min.x + box->box_max.x) * 0.5f,
+                (box->box_min.y + box->box_max.y) * 0.5f,
+                (box->box_min.z + box->box_max.z) * 0.5f
+    };
+    DirectX::XMFLOAT3 angle = { 0.0f, 0.0f, 0.0f };
+    DirectX::XMFLOAT3 size = {
+        box->box_max.x - box->box_min.x,
+        box->box_max.y - box->box_min.y,
+        box->box_max.z - box->box_min.z
+    };
+    DirectX::XMFLOAT4 color = { 0.2f, 0.2f, 0.8f, 1.0f };
 
+    renderer->RenderBox(rc, position, angle, size, color);
 }
 
 void Gimmic_BreakWall::OnImGui()
