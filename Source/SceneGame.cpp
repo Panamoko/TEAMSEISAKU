@@ -6,6 +6,8 @@
 #include "EnemyManager.h"
 #include "EnemySlime.h"
 #include "Player.h"
+#include "AllySlime.h"         // 既存＝直線弾
+#include "AllySlimeHoming.h"   // 新規＝追尾弾
 #include "BuildingManager.h"
 #include <cfloat>          // ★ FLT_MAX 用
 #include "System/Mouse.h"  // ★ Mouse::BTN_LEFT / GetX()/GetY() を使うなら明示的に
@@ -14,11 +16,13 @@
 #include "StageManager.h"
 #include <cmath>
 #include <DirectXMath.h>
+#include <algorithm>
+static constexpr int kMaxAlliesTotal = 5;
 using namespace DirectX;
 
 #include "Editor.h"
 
-
+SceneGame::~SceneGame() = default;  // ★これを追加
 // 初期化
 void SceneGame::Initialize()
 {
@@ -144,19 +148,29 @@ void SceneGame::Update(float elapsedTime)
 		GimmicManager::Instance().Update(elapsedTime);
 
 		// 味方スライム更新
-		for (auto& a : allies) {
-			a->Update(elapsedTime);
-		}
+		for (auto& a : alliesStraight) a->Update(elapsedTime);
+		for (auto& a : alliesHoming)  a->Update(elapsedTime);
 
 		CollisionManager::Instance().CheckAllCollision();
 	}
 	Player::UpdateSelectionFromMouse(players, 120.0f);
 
-	// ※ Yボタンで Ally を追加する処理は Scene 側の責務なのでそのまま残す:
-	GamePad& gamePad = Input::Instance().GetGamePad();
-	if (gamePad.GetButtonDown() & GamePad::BTN_Y) {
-		AddAllyFor(Player::GetActivePtr());
+	// === 追加: C/Vでスポーン ===
+	auto& gp = Input::Instance().GetGamePad();
+	auto down = gp.GetButtonDown();
+	Player* active = Player::GetActivePtr(); // あなたのAPIに合わせて
+
+	if (active) {
+		if (down & GamePad::BTN_X) {      // Cキー（エミュ）＝直線弾
+			AddAllyStraightFor(active);
+		}
+		if (down & GamePad::BTN_Y) {      // Vキー（エミュ）＝追尾弾
+			AddAllyHomingFor(active);
+		}
 	}
+
+	// === 直線・追尾をそれぞれ更新 ===
+
 
 }
 
@@ -193,16 +207,10 @@ void SceneGame::Render()
 		for (auto& up : players) up->Render(rc, modelRenderer);
 
 		// 味方スライム
-	    for (auto& a : allies) 
-		{
-	        a->Render(rc, modelRenderer);
-	    }
 
-		////エディタモデル描画
-		//for (auto& obj : objects)
-		//{
-		//	obj->Render(rc, modelRenderer);
-		//}
+
+		for (auto& a : alliesStraight) a->Render(rc, modelRenderer);
+		for (auto& a : alliesHoming)  a->Render(rc, modelRenderer);
 
 		// エネミー描画
 		EnemyManager::Instance().Render(rc, modelRenderer);
@@ -309,25 +317,37 @@ void SceneGame::DrawGUI()
 int SceneGame::CountAlliesFor(Player* leader) const
 {
 	int n = 0;
-	for (auto& a : allies) if (a->GetLeader() == leader) ++n;
+	for (auto& a : alliesStraight) if (a->GetLeader() == leader) ++n;
+	for (auto& a : alliesHoming)  if (a->GetLeader() == leader) ++n;
 	return n;
 }
 
-void SceneGame::AddAllyFor(Player* leader)
+void SceneGame::AddAllyStraightFor(Player* leader)
 {
-	if (!leader) return;
+	if (CountAlliesGlobal() >= kMaxAlliesTotal) 
+	{
+        // （任意）ImGui::SetTooltip("Allies capped (5)");
+        return;
+    }
+	int slot = CountAlliesFor(leader);
+	auto p = std::make_unique<AllySlime>(slot); // 既存クラス＝直線弾
+	p->SetLeader(leader);
+	alliesStraight.emplace_back(std::move(p));
+}
 
-	// 5体上限
-	int idx = CountAlliesFor(leader);
-	if (idx >= 4) return;
+void SceneGame::AddAllyHomingFor(Player* leader)
+{
+	if (CountAlliesGlobal() >= kMaxAlliesTotal)
+	{
+       return;
+    }
+	int slot = CountAlliesFor(leader);
+	auto p = std::make_unique<AllySlimeHoming>(slot); // 新規クラス＝追尾弾
+	p->SetLeader(leader);
+	alliesHoming.emplace_back(std::move(p));
+}
 
-	// 編隊スロット = いまの数（0..4）
-	auto s = std::make_unique<AllySlime>(idx);
-	s->SetLeader(leader);
-
-	// 生成直後はリーダーのちょい後ろに置く（UpdateAnchorで整列していく）
-	const auto p = leader->GetPosition();
-	s->SetPosition({ p.x, p.y, p.z - 1.2f - 0.3f * idx });
-
-	allies.emplace_back(std::move(s));
+int SceneGame::CountAlliesGlobal() const
+{
+    return static_cast<int>(alliesStraight.size() + alliesHoming.size());
 }

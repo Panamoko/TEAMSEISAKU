@@ -6,10 +6,12 @@
 #include "Character.h"   // ← ここで入れる（ヘッダからは外した）
 #include "Player.h"              // プレイヤー位置・角度を取得して編隊アンカーを出す
 #include "EnemyManager.h"        // 敵の取得
+#include "TownHall.h"
 #include "ProjectileStraite.h"   // 直進弾（プレイヤーと同じものを使用）
 #include "ModelManager.h"        // モデルロード
+#include "BuildingManager.h"
 #include "Collision.h"           // 球×円柱などの当たり判定
-
+#include "AllyTargeting.h"   // ← 追加
 #include <cmath>
 #include <cfloat>
 
@@ -19,7 +21,7 @@ using namespace DirectX;
 static inline XMFLOAT3 operator+(const XMFLOAT3& a, const XMFLOAT3& b) { return { a.x + b.x, a.y + b.y, a.z + b.z }; }
 static inline XMFLOAT3 operator-(const XMFLOAT3& a, const XMFLOAT3& b) { return { a.x - b.x, a.y - b.y, a.z - b.z }; }
 static inline XMFLOAT3 operator*(const XMFLOAT3& a, float s) { return { a.x * s, a.y * s, a.z * s }; }
-
+// --- コア取得（あなたの環境に合わせてどちらか） ---
 AllySlime::AllySlime(int formationIndex)
     : index(formationIndex)
 {
