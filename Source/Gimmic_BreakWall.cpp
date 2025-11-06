@@ -44,11 +44,18 @@ void Gimmic_BreakWall::Update(float elapsedTime)
     DirectX::XMFLOAT3 half;
     DirectX::XMFLOAT3 axis[3];
 
+    DirectX::XMFLOAT3 rotation = {
+        DirectX::XMConvertToRadians(angle.x),
+        DirectX::XMConvertToRadians(angle.y),
+        DirectX::XMConvertToRadians(angle.z)
+    };
+
+
     // ƒ‚ƒfƒ‹‚Ì OBB ‚ðŽæ“¾
     if (model->GetModelOBB(
         model,
         position,
-        angle,
+        rotation,
         scale,
         center,
         half,
@@ -60,6 +67,14 @@ void Gimmic_BreakWall::Update(float elapsedTime)
         box->axis[0] = axis[0];
         box->axis[1] = axis[1];
         box->axis[2] = axis[2];
+
+        if (model) {
+            printf("OBB center = (%f,%f,%f)\n", center.x, center.y, center.z);
+            printf("OBB half   = (%f,%f,%f)\n", half.x, half.y, half.z);
+            printf("axis0 = (%f,%f,%f)\n", axis[0].x, axis[0].y, axis[0].z);
+            printf("axis1 = (%f,%f,%f)\n", axis[1].x, axis[1].y, axis[1].z);
+            printf("axis2 = (%f,%f,%f)\n", axis[2].x, axis[2].y, axis[2].z);
+        }
     }
 }
 

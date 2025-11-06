@@ -200,63 +200,133 @@ bool Collision::IntersectSphereVsOBB(
 }
 
 bool Collision::IntersectCylinderVsOBB(
-	const XMFLOAT3& C, float cr, float ch, const OBB& B, XMFLOAT3* outMTD)
+	const XMFLOAT3& cylinderCenter,
+	float cylinderRadius,
+	float cylinderHeight,
+	const OBB& obb,
+	XMFLOAT3* outMTD
+)
 {
-	// 円柱の上下(Y)レンジ
-	float cy0 = C.y;          // 下端（中心を下端としていたら調整）
-	float cy1 = C.y + ch;     // 上端
-	// OBBローカル系
-	XMFLOAT3 v{ C.x - B.center.x, (cy0 + cy1) * 0.5f - B.center.y, C.z - B.center.z };
-	XMFLOAT3 c = rotate_to_local_yaw(v, B.yaw);
+	//円柱の中心
+	float cylinderCenterY = cylinderCenter.y + cylinderHeight * 0.5f;
 
-	// まずY方向のオーバーラップ
-	float boxY0 = -B.half.y, boxY1 = B.half.y;
-	float cylY0 = c.y - ch * 0.5f, cylY1 = c.y + ch * 0.5f;
-	float penY0 = boxY1 - cylY0;   // 押し戻し量候補
-	float penY1 = cylY1 - boxY0;
-	if (penY0 <= 0.f || penY1 <= 0.f) return false; // Yが離れてる
+	//円柱中心 → OBB 中心までの差分
+	DirectX::XMFLOAT3 diffWorld{
+		cylinderCenter.x - obb.center.x,
+		cylinderCenter.y - obb.center.y,
+		cylinderCenter.z - obb.center.z,
+	};
 
-	// XZは「円 vs 長方形」：最近接点で距離判定
-	float qx = clampf(c.x, -B.half.x, B.half.x);
-	float qz = clampf(c.z, -B.half.z, B.half.z);
-	float dx = c.x - qx, dz = c.z - qz;
-	float d2 = dx * dx + dz * dz;
-	if (d2 > cr * cr) return false;
+	//OBBローカル空間へ射影（軸との内積）
+	auto dot = [](const DirectX::XMFLOAT3& a, const DirectX::XMFLOAT3& b)
+		{
+			return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
+		};
 
-	if (outMTD) {
-		// 水平方向の押し戻し量（円の半径ぶん）
-		float pushX = 0.f, pushZ = 0.f;
-		if (d2 > 1e-12f) {
-			float d = sqrtf(d2);
-			float t = (cr - d) / d;
-			pushX = dx * t; pushZ = dz * t;
+	float localX = dot(diffWorld, obb.axis[0]);
+	float localY = dot(diffWorld, obb.axis[1]);
+	float localZ = dot(diffWorld, obb.axis[2]);
+
+	//Y軸（高さ方向）のオーバーラップチェック
+
+	float boxMinY = -obb.half.y;
+	float boxMaxY = obb.half.y;
+
+	float cylMinY = localY - cylinderHeight * 0.5f;
+	float cylMaxY = localY + cylinderHeight * 0.5f;
+
+	float overlapTop = boxMaxY - cylMinY;
+	float overlapBottom = cylMaxY - boxMinY;
+
+	if (overlapTop <= 0.0f || overlapBottom <= 0.0f)return false;
+
+	//XZ 平面における「円 vs 長方形」衝突チェック
+
+	auto clampf = [](float v, float minV, float maxV)
+		{
+			return (v < minV) ? minV : (v > maxV ? maxV : v);
+		};
+
+	//円柱中心のローカル位置を長方形内部へクランプ
+	float nearestX = clampf(localX, -obb.half.x, obb.half.x);
+	float nearestZ = clampf(localZ, -obb.half.z, obb.half.z);
+
+	float diffX = localX - nearestX;
+	float diffZ = localZ - nearestZ;
+
+	float distSq = (diffX * diffX) + (diffZ * diffZ);
+
+	if (distSq > cylinderRadius * cylinderRadius)return false;
+
+	//押し戻しベクトル（MTD）計算
+
+	if (outMTD)
+	{
+		float mtdLocalX = 0.0f;
+		float mtdLocalZ = 0.0f;
+
+		if (distSq > 1e-12f)
+		{
+			float dist = sqrtf(distSq);
+			float penetrationRatio = (cylinderRadius - dist) / dist;
+
+			mtdLocalX = diffX * penetrationRatio;
+			mtdLocalZ = diffZ * penetrationRatio;
 		}
-		else {
-			// 円心が矩形の内側：最小軸で押し出す
-			float ox = B.half.x - fabsf(c.x);
-			float oz = B.half.z - fabsf(c.z);
-			if (ox < oz) pushX = (c.x < 0 ? -ox : ox);
-			else         pushZ = (c.z < 0 ? -oz : oz);
-		}
+		else
+		{
+			//円心が完全にボックス内 → 最小距離軸に押し出す
+			float overlapX = obb.half.x - fabsf(localX);
+			float overlapZ = obb.half.z - fabsf(localZ);
 
-		// Y方向の押し戻し量（上下どちらが近いか）
-		float py = (penY0 < penY1) ? (penY0) : (-penY1);
+			if (overlapX < overlapZ)
+			{
+				mtdLocalX = (localX < 0 ? -overlapX : overlapX);
+			}
+			else
+			{
+				mtdLocalZ = (localZ < 0 ? -overlapZ : overlapZ);
+			}
 
-		// 「一番小さい侵入解消」で選択（水平 or 垂直）
-		XMFLOAT3 mtd_local{};
-		float absH = fabsf(pushX) + fabsf(pushZ);
-		if (absH > 0.f) {
-			float horizMag = sqrtf(pushX * pushX + pushZ * pushZ);
-			if (fabsf(py) < horizMag) mtd_local = XMFLOAT3(0, py, 0);
-			else                      mtd_local = XMFLOAT3(pushX, 0, pushZ);
-		}
-		else {
-			mtd_local = XMFLOAT3(0, py, 0);
-		}
+			//Y方向の押し戻し
+			float mtdLocalY = (overlapTop < overlapBottom) ? overlapTop : -overlapBottom;
 
-		XMFLOAT3 mtd_world = rotate_to_world_yaw(mtd_local, B.yaw);
-		outMTD->x = mtd_world.x; outMTD->y = mtd_world.y; outMTD->z = mtd_world.z;
+			//どの方向の侵入量が一番小さいかで採用軸を決める
+			DirectX::XMFLOAT3 mtdLocal{ 0.0f,0.0f,0.0f };
+			float horizMag = sqrtf((mtdLocalX * mtdLocalX) + (mtdLocalZ * mtdLocalZ));
+
+			if (horizMag > 0.0f)
+			{
+				//Y方向の方が小さければ縦に押し返す
+				if (fabsf(mtdLocalY) < horizMag)mtdLocal = DirectX::XMFLOAT3(0.0f, mtdLocalY, 0.0f);
+				else mtdLocal = DirectX::XMFLOAT3(mtdLocalX, 0.0f, mtdLocalZ);
+			}
+			else
+			{
+				//水平方向が0 → 縦方向一択
+				mtdLocal = DirectX::XMFLOAT3(0.0f, mtdLocalY, 0.0f);
+			}
+
+			//ローカル → ワールドへ戻す
+
+			DirectX::XMFLOAT3 mtdWorld{
+				mtdLocal.x * obb.axis[0].x +
+				mtdLocal.y * obb.axis[1].x +
+				mtdLocal.z * obb.axis[2].x,
+
+				mtdLocal.x * obb.axis[0].y +
+				mtdLocal.y * obb.axis[1].y +
+				mtdLocal.z * obb.axis[2].y,
+
+				mtdLocal.x * obb.axis[0].z +
+				mtdLocal.y * obb.axis[1].z +
+				mtdLocal.z * obb.axis[2].z
+			};
+
+			*outMTD = mtdWorld;
+		}
 	}
+
 	return true;
 }
 
@@ -264,26 +334,5 @@ bool Collision::IntersectCylinderVsAABB(
 	const CylinderCollider* cylinder,
 	const BoxCollider* box)
 {
-	if (!cylinder || !box)return false;
-
-	//XZ平面での最近接点を求める
-	float closestX = (std::clamp)(cylinder->center.x, box->box_min.x, box->box_max.x);
-	float closestZ = (std::clamp)(cylinder->center.z, box->box_min.z, box->box_max.z);
-
-	float dx = cylinder->center.x - closestX;
-	float dz = cylinder->center.z - closestZ;
-
-	float distSq = dx * dx + dz * dz;
-
-	// XZ平面での距離が円柱の半径より大きければ衝突していない
-	if (distSq > cylinder->radius * cylinder->radius) return false;
-
-	// --- Y軸方向の判定 ---
-	float cylMinY = cylinder->center.y;
-	float cylMaxY = cylinder->center.y + cylinder->height;
-
-	if (cylMaxY < box->box_min.y || cylMinY > box->box_max.y) return false;
-
-	// 衝突している
-	return true;
+	return false;
 }
