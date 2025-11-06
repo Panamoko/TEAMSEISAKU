@@ -10,6 +10,7 @@ struct Collider
 {
 	ColliderType type;
 	GameObject* owner;//属するオブジェクト
+	DirectX::XMFLOAT3 mtd;
 	virtual ~Collider() = default;
 };
 

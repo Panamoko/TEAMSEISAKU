@@ -122,7 +122,7 @@ bool Model::GetModelOBB(
 	// 1. ローカル AABB を取る
 	// -------------------------------
 	XMFLOAT3 localMin, localMax;
-	if (getModelAABB(model, localMin, localMax))
+	if (!getModelAABB(model, localMin, localMax))
 		return false;
 
 	// OBB のローカル中心とハーフサイズ

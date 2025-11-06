@@ -33,6 +33,8 @@ public:
 	//全オブジェクト間の衝突判定
 	void CheckAllCollision();
 
+	DirectX::XMFLOAT3 GetMtd() { return mtd; }
+
 private:
 	CollisionManager() = default;
 	~CollisionManager() = default;
@@ -43,5 +45,6 @@ private:
 	std::vector<GameObject*> objects;
 	std::vector<GameObject*> pendingRemovals;
 	bool inUpdate = false;
+	DirectX::XMFLOAT3 mtd;
 };
 

@@ -125,7 +125,7 @@ void CollisionManager::CheckAllCollision()
 				CylinderCollider* cylinderA = static_cast<CylinderCollider*>(objectA->collider.get());
 				OBB* obb_B = static_cast<OBB*>(objectB->collider.get());
 				isCollisionDetected = Collision::IntersectCylinderVsOBB(
-					cylinderA->center, cylinderA->radius, cylinderA->height, *obb_B);
+					cylinderA->center, cylinderA->radius, cylinderA->height, *obb_B, &mtd);
 			}
 
 			//‰~’Œ VS AABB
