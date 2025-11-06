@@ -838,6 +838,14 @@ void Player::UpdateAutoMoveToEnemy(float dt)
 	}
 }
 
+void Player::OnCollision(GameObject* object)
+{
+	position = object->position;
+	position.x -= 1.0f;
+	position.z -= 1.0f;
+	//angle = object->angle;
+}
+
 // šŠÖ”‚ğŠÛ‚²‚Æ’Ç‰Á
 // UŒ‚—Dæ“xØ‚è‘Ö‚¦“ü—Í
 void Player::InputToggleAttackPriority()

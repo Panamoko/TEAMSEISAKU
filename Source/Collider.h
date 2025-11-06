@@ -36,5 +36,6 @@ struct OBB :public Collider
 {
 	DirectX::XMFLOAT3 center; // 中心座標
 	DirectX::XMFLOAT3 half;   // ハーフサイズ（X,Y,Z）
+	DirectX::XMFLOAT3 axis[3];//X,Y,Z方向ベクトル
 	float yaw;                // Y軸回転（ラジアン）
 };

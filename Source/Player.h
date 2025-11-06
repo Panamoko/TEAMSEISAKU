@@ -114,8 +114,9 @@ private:
 	// ©“®ˆÚ“®XV
 	void UpdateAutoMoveToEnemy(float dt);  
 
+	//Õ“Ëˆ—
+	void OnCollision(GameObject* object) override;
 
-	
 private:
 	Model* model = nullptr;
 	float		moveSpeed = 5.0f;

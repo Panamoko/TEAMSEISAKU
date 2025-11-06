@@ -38,6 +38,18 @@ public:
 	// リソース取得
 	const ModelResource* GetResource() const { return resource.get(); }
 
+	//バウンディングボックス
+	bool getModelAABB(const Model* model, DirectX::XMFLOAT3& outMin, DirectX::XMFLOAT3& outMax);
+
+	//OBBバウンディングボックス
+	bool GetModelOBB(
+		const Model* model,
+		const DirectX::XMFLOAT3& position,
+		const DirectX::XMFLOAT3& rotation,   // RPY（XYZ 回転）
+		const DirectX::XMFLOAT3& scale,
+		DirectX::XMFLOAT3& outCenter,
+		DirectX::XMFLOAT3& outHalfSize,
+		DirectX::XMFLOAT3 outAxis[3]);         // 3本の軸
 private:
 	std::shared_ptr<ModelResource>	resource;
 	std::vector<Node>				nodes;
