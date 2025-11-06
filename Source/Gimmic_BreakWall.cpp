@@ -1,5 +1,6 @@
 #include "Gimmic_BreakWall.h"
 #include "Factory.h"
+#include <imgui.h>
 
 //a
 
@@ -15,13 +16,16 @@ Gimmic_BreakWall::Gimmic_BreakWall()
     scale.x = 0.1f;
     scale.y = 0.05f;
     scale.z = 0.1f;
+
+    CollisionManager::Instance().AddObject(this);
 }
 
 //Õ“ËŒ‹‰Ê
 void Gimmic_BreakWall::OnCollision(GameObject* objects)
 {
-    if (objects->type == Type::Player)hp--;
-    else if (hp <= 0.0f && objects->type == Type::Player)
+    if (objects->type == Type::Player)
+        hp--;
+    if (hp <= 0.0f)
     {
         isActive = false;
         GimmicManager::Instance().RemoveInactive();
@@ -56,6 +60,14 @@ void Gimmic_BreakWall::RenderDebugPrimitive(
     const RenderContext& rc, ShapeRenderer* renderer)
 {
 
+}
+
+void Gimmic_BreakWall::OnImGui()
+{
+    if (ImGui::CollapsingHeader("BreakWall Settings"))
+    {
+        ImGui::DragFloat("HP", &hp, 0.1f, 0.0f, 1500.0f, "%.1f");
+    }
 }
 
 REGISTER_GAMEOBJECT(Gimmic_BreakWall);

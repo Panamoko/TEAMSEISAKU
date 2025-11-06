@@ -1,6 +1,7 @@
 #include "TownHall.h"
 #include "System/ShapeRenderer.h"
 #include "System/RenderContext.h"
+#include "Factory.h"
 
 //#include "static_mesh.h"
 //#include "texture.h"
@@ -10,8 +11,9 @@
 using namespace DirectX;
 
 
-TownHall::TownHall(const XMFLOAT3& pos, float radius, int maxHP)
-	: position(pos), radius(radius), maxHP(maxHP), hp(maxHP) {}
+TownHall::TownHall()
+{
+}
 
 TownHall::~TownHall()
 {
@@ -19,8 +21,8 @@ TownHall::~TownHall()
 }
 
 
-void TownHall::Initialize() {
-
+void TownHall::Initialize()
+{
 	// 必要ならモデル読み込みなど。
 	// mesh = new StaticMesh("assets/townhall.fbx");
 	// tex = new Texture("assets/townhall_albedo.dds");
@@ -34,6 +36,9 @@ void TownHall::Initialize() {
 	animator.Play("Take 001", true);
 
 	scale = { 0.3f, 0.3f, 0.3f };
+
+	hp = 1500.0f;
+
 
 	collider = std::make_unique<CylinderCollider>();
 	collider->type = ColliderType::Cylinder;
@@ -97,3 +102,5 @@ void TownHall::OnCollision(GameObject* object)
 {
 	TakeDamage(1);
 }
+
+REGISTER_GAMEOBJECT(TownHall);

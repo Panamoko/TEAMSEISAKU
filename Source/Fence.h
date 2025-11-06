@@ -10,12 +10,14 @@ class ModelRenderer;
 
 class Fence final : public ITargetable {
 public:
-    Fence(const DirectX::XMFLOAT3& pos,
+    Fence(
+        const DirectX::XMFLOAT3& pos,
         float radius = 1.0f,
         float height = 1.2f,
         int   maxHP = 200)
         : position(pos), radius(radius), height(height),
-        maxHP(maxHP), hp(maxHP) {}
+        maxHP(maxHP), hp(maxHP) 
+    {}
 
     void Initialize() {
         // プロジェクトの実体配置に合わせてパスを調整
