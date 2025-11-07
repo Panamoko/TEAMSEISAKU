@@ -20,14 +20,6 @@ public:
 
 	void OnImGui();
 
-	static void OBBtoAABB(
-		const DirectX::XMFLOAT3& center,
-		const DirectX::XMFLOAT3& half,
-		const DirectX::XMFLOAT3 axis[3],
-		DirectX::XMFLOAT3& outPos,
-		DirectX::XMFLOAT3& outSize
-	);
-
 private:
 	bool isBroken = false;//‰ó‚ê‚½‚©‚Ç‚¤‚©
 	float hp = 2.0f;//‘Ï‹v“x

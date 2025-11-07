@@ -75,4 +75,13 @@ public:
 		const BoxCollider* box
 	);
 
+	static void OBBtoAABB(
+		const DirectX::XMFLOAT3& center,
+		const DirectX::XMFLOAT3& half,
+		const DirectX::XMFLOAT3 axis[3],
+		DirectX::XMFLOAT3& outPos,
+		DirectX::XMFLOAT3& outSize
+	);
+
+
 };
