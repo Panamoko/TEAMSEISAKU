@@ -34,6 +34,7 @@ public:
 	void CheckAllCollision();
 
 	DirectX::XMFLOAT3 GetMtd() { return mtd; }
+	DirectX::XMFLOAT3 SetMtd(DirectX::XMFLOAT3 outMtd) { return mtd = outMtd; }
 
 private:
 	CollisionManager() = default;
