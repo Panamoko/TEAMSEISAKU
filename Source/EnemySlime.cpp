@@ -13,7 +13,7 @@ EnemySlime::EnemySlime()
 	class_name = "EnemySlime";
 
 	// ModelManager ‚©‚çƒXƒ‰ƒCƒ€ƒ‚ƒfƒ‹Žæ“¾
-	model = ModelManager::Instance().Load("Data/Model/Slime/Slime.mdl");
+	model = ModelManager::Instance().Load("Data/Model/chara/teki.mdl");
 	//models.push_back(std::make_unique<Model>("Data/Model/Slime/Slime.mdl"));
 
 
