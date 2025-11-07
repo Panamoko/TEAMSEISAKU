@@ -31,7 +31,7 @@ public:
 		const DirectX::XMFLOAT3& positionB,
 		float radiusB,
 		float heightB,
-		DirectX::XMFLOAT3& outPositionB
+		DirectX::XMFLOAT3& mtd
 	);
 
 	// ‹…‚Æ‰~’Œ‚ÌŒğ·”»’è
