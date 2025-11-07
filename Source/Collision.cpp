@@ -336,3 +336,66 @@ bool Collision::IntersectCylinderVsAABB(
 {
 	return false;
 }
+
+void Collision::OBBtoAABB(
+	const DirectX::XMFLOAT3& center,
+	const DirectX::XMFLOAT3& half,
+	const DirectX::XMFLOAT3 axis[3],
+	DirectX::XMFLOAT3& outPos,
+	DirectX::XMFLOAT3& outSize)
+{
+	using namespace DirectX;
+
+	XMVECTOR C = XMLoadFloat3(&center);
+	XMVECTOR A0 = XMLoadFloat3(&axis[0]);
+	XMVECTOR A1 = XMLoadFloat3(&axis[1]);
+	XMVECTOR A2 = XMLoadFloat3(&axis[2]);
+
+	float hx = half.x;
+	float hy = half.y;
+	float hz = half.z;
+
+	XMFLOAT3 c[8];
+	const int s[8][3] =
+	{
+		{-1,-1,-1},{-1,+1,-1},{+1,+1,-1},{+1,-1,-1},
+		{-1,-1,+1},{-1,+1,+1},{+1,+1,+1},{+1,-1,+1},
+	};
+
+	for (int i = 0; i < 8; i++)
+	{
+		XMVECTOR p =
+			C +
+			A0 * (hx * s[i][0]) +
+			A1 * (hy * s[i][1]) +
+			A2 * (hz * s[i][2]);
+		XMStoreFloat3(&c[i], p);
+	}
+
+	XMFLOAT3 mn = c[0];
+	XMFLOAT3 mx = c[0];
+
+	for (int i = 1; i < 8; i++)
+	{
+		mn.x = (std::min)(mn.x, c[i].x);
+		mn.y = (std::min)(mn.y, c[i].y);
+		mn.z = (std::min)(mn.z, c[i].z);
+
+		mx.x = (std::max)(mx.x, c[i].x);
+		mx.y = (std::max)(mx.y, c[i].y);
+		mx.z = (std::max)(mx.z, c[i].z);
+	}
+
+	outPos = {
+		(mn.x + mx.x) * 0.5f,
+		(mn.y + mx.y) * 0.5f,
+		(mn.z + mx.z) * 0.5f
+	};
+
+	outSize = {
+		mx.x - mn.x,
+		mx.y - mn.y,
+		mx.z - mn.z
+	};
+
+}

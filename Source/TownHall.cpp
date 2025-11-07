@@ -45,15 +45,19 @@ void TownHall::Initialize()
 	collider->owner = this;
 	cylinder = static_cast<CylinderCollider*>(collider.get());
 
-	cylinder->center = position;
+	position.x += 10.0f;
+	position.z += 10.0f;
+
 	cylinder->height = height;
 	cylinder->radius = radius;
+	cylinder->center = position;
 
 	CollisionManager::Instance().AddObject(this);
 }
 
 
-void TownHall::Update(float elapsedtime) {
+void TownHall::Update(float elapsedtime)
+{
 	animator.Update(elapsedtime);
 }
 

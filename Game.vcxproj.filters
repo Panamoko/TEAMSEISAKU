@@ -450,6 +450,9 @@
     <ClCompile Include="Source\AllyTargeting.cpp">
       <Filter>Source\Character\Player</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Collider.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shader\Sprite.hlsli">

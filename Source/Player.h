@@ -5,7 +5,7 @@
 #include "ProjectileManager.h"
 #include <vector>
 #include <memory>
-
+#include"Animator.h"
 class Enemy;// ← 追記（前方宣言）ほぼ引数用のポインタ取得
 
 // プレイヤー
@@ -49,33 +49,10 @@ public:
 	// 自分がアクティブか判定
 	bool IsActive() const;        
 
-	// ★ 描画に使われたビューポートを内部にキャッシュ（TopLeftX/Y, Width/Height）
-	static void SetPickViewport(float topLeftX, float topLeftY, float width, float height);
+	// 数字キーで操作プレイヤーを切り替える（1→先頭、2→2人目）
+	// 戻り値: 切り替えが発生したら true
+	static bool UpdateActiveByKeyboard(const std::vector<std::unique_ptr<Player>>& players);
 
-	// ★ D3DのRSからビューポートを取得してキャッシュ（Renderの最初で1回呼ぶ）
-	static void CapturePickViewportFromRS();
-
-	// ★ クリック座標(px)から最寄りプレイヤーを取得（見つからなければnullptr）
-	static Player* PickNearestByScreenCircle(
-		float mouseX, float mouseY,
-		const std::vector<std::unique_ptr<Player>>& players,
-		float pixelRadius = 120.0f);
-
-	// ★ “クリックしたらアクティブ入れ替え”をまとめてやる（座標は呼び出し側が渡す）
-	static bool SelectActiveByScreenClick(
-		float mouseX, float mouseY,
-		const std::vector<std::unique_ptr<Player>>& players,
-		float pixelRadius = 120.0f);
-
-	// ★ ImGui / Input / Mouse を中で読む “ぜんぶお任せ版”
-	// Update でこれを1行呼ぶだけでOK
-	static bool UpdateSelectionFromMouse(
-		const std::vector<std::unique_ptr<Player>>& players,
-		float pixelRadius = 120.0f);
-	static void DebugDrawSelectionOverlay(
-		const std::vector<std::unique_ptr<Player>>& players,
-		float pixelRadius = 120.0f,
-		bool highlightActive = true);
 protected:
 	//着地したときに呼ばれる
 	void OnLanding() override;
@@ -123,7 +100,7 @@ private:
 	float		turnSpeed = DirectX::XMConvertToRadians(720);
 
 	std::shared_ptr<Enemy> FindNearestEnemy() const;         // ← 追記：最寄り敵の検索
-	
+	Animator animator;
 	enum class AttackPriority {
 		CoreFirst,  // コア優先（現在の動作）
 		EnemyFirst  // スライム優先

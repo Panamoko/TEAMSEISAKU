@@ -43,8 +43,8 @@ public:
 private:
 	DirectX::XMFLOAT3 position{}; // 中心（地面上）
 
-	float radius{}; // 円柱の半径（XZ判定）
-	float height{ 6.0f }; // デバッグ用の可視高さ（必要に応じて）
+	float radius{ 3.5f }; // 円柱の半径（XZ判定）
+	float height{ 7.0f }; // デバッグ用の可視高さ（必要に応じて）
 
 	int maxHP{};
 	int hp{};
