@@ -17,7 +17,7 @@
 #include <cmath>
 #include <DirectXMath.h>
 #include <algorithm>
-static constexpr int kMaxAlliesTotal = 5;
+static constexpr int kMaxAlliesPerPlayer = 5;
 using namespace DirectX;
 
 #include "Editor.h"
@@ -124,7 +124,7 @@ void SceneGame::Update(float elapsedTime)
 	cameraController->Update(elapsedTime);
 
 	BuildingManager::Instance().Update(elapsedTime);
-
+	Player::UpdateActiveByKeyboard(players);
 	if (auto th = BuildingManager::Instance().GetTownHall(); th && th->IsDestroyed()) {
 		// TODO: ここでゲームクリア遷移
 		// FadeManager::LoadScene(SceneType::GameClear);
@@ -153,7 +153,6 @@ void SceneGame::Update(float elapsedTime)
 
 		CollisionManager::Instance().CheckAllCollision();
 	}
-	Player::UpdateSelectionFromMouse(players, 120.0f);
 
 	// === 追加: C/Vでスポーン ===
 	auto& gp = Input::Instance().GetGamePad();
@@ -179,7 +178,6 @@ void SceneGame::Render()
 {
 	Graphics& graphics = Graphics::Instance();
 	ID3D11DeviceContext* dc = graphics.GetDeviceContext();
-	Player::CapturePickViewportFromRS();
 	ShapeRenderer* shapeRenderer = graphics.GetShapeRenderer();
 	ModelRenderer* modelRenderer = graphics.GetModelRenderer();
 	// 描画準備
@@ -310,7 +308,7 @@ void SceneGame::DrawGUI()
 		}
 	}
 
- Player::DebugDrawSelectionOverlay(players, /*pixelRadius=*/120.0f, /*highlightActive=*/true);
+
  ImGui::End();
 }
 
@@ -324,11 +322,11 @@ int SceneGame::CountAlliesFor(Player* leader) const
 
 void SceneGame::AddAllyStraightFor(Player* leader)
 {
-	if (CountAlliesGlobal() >= kMaxAlliesTotal) 
+	if (CountAlliesFor(leader) >= kMaxAlliesPerPlayer)
 	{
-        // （任意）ImGui::SetTooltip("Allies capped (5)");
-        return;
-    }
+		// （任意）ImGui::SetTooltip("Allies capped per player (5)");
+		return;
+	}
 	int slot = CountAlliesFor(leader);
 	auto p = std::make_unique<AllySlime>(slot); // 既存クラス＝直線弾
 	p->SetLeader(leader);
@@ -337,10 +335,10 @@ void SceneGame::AddAllyStraightFor(Player* leader)
 
 void SceneGame::AddAllyHomingFor(Player* leader)
 {
-	if (CountAlliesGlobal() >= kMaxAlliesTotal)
-	{
-       return;
-    }
+	// 新:
+	if (CountAlliesFor(leader) >= kMaxAlliesPerPlayer) {
+		return;
+	}
 	int slot = CountAlliesFor(leader);
 	auto p = std::make_unique<AllySlimeHoming>(slot); // 新規クラス＝追尾弾
 	p->SetLeader(leader);
