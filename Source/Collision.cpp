@@ -42,33 +42,57 @@ bool Collision::IntersectCylinderVsCylinder(
 	const DirectX::XMFLOAT3& positionB,
 	float radiusB,
 	float heightB,
-	DirectX::XMFLOAT3& outPositionB)
+	DirectX::XMFLOAT3& mtd)
 {
-	// Aの足元がBの頭より上なら当たっていない
-	if (positionA.y > positionB.y + heightB)
+	//Y軸方向の重なり確認
+	float minA = positionA.y;
+	float maxA = positionA.y; heightA;
+	float minB = positionB.y;
+	float maxB = positionB.y + heightB;
+
+	if (maxA < minB || maxB < minA)
 	{
+		mtd = { 0.0f,0.0f,0.0f };
 		return false;
 	}
-	// Aの頭がBの足元より下なら当たっていない
-	if (positionA.y + heightA < positionB.y)
+
+	// XZ平面で距離を調べる
+	float dx = positionA.x - positionB.x;
+	float dz = positionA.z - positionB.z;
+
+	float distSq = (dx * dx) + (dz * dz);
+	float hitDist = radiusA + radiusB;
+
+	if (distSq >= hitDist * hitDist)
 	{
+		//衝突無し
+		mtd = { 0.0f,0.0f,0.0f };
 		return false;
 	}
-	// XZ平面での範囲チェック
-	float vx = positionB.x - positionA.x;
-	float vz = positionB.z - positionA.z;
-	float range = radiusA + radiusB;
-	float distXZ = sqrtf(vx * vx + vz * vz);
-	if (distXZ > range)
+
+	//衝突している → 押し戻し量（MTD）計算
+	float dist = std::sqrtf(distSq);
+
+	//完全に同じ位置にある → 適当な方向へ押し出す
+	if (dist == 0.0f)
 	{
-		return false;
+		mtd = { hitDist,0.0f,0.0f };
+		return true;
 	}
-	// AがBを押し出す
-	vx /= distXZ;
-	vz /= distXZ;
-	outPositionB.x = positionA.x + (vx * range);
-	outPositionB.y = positionB.y;
-	outPositionB.z = positionA.z + (vz * range);
+
+	//めり込み量
+	float penetration = hitDist - dist;
+
+	//壁の中心 → A の方向ベクトル
+	float nx = dx / dist;
+	float nz = dz / dist;
+
+	//A を外側に押し戻すベクトル
+	mtd = {
+		nx * penetration,
+		0.0f,
+		nz * penetration
+	};
 
 	return true;
 }

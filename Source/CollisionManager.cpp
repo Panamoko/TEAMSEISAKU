@@ -140,17 +140,17 @@ void CollisionManager::CheckAllCollision()
 			}
 
 			////‰~’Œ@VS ‰~’Œ
-			//else if (objectA->collider->type == ColliderType::Cylinder &&
-			//		 objectB->collider->type == ColliderType::Cylinder)
-			//{
-			//	CylinderCollider* cylinderA = static_cast<CylinderCollider*>(objectA->collider.get());
-			//	CylinderCollider* cylinderB = static_cast<CylinderCollider*>(objectB->collider.get());
-			//	isCollisionDetected = Collision::IntersectCylinderVsCylinder(
-			//		cylinderA->center, cylinderA->radius, cylinderA->height,
-			//		cylinderB->center, cylinderB->radius, cylinderB->height,
-			//		mtd
-			//	);
-			//}
+			else if (objectA->collider->type == ColliderType::Cylinder &&
+					 objectB->collider->type == ColliderType::Cylinder)
+			{
+				CylinderCollider* cylinderA = static_cast<CylinderCollider*>(objectA->collider.get());
+				CylinderCollider* cylinderB = static_cast<CylinderCollider*>(objectB->collider.get());
+				isCollisionDetected = Collision::IntersectCylinderVsCylinder(
+					cylinderA->center, cylinderA->radius, cylinderA->height,
+					cylinderB->center, cylinderB->radius, cylinderB->height,
+					mtd
+				);
+			}
 
 			//Õ“Ë‚µ‚½ê‡
 			if (isCollisionDetected)
