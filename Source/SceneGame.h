@@ -4,7 +4,6 @@
 #include "CameraController.h"
 #include "Scene.h"
 #include "Editor.h"
-#include "Core.h"
 #include <memory>
 #include <vector>
 #include "AllySlime.h"
@@ -43,7 +42,6 @@ public:
 private:
 
 	editor game_editor;
-	Core core;
 	std::vector<std::unique_ptr<Model>> models;
 	// š’¼ü^’Ç”ö‚Ì•ÊŠÇ—
 	std::vector<std::unique_ptr<AllySlime>>       alliesStraight;

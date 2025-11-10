@@ -11,6 +11,7 @@ class Core : public GimmicBase
 public:
 	Core();
 	~Core();
+	void init();
 	void Update(float elapsedTime)override;
 	void Render(const RenderContext& rc, ModelRenderer* renderer)override;
 	//デバッグ描画
@@ -20,6 +21,6 @@ public:
 private:
 	Animator animator;               // 追加
 	CylinderCollider* cylinder;
-	float hp = 1500.0f;
+	float hp;
 };
 

@@ -132,13 +132,6 @@ void SceneGame::Update(float elapsedTime)
 	//	SceneManager::Instance().ChangeScene(new SceneLoading(new SceneTitle));
 	//	return;
 	//}
-	float CoreHp;
-	if (CoreHp = core.GetHP() <= 0.0f)
-	{
-		// コアが壊れたらローディングを挟んでタイトルへ
-		SceneManager::Instance().ChangeScene(new SceneLoading(new SceneTitle));
-		return;
-	}
 
 	if (game_editor.PlayGame())
 	{

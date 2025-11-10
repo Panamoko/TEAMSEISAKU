@@ -268,7 +268,9 @@
     <ClInclude Include="Source\AllyTargeting.h">
       <Filter>Source\Character\Player</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Core.h" />
+    <ClInclude Include="Source\Core.h">
+      <Filter>Source\Gimmic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -455,7 +457,7 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="Source\Core.cpp">
-      <Filter>Source</Filter>
+      <Filter>Source\Gimmic</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

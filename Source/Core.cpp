@@ -1,6 +1,9 @@
 #include "Core.h"
 #include "Factory.h"
 #include "ModelManager.h"
+#include "SceneManager.h"
+#include "SceneTitle.h"
+#include "SceneLoading.h"
 
 Core::Core()
 {
@@ -14,28 +17,35 @@ Core::Core()
 	collider->type = ColliderType::Cylinder;
 	collider->owner = this;
 	cylinder = static_cast<CylinderCollider*>(collider.get());
+	cylinder->height = 7.0f;
+	cylinder->radius = 3.5f;
 	CollisionManager::Instance().AddObject(this);
 
 	class_name = "Core";
 	scale = { 0.3f, 0.3f, 0.3f };
+	hp = 1500.0f;
 }
 
 Core::~Core()
 {
 }
 
+void Core::init()
+{
+	CollisionManager::Instance().AddObject(this);
+}
+
 void Core::Update(float elapsedTime)
 {
 	animator.Update(elapsedTime);
 
-	cylinder->height = 7.0f;
-	cylinder->radius = 3.5f;
 	cylinder->center = position;
 
 	if (hp <= 0.0f)
 	{
 		GimmicManager::Instance().Remove(this);
 		CollisionManager::Instance().Remove(this);
+		SceneManager::Instance().ChangeScene(new SceneLoading(new SceneTitle));
 	}
 }
 
