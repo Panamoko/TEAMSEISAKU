@@ -125,6 +125,7 @@
     <ClInclude Include="Source\AllySlimeHoming.h" />
     <ClInclude Include="Source\AllyTargeting.h" />
     <ClInclude Include="Source\Animator.h" />
+    <ClInclude Include="Source\Barracks.h" />
     <ClInclude Include="Source\BuildingManager.h" />
     <ClInclude Include="Source\Camera.h" />
     <ClInclude Include="Source\CameraController.h" />
@@ -195,6 +196,7 @@
     <ClCompile Include="Source\AllySlimeHoming.cpp" />
     <ClCompile Include="Source\AllyTargeting.cpp" />
     <ClCompile Include="Source\Animator.cpp" />
+    <ClCompile Include="Source\Barracks.cpp" />
     <ClCompile Include="Source\BuildingManager.cpp" />
     <ClCompile Include="Source\Camera.cpp" />
     <ClCompile Include="Source\CameraController.cpp" />
