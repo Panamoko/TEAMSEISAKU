@@ -22,7 +22,7 @@ using namespace DirectX;
 #include "SceneManager.h"
 #include "SceneTitle.h"
 #include "SceneLoading.h"
-#include "Editor.h"
+
 
 SceneGame::~SceneGame() = default;  // ★これを追加
 // 初期化
@@ -127,12 +127,18 @@ void SceneGame::Update(float elapsedTime)
 
 	BuildingManager::Instance().Update(elapsedTime);
 	Player::UpdateActiveByKeyboard(players);
-	if (auto th = BuildingManager::Instance().GetTownHall(); th && th->IsDestroyed()) {
+	//if (auto th = BuildingManager::Instance().GetTownHall(); th && th->IsDestroyed()) {
+	//	// コアが壊れたらローディングを挟んでタイトルへ
+	//	SceneManager::Instance().ChangeScene(new SceneLoading(new SceneTitle));
+	//	return;
+	//}
+	float CoreHp;
+	if (CoreHp = core.GetHP() <= 0.0f)
+	{
 		// コアが壊れたらローディングを挟んでタイトルへ
 		SceneManager::Instance().ChangeScene(new SceneLoading(new SceneTitle));
 		return;
 	}
-
 
 	if (game_editor.PlayGame())
 	{
@@ -219,9 +225,7 @@ void SceneGame::Render()
 		BuildingManager::Instance().Render(rc, modelRenderer);
 
 		//ギミック描画
-		GimmicManager::Instance().Render(rc, modelRenderer);
-
-		
+		GimmicManager::Instance().Render(rc, modelRenderer);		
 
 	}
 
@@ -249,8 +253,6 @@ void SceneGame::Render()
 				rc, p->GetPosition(), 1.2f, 0.05f, DirectX::XMFLOAT4(1, 1, 0, 0.5f));
 		}
 		BuildingManager::Instance().DebugDraw(rc, shapeRenderer);
-
-
 	}
 
 	// 2Dスプライト描画
