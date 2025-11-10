@@ -32,18 +32,24 @@ void Barracks::Update(float elapsedTime)
 		return;
 	}
 
+	//スポーン位置設定
+	spawn_positon.x += position.x;
+	spawn_positon.y += position.y;
+	spawn_positon.z += position.z;
+
 	spawn_timer += elapsedTime;
+
+	current_enemy_count = static_cast<int>(spawned_enemies.size());//スポーンしている敵の数を確認
 
 	//敵のスポーン数チェックと経過時間チェック
 	if (current_enemy_count < max_enemy_count && spawn_timer >= spawn_interval)
 	{
-		spawn_timer = 0.0f;
+		spawn_timer = 0.0f;							//経過時間をリセット
 
 		enemys = std::make_shared<EnemySlime>();	//敵をスポーン
-		enemys->SetPosition(spawn_positon);			//位置設定
+		enemys->SetPosition(spawn_positon);			//スポーン位置本設定
 		EnemyManager::Instance().Register(enemys);	//敵を登録
 		spawned_enemies.push_back(enemys);			//兵舎にも敵を登録
-		current_enemy_count++;						//敵の現在数を増やす
 	}
 
 	//兵舎が管理する敵の死体を整理
