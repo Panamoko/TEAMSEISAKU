@@ -19,7 +19,9 @@
 #include <algorithm>
 static constexpr int kMaxAlliesPerPlayer = 5;
 using namespace DirectX;
-
+#include "SceneManager.h"
+#include "SceneTitle.h"
+#include "SceneLoading.h"
 #include "Editor.h"
 
 SceneGame::~SceneGame() = default;  // ★これを追加
@@ -126,10 +128,11 @@ void SceneGame::Update(float elapsedTime)
 	BuildingManager::Instance().Update(elapsedTime);
 	Player::UpdateActiveByKeyboard(players);
 	if (auto th = BuildingManager::Instance().GetTownHall(); th && th->IsDestroyed()) {
-		// TODO: ここでゲームクリア遷移
-		// FadeManager::LoadScene(SceneType::GameClear);
-		// あるいはフラグを立てて UI 表示 → 入力で遷移
+		// コアが壊れたらローディングを挟んでタイトルへ
+		SceneManager::Instance().ChangeScene(new SceneLoading(new SceneTitle));
+		return;
 	}
+
 
 	if (game_editor.PlayGame())
 	{

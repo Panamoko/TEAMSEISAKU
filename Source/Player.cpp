@@ -692,9 +692,12 @@ void Player::InputToggleAttackPriority()
 	// 'X'キー（GamePad::BTN_B としてエミュレートされている）が押された瞬間
 	if (gamePad.GetButtonDown() & GamePad::BTN_B)
 	{
-		if (attackPriority == AttackPriority::CoreFirst) {
+		if (attackPriority == AttackPriority::CoreFirst) 
+		{
 			attackPriority = AttackPriority::EnemyFirst;
-		} else {
+		} 
+		else
+		{
 			attackPriority = AttackPriority::CoreFirst;
 		}
 	}
@@ -708,11 +711,13 @@ bool Player::UpdateActiveByKeyboard(const std::vector<std::unique_ptr<Player>>& 
 	auto& gp = Input::Instance().GetGamePad();
 	unsigned   down = gp.GetButtonDown();
 
-	if ((down & GamePad::BTN_BACK) && !players.empty()) {
+	if ((down & GamePad::BTN_BACK) && !players.empty()) 
+	{
 		Player::SetActive(players[0].get());   // 1キー → 先頭プレイヤー
 		return true;
 	}
-	if ((down & GamePad::BTN_START) && players.size() >= 2) {
+	if ((down & GamePad::BTN_START) && players.size() >= 2) 
+	{
 		Player::SetActive(players[1].get());   // 2キー → 2人目
 		return true;
 	}

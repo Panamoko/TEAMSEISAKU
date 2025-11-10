@@ -104,6 +104,7 @@ void TownHall::TakeDamage(int amount) {
 
 void TownHall::OnCollision(GameObject* object)
 {
+	if(type == Type::PlayerAttack)
 	TakeDamage(1);
 }
 
