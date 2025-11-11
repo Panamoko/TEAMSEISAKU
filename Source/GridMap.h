@@ -11,6 +11,10 @@
 	void Build(const std::vector < std::shared_ptr<GameObject>>& objects);
 	//指定セルが障害物かどうか調べる
 	bool IsBloked(int x, int z)const;
+
+	int GetWidth() { return width; }
+	int GetHeight() { return height; }
+
  private:
 	int width;//マップの横方向のセル数
 	int height;//マップの縦方向のセル数
