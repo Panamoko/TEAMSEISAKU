@@ -24,7 +24,7 @@ private:
 	// オービット用の状態（度数法）
 	float yawDeg = 0.0f;
 	float pitchDeg = 35.264f;
-	float distance = 25.0f;     // 好きな初期距離
+	float distance = 0.0f;     // 好きな初期距離
 
 	// ピッチ制限
 	float minPitchDeg = 5.0f;   // 真上に行き過ぎない

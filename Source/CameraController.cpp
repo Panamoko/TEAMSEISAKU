@@ -30,7 +30,7 @@ void CameraController::Update(float elapsedTime)
     const float wheelStepPerNotch = 2.0f; // ホイール1ノッチあたりの距離変化目安
     const float rotSpeed = 0.25f;     // オービット回転 [deg/px]
     const float minD = 10.0f;         // 最小距離
-    const float maxD = 45.0f;         // 最大距離
+    const float maxD = 65.0f;         // 最大距離
 
     // 現在のEye/Focus/距離
     XMFLOAT3 eyeF = camera.GetEye();

@@ -260,15 +260,10 @@
     <ClInclude Include="Source\Core.h">
       <Filter>Source\Gimmic</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Barracks.h" />
     <ClInclude Include="GameObjectManager.h" />
     <ClInclude Include="Source\EnemySlimeMelee.h" />
     <ClInclude Include="Source\ITargetable.h" />
-    <ClInclude Include="Source\Yagura.h">
-      <Filter>Source\Gimmic</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Barracks.h">
-      <Filter>Source\Gimmic</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -450,9 +445,6 @@
     </ClCompile>
     <ClCompile Include="Source\EnemySlimeMelee.cpp">
       <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Yagura.cpp">
-      <Filter>Source\Gimmic</Filter>
     </ClCompile>
     <ClCompile Include="Source\Barracks.cpp">
       <Filter>Source\Gimmic</Filter>

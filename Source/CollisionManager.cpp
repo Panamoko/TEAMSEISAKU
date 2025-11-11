@@ -108,6 +108,23 @@ void CollisionManager::CheckAllCollision()
 						contactPoint);
 			}
 
+			//‰~’Œ VS ‹…
+			else if (objectA->collider->type == ColliderType::Cylinder &&
+				objectB->collider->type == ColliderType::Sphere)
+			{
+				CylinderCollider* cylinderA = static_cast<CylinderCollider*>(objectA->collider.get());
+				SphereCollider* sphereB = static_cast<SphereCollider*>(objectB->collider.get());
+
+				DirectX::XMFLOAT3 contactPoint; // (IntersectSphereVsCylinder ‚ÌÅŒã‚Ìˆø”)
+
+				// Collision::IntersectSphereVsCylinder ‚Ìˆø”‚ð“ü‚ê‘Ö‚¦‚ÄŒÄ‚Ô
+				isCollisionDetected =
+					Collision::IntersectSphereVsCylinder(
+						sphereB->center, sphereB->radius,
+						cylinderA->center, cylinderA->radius, cylinderA->height,
+						contactPoint);
+			}
+
 			//‹… VS OBB
 			else if (objectA->collider->type == ColliderType::Sphere &&
 					 objectB->collider->type == ColliderType::OBB)
