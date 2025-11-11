@@ -20,18 +20,25 @@ Gimmic_BreakWall::Gimmic_BreakWall()
     scale.y = 0.05f;
     scale.z = 0.1f;
 
+    maxHp = 2.0f; 
+    hp = maxHp;
+    isBroken = false;
+    respawnTimer = 0.0f;
+
     CollisionManager::Instance().AddObject(this);
 }
 
 //衝突結果
 void Gimmic_BreakWall::OnCollision(GameObject* objects)
 {
+    if (isBroken) return;
+
     if (objects->type == Type::PlayerAttack)
         hp--;
     if (hp <= 0.0f)
     {
-        isActive = false;
-        GimmicManager::Instance().RemoveInactive();
+        isBroken = true;
+        respawnTimer = respawnTime;
         CollisionManager::Instance().Remove(this);
     }
 }
@@ -51,6 +58,20 @@ void Gimmic_BreakWall::Update(float elapsedTime)
         DirectX::XMConvertToRadians(angle.z)
     };
 
+    if (isBroken)
+    {
+        respawnTimer -= elapsedTime;
+        if (respawnTimer <= 0.0f)
+        {
+            isBroken = false;
+            hp = maxHp; 
+            respawnTimer = 0.0f;
+
+            // リポップしたので、当たり判定(CollisionManager)に再登録する
+            CollisionManager::Instance().AddObject(this);
+        }
+        return;
+    }
 
     // モデルの OBB を取得
     if (model->GetModelOBB(
@@ -79,9 +100,19 @@ void Gimmic_BreakWall::Update(float elapsedTime)
     }
 }
 
+void Gimmic_BreakWall::Render(const RenderContext& rc, ModelRenderer* renderer)
+{
+    if (isBroken) return;
+
+    GameObject::Render(rc, renderer);
+}
+
+
 void Gimmic_BreakWall::RenderDebugPrimitive(
     const RenderContext& rc, ShapeRenderer* renderer)
 {
+    if (isBroken) return;
+
     if (!renderer || !collider) return;
 
     DirectX::XMFLOAT3 pos;
@@ -105,6 +136,15 @@ void Gimmic_BreakWall::OnImGui()
 {
     if (ImGui::CollapsingHeader("BreakWall Settings"))
     {
+        ImGui::Checkbox("isBroken", &isBroken);
+        ImGui::DragFloat("HP", &hp, 0.1f, 0.0f, maxHp, "%.1f");
+        ImGui::DragFloat("Max HP", &maxHp, 0.1f, 1.0f, 1500.0f, "%.1f");
+        ImGui::DragFloat("Respawn Time", &respawnTime, 0.1f, 1.0f, 60.0f, "%.1f");
+        if (isBroken) {
+            ImGui::Text("Respawning in: %.1f", respawnTimer);
+            ImGui::ProgressBar(1.0f - (respawnTimer / respawnTime));
+        }
+
         ImGui::DragFloat("HP", &hp, 0.1f, 0.0f, 1500.0f, "%.1f");
         ImGui::DragFloat3("size", &size.x, 0.1f, 0.0f, 1500.0f, "%.1f");
     }
