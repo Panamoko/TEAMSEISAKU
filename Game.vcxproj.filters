@@ -261,6 +261,9 @@
       <Filter>Source\Gimmic</Filter>
     </ClInclude>
     <ClInclude Include="Source\Barracks.h" />
+    <ClInclude Include="GameObjectManager.h" />
+    <ClInclude Include="Source\EnemySlimeMelee.h" />
+    <ClInclude Include="Source\ITargetable.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -441,6 +444,9 @@
       <Filter>Source\Gimmic</Filter>
     </ClCompile>
     <ClCompile Include="Source\Barracks.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\EnemySlimeMelee.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
