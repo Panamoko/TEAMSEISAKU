@@ -9,7 +9,7 @@
 #include "ProjectileStraite.h"   // 直進弾（プレイヤーと同じものを使用）
 #include "ModelManager.h"        // モデルロード
 #include "Collision.h"           // 球×円柱などの当たり判定
-#include "AllyTargeting.h"   // ← 追加
+#include "AllyTargeting.h"   
 #include <cmath>
 #include <cfloat>
 
@@ -65,56 +65,40 @@ void AllySlime::AutoAttackUpdate(float elapsedTime)
 {
     if (!autoAttackEnabled) return;
 
-    // 連射クールダウン
+    // クールダウン
     if (autoAttackTimer > 0.0f) {
         autoAttackTimer -= elapsedTime;
         return;
     }
 
-    // 射程内の“最寄り”の敵を探索
-    EnemyManager& em = EnemyManager::Instance();
-    const int enemyCount = em.GetEnemyCount();
-    if (enemyCount <= 0) return;
+    // 自分の発射基点（胸元）
+    const DirectX::XMFLOAT3 muzzle = { position.x, position.y + height * 0.5f, position.z };
 
-    float bestDistSq = FLT_MAX;
-    std::shared_ptr<Enemy> bestEnemy = nullptr;
+    // 優先度: Core > BreakWall > Enemy
+    AllyTargeting::TargetInfo tgt =
+        AllyTargeting::FindBestTarget(position, autoAttackRange, &EnemyManager::Instance());
 
-    for (int i = 0; i < enemyCount; ++i) {
-        std::shared_ptr<Enemy> enemy = em.GetEnemy(i);
-        if (!enemy) continue;
+    if (!tgt) return;
 
-        // 自分中心→敵上半身あたりまでの距離（Yは上半身同士で合わせる）
-        const XMFLOAT3& ep = enemy->GetPosition();
-        float dx = ep.x - position.x;
-        float dy = (ep.y + enemy->GetHeight() * 0.5f) - (position.y + height * 0.5f);
-        float dz = ep.z - position.z;
-        const float distSq = dx * dx + dy * dy + dz * dz;
-
-        if (distSq <= autoAttackRange * autoAttackRange && distSq < bestDistSq) {
-            bestDistSq = distSq;
-            bestEnemy = enemy;
-        }
-    }
-    if (!bestEnemy) return; // 射程内にいない
-
-    // 発射位置（胸元くらい）
-    const XMFLOAT3 pos = { position.x, position.y + height * 0.5f, position.z };
-
-    // 敵（上半身）方向の正規化ベクトルを算出
-    XMFLOAT3 target = bestEnemy->GetPosition();
-    target.y += bestEnemy->GetHeight() * 0.5f;
-    XMFLOAT3 dir = { target.x - pos.x, target.y - pos.y, target.z - pos.z };
-    const float len = std::sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
-    if (len < 0.001f) return;
+    // 発射方向ベクトル
+    DirectX::XMFLOAT3 dir = {
+        tgt.pos.x - muzzle.x,
+        tgt.pos.y - muzzle.y,
+        tgt.pos.z - muzzle.z
+    };
+    float len = std::sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
+    if (len < 1e-4f) return;
     dir.x /= len; dir.y /= len; dir.z /= len;
 
-    // 直進弾を生成→発射（Player と同じ ProjectileStraite を使用）
-    auto* proj = new ProjectileStraite(&projectileManager); // 管理は自前の projectileManager
-    proj->Launch(dir, pos);
+    // 直進弾を生成＆発射（※Player と同じ ProjectileStraite を使用）
+    auto* p = new ProjectileStraite(&projectileManager);
+    p->Launch(dir, muzzle); // 位置と方向のみ
+    projectileManager.Register(p);
 
-    // クールダウン開始
+    // 連射間隔リセット
     autoAttackTimer = autoAttackInterval;
 }
+
 
 void AllySlime::CollisionProjectilesVsEnemies()
 {

@@ -3,6 +3,7 @@
 // AllySlime と同一設計の追尾弾スライム（.cpp）
 // =============================================
 #include "AllySlimeHoming.h"
+#include "AllyTargeting.h"
 #include "Player.h"
 #include "EnemyManager.h"
 #include "ProjectileHoming.h"
@@ -63,40 +64,31 @@ void AllySlimeHoming::AutoAttackUpdate(float elapsedTime)
         return;
     }
 
-    EnemyManager& em = EnemyManager::Instance();
-    const int enemyCount = em.GetEnemyCount();
-    if (enemyCount <= 0) return;
+    const DirectX::XMFLOAT3 muzzle = { position.x, position.y + height * 0.5f, position.z };
 
-    // 射程内の最寄り敵
-    float bestDistSq = FLT_MAX;
-    std::shared_ptr<Enemy> bestEnemy;
-    const XMFLOAT3 muzzle = { position.x, position.y + height * 0.5f, position.z };
+    // Core > BreakWall > Enemy の順で検索
+    AllyTargeting::TargetInfo tgt =
+        AllyTargeting::FindBestTarget(position, autoAttackRange, &EnemyManager::Instance());
+    if (!tgt) return;
 
-    for (int i = 0; i < enemyCount; ++i) {
-        auto e = em.GetEnemy(i);
-        if (!e) continue;
-        XMFLOAT3 q = e->GetPosition(); q.y += e->GetHeight() * 0.5f;
-        float dx = q.x - muzzle.x, dy = q.y - muzzle.y, dz = q.z - muzzle.z;
-        float d2 = dx * dx + dy * dy + dz * dz;
-        if (d2 < bestDistSq) { bestDistSq = d2; bestEnemy = e; }
-    }
-    if (!bestEnemy) return;
-    if (bestDistSq > autoAttackRange * autoAttackRange) return;
-
-    // 発射方向
-    XMFLOAT3 target = bestEnemy->GetPosition();
-    target.y += bestEnemy->GetHeight() * 0.5f;
-    XMFLOAT3 dir = { target.x - muzzle.x, target.y - muzzle.y, target.z - muzzle.z };
+    // 初期向き（ターゲット方向へ）
+    DirectX::XMFLOAT3 dir = {
+        tgt.pos.x - muzzle.x,
+        tgt.pos.y - muzzle.y,
+        tgt.pos.z - muzzle.z
+    };
     float len = std::sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
-    if (len < 0.001f) return;
+    if (len < 1e-4f) return;
     dir.x /= len; dir.y /= len; dir.z /= len;
 
-    // ★追尾弾を生成（違いはここだけ）
-    auto* proj = new ProjectileHoming(&projectileManager);
-    proj->Launch(dir, muzzle, target);
+    // 追尾弾（ProjectileHoming）を生成し、ターゲット座標を渡す
+    auto* p = new ProjectileHoming(&projectileManager);
+    p->Launch(dir, muzzle, tgt.pos);  // ← target に向かって旋回する
+    projectileManager.Register(p);
 
     autoAttackTimer = autoAttackInterval;
 }
+
 
 void AllySlimeHoming::CollisionProjectilesVsEnemies()
 {

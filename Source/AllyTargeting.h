@@ -1,13 +1,25 @@
-//#pragma once
-//#include <DirectXMath.h>
-//
-//class TownHall;
-//
-//// 射程内の「敵 or コア(TownHall)」から最寄りの“狙う座標”を返す
-//// 戻り値: 見つかれば true（outTarget に座標を入れる）
-//bool FindBestTargetPos_EnemyOrCore(const DirectX::XMFLOAT3& self,
-//    float range,
-//    DirectX::XMFLOAT3& outTarget);
-//
-//// コア(TownHall)の取得ヘルパ
-//TownHall* GetCore();
+#pragma once
+#include <DirectXMath.h>
+
+class EnemyManager;
+class Enemy;
+class GimmicBase;
+
+namespace AllyTargeting
+{
+    enum class Kind { None, Core, BreakWall, Enemy };
+
+    struct TargetInfo {
+        Kind kind = Kind::None;
+        DirectX::XMFLOAT3 pos{ 0,0,0 };  // 弾が狙う座標（やや上半身を狙う）
+        Enemy* enemy = nullptr;         // Enemy のときのみ
+        GimmicBase* gimmick = nullptr;  // Core / BreakWall のときのみ
+        float distSq = FLT_MAX;
+        explicit operator bool() const { return kind != Kind::None; }
+    };
+
+    // 優先度: Core > BreakWall > Enemy（range 以内のみ）
+    TargetInfo FindBestTarget(const DirectX::XMFLOAT3& selfPos,
+        float range,
+        EnemyManager* enemyMgr = nullptr);
+}

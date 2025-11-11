@@ -1,49 +1,79 @@
-//#include "AllyTargeting.h"
-//#include <cfloat>
-//#include <cmath>
-//#include "EnemyManager.h"
-//#include "TownHall.h"
-//
-//// ‚ ‚È‚½‚ÌŠÂ‹«‚ÌƒRƒAQÆ‚É‡‚í‚¹‚Ä BuildingManager “™‚ğ include
-//// —á:
-//// #include "BuildingManager.h"
-//
-//using namespace DirectX;
-//
-//TownHall* GetCore()
-//{
-//    extern TownHall * gTownHall; // © ‚±‚±‚ÍÀŠÂ‹«‚É‡‚í‚¹‚Ä‚­‚¾‚³‚¢
-//    return gTownHall;
-//}
-//
-//bool FindBestTargetPos_EnemyOrCore(const XMFLOAT3& self, float range, XMFLOAT3& outTarget)
-//{
-//    const float r2 = range * range;
-//    float bestD2 = FLT_MAX;
-//    bool  found = false;
-//
-//    // 1) “G‚©‚ç’Tõ
-//    auto& em = EnemyManager::Instance();
-//    const int n = em.GetEnemyCount();
-//    for (int i = 0; i < n; ++i) {
-//        auto e = em.GetEnemy(i);
-//        if (!e) continue;
-//        XMFLOAT3 p = e->GetPosition();
-//        p.y += e->GetHeight() * 0.5f; // “·‘Ì‚ ‚½‚è‚ğ‘_‚¤
-//        float dx = p.x - self.x, dy = p.y - self.y, dz = p.z - self.z;
-//        float d2 = dx * dx + dy * dy + dz * dz;
-//        if (d2 <= r2 && d2 < bestD2) { bestD2 = d2; outTarget = p; found = true; }
-//    }
-//
-//    // 2) ƒRƒAiTownHallj‚àŒó•â‚É
-//    if (auto core = GetCore()) {
-//        if (core->IsAlive()) {
-//            XMFLOAT3 p = core->GetPosition();
-//            p.y += core->GetHeight() * 0.5f;
-//            float dx = p.x - self.x, dy = p.y - self.y, dz = p.z - self.z;
-//            float d2 = dx * dx + dy * dy + dz * dz;
-//            if (d2 <= r2 && d2 < bestD2) { bestD2 = d2; outTarget = p; found = true; }
-//        }
-//    }
-//    return found;
-//}
+#include "AllyTargeting.h"
+#include <cfloat>
+#include <cmath>
+#include "GimmicManager.h"
+#include "Gimmic_BreakWall.h"
+#include "Core.h"
+#include "EnemyManager.h"
+#include "Enemy.h"
+
+using namespace DirectX;
+
+namespace {
+    inline float DistSq(const XMFLOAT3& a, const XMFLOAT3& b) {
+        const float dx = a.x - b.x, dy = a.y - b.y, dz = a.z - b.z;
+        return dx * dx + dy * dy + dz * dz;
+    }
+    inline XMFLOAT3 AimUpper(const XMFLOAT3& p, float up = 0.5f) {
+        return XMFLOAT3{ p.x, p.y + up, p.z };
+    }
+}
+
+AllyTargeting::TargetInfo AllyTargeting::FindBestTarget(const XMFLOAT3& selfPos,
+    float range,
+    EnemyManager* enemyMgr)
+{
+    TargetInfo best;
+    const float rangeSq = range * range;
+
+    // 1) Core ‚ğÅ—Dæ
+    for (auto& g : GimmicManager::Instance().GetAll()) {
+        if (!g) continue;
+        if (auto* core = dynamic_cast<Core*>(g.get())) {
+            const XMFLOAT3 pos = core->GetPosition();
+            const float d2 = DistSq(selfPos, pos);
+            if (d2 <= rangeSq && d2 < best.distSq) {
+                best.kind = Kind::Core;
+                best.gimmick = core;
+                best.pos = AimUpper(pos, 0.7f);
+                best.distSq = d2;
+            }
+        }
+    }
+    if (best) return best;
+
+    // 2) BreakWall
+    for (auto& g : GimmicManager::Instance().GetAll()) {
+        if (!g) continue;
+        if (auto* wall = dynamic_cast<Gimmic_BreakWall*>(g.get())) {
+            const XMFLOAT3 pos = wall->GetPosition();
+            const float d2 = DistSq(selfPos, pos);
+            if (d2 <= rangeSq && d2 < best.distSq) {
+                best.kind = Kind::BreakWall;
+                best.gimmick = wall;
+                best.pos = AimUpper(pos, 0.3f); // ’†S‚â‚âã
+                best.distSq = d2;
+            }
+        }
+    }
+    if (best) return best;
+
+    // 3) Enemyi]—ˆ’Ê‚è‚ÌgÅ‹ßÚhj
+    if (enemyMgr) {
+        const int n = enemyMgr->GetEnemyCount();
+        for (int i = 0; i < n; ++i) {
+            auto e = enemyMgr->GetEnemy(i);
+            if (!e) continue;
+            const XMFLOAT3 pos = e->GetPosition();
+            const float d2 = DistSq(selfPos, pos);
+            if (d2 <= rangeSq && d2 < best.distSq) {
+                best.kind = Kind::Enemy;
+                best.enemy = e.get();
+                // ã”¼g‚ğ‘_‚¤
+                best.pos = AimUpper(pos, e->GetHeight() * 0.5f);
+                best.distSq = d2;
+            }
+        }
+    }
+    return best; // None or Enemy
+}
