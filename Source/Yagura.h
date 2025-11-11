@@ -4,7 +4,7 @@
 
 class Yagura : public GimmicBase
 {
-private:
+public:
 	Yagura();
 	~Yagura();
 	void Update(float elapsedTime)override; //ギミック更新処理
@@ -12,7 +12,7 @@ private:
 	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) override;//デバッグ表示
 	float GetHp() { return hp; }//HP取得
 
-public:
+private:
 	float attack_range;	//攻撃範囲
 	float hp;			//耐久度
 	float power;		//攻撃力
