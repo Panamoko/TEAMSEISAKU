@@ -36,6 +36,8 @@ public:
 
 	int GetID() { return id; }
 
+	OBB GameObject::GetOBB() const;
+
 public:
 	Model* model = nullptr;//実際のモデルデータ
 	std::unique_ptr<Collider> collider;

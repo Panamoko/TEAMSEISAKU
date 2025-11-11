@@ -21,6 +21,27 @@ void GameObject::UpdateTransform()
 	DirectX::XMStoreFloat4x4(&transform, W);
 }
 
+OBB GameObject::GetOBB() const
+{
+	OBB box;
+	if (!model || !collider) return box;
+
+	box.type = ColliderType::OBB;
+	box.owner = const_cast<GameObject*>(this);
+
+	bool ok = model->GetModelOBB(
+		model,
+		position,
+		angle,
+		scale,
+		box.center,
+		box.half,
+		box.axis
+	);
+
+	return box;
+}
+
 GameObject::GameObject() :name("Empty")
 {
 	id = nextID;
