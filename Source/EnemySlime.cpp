@@ -3,7 +3,6 @@
 #include "EnemySlime.h"
 #include "ProjectileStraite.h"
 #include "Player.h"
-#include "BuildingManager.h"
 #include "Collision.h"
 #include <cfloat>
 
@@ -68,20 +67,6 @@ void EnemySlime::Update(float elapsedTime)
 
 	//速力処理更新
 	UpdateVelocity(elapsedTime);
-
-	{
-		auto& bm = BuildingManager::Instance();
-		const int n = bm.GetFenceCount();
-		for (int i = 0; i < n; ++i) {
-			const Fence* f = bm.GetFence(i);
-			if (!f || !f->IsAlive()) continue;
-			const OBB& box = bm.GetFence(i)->GetOBB();
-			DirectX::XMFLOAT3 mtd;
-			if (Collision::IntersectCylinderVsOBB(position, radius, height, box, &mtd)) {
-				position.x += mtd.x; position.y += mtd.y; position.z += mtd.z;
-			}
-		}
-	}
 
 	//弾丸更新処理
 	projectileManager.Update(elapsedTime);

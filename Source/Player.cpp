@@ -13,8 +13,6 @@
 #include <DirectXMath.h>
 #include <d3d11.h>
 #include <algorithm>
-#include "BuildingManager.h"
-#include "TownHall.h"
 using namespace DirectX;
 
 
@@ -293,19 +291,6 @@ void Player::CollisionPlayerVsEnemies()
 
 void Player::CollisionPlayerVsFences()
 {
-	{
-		auto& bm = BuildingManager::Instance();
-		const int n = bm.GetFenceCount();
-		for (int i = 0; i < n; ++i) {
-			const Fence* f = bm.GetFence(i);
-			if (!f || !f->IsAlive()) continue;
-			const OBB& box = bm.GetFence(i)->GetOBB();
-			DirectX::XMFLOAT3 mtd;
-			if (Collision::IntersectCylinderVsOBB(position, radius, height, box, &mtd)) {
-				position.x += mtd.x; position.y += mtd.y; position.z += mtd.z;
-			}
-		}
-	}
 }
 
 
@@ -448,7 +433,6 @@ void Player::InputProjectile()
 void Player::CollisionProjectilesVsEnemies()
 {
 	EnemyManager& enemyManager = EnemyManager::Instance();
-	TownHall* townHall = BuildingManager::Instance().GetTownHall();
 
 	const int projectileCount = projectileManager.GetProjectileCount();
 	const int enemyCount = enemyManager.GetEnemyCount();
@@ -459,25 +443,6 @@ void Player::CollisionProjectilesVsEnemies()
 		if (!projectile) continue;
 
 		bool destroyed = false;
-
-		// 1) まず TownHall との衝突
-		if (townHall && townHall->IsAlive())
-		{
-			DirectX::XMFLOAT3 outPos;
-			if (Collision::IntersectSphereVsCylinder(
-				projectile->GetPosition(),
-				projectile->GetRadius(),
-				townHall->GetPosition(),
-				townHall->GetRadius(),
-				townHall->GetHeight(),
-				outPos))
-			{
-				townHall->TakeDamage(1);
-				projectile->Destroy();
-				destroyed = true;
-			}
-		}
-		if (destroyed) continue;
 
 		// 2) つぎに「弾 × 敵」
 		for (int j = 0; j < enemyCount; ++j)
@@ -537,18 +502,12 @@ void Player::AutoAttackUpdate(float elapsedTime)
 	// ==============================
 	// 1) ターゲット候補を検索
 	// ==============================
-	TownHall* townHall = BuildingManager::Instance().GetTownHall();
 
 	DirectX::XMFLOAT3 coreTargetPos{};
 	bool coreInRange = false;
 	DirectX::XMFLOAT3 enemyTargetPos{};
 	bool enemyInRange = false;
 	float nearestEnemyDistSq = FLT_MAX; // ★ 最も近い敵の距離（3D）
-
-	// 1a. コアのチェック
-	if (townHall && townHall->IsAlive()) {
-		// ... (コアが射程内かチェックし、coreInRange と coreTargetPos を設定) ...
-	}
 
 	// 1b. 敵のチェック (FindNearestEnemy を使わず、ここでループ)
 	EnemyManager& em = EnemyManager::Instance();

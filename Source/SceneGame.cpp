@@ -8,7 +8,6 @@
 #include "Player.h"
 #include "AllySlime.h"         // 既存＝直線弾
 #include "AllySlimeHoming.h"   // 新規＝追尾弾
-#include "BuildingManager.h"
 #include <cfloat>          // ★ FLT_MAX 用
 #include "System/Mouse.h"  // ★ Mouse::BTN_LEFT / GetX()/GetY() を使うなら明示的に
 #include "CollisionManager.h"
@@ -261,53 +260,7 @@ void SceneGame::DrawGUI()
 {
 	//Player::Instance().DrawDebugGUI();
 
-	// === 建物ステータスウィンドウ ===
-	ImGui::Begin("Buildings Status");
 
-	// --- タウンホールのHP ---
-	if (auto th = BuildingManager::Instance().GetTownHall())
-	{
-		ImGui::Text("TownHall HP:");
-		int currentHP = th->GetHP();
-		int maxHP = th->GetMaxHP();
-		float ratio = (maxHP > 0) ? ((float)currentHP / (float)maxHP) : 0.0f;
-
-		// HPを "1300/1500" のようにテキストで表示
-		std::string hp_text = std::to_string(currentHP) + "/" + std::to_string(maxHP);
-		ImGui::ProgressBar(ratio, ImVec2(200, 16), hp_text.c_str());
-	}
-
-	ImGui::Separator(); // 区切り線
-
-	// --- 柵のHP ---
-	BuildingManager& bm = BuildingManager::Instance();
-	int fenceCount = bm.GetFenceCount(); // 柵の総数を取得
-	if (fenceCount > 0)
-	{
-		ImGui::Text("Fences HP:");
-		// 登録されている全ての柵をループ
-		for (int i = 0; i < fenceCount; ++i)
-		{
-			Fence* f = bm.GetFence(i); // i番目の柵を取得
-			if (!f || !f->IsAlive()) continue; // 取得失敗か、すでにHP 0 ならスキップ
-
-			int currentHP = f->GetHP(); // ステップ1で追加した関数
-			int maxHP = f->GetMaxHP();  // ステップ1で追加した関数
-			float ratio = (maxHP > 0) ? ((float)currentHP / (float)maxHP) : 0.0f;
-
-			// ラベル（"Fence 0: 150/200" のように表示）
-			std::string label = "Fence " + std::to_string(i) + ": " +
-				std::to_string(currentHP) + "/" + std::to_string(maxHP);
-
-			// 各プログレスバーにユニークIDを設定 (ImGuiのお作法)
-			ImGui::PushID(f);
-			ImGui::ProgressBar(ratio, ImVec2(180, 16), label.c_str());
-			ImGui::PopID();
-		}
-	}
-
-
- ImGui::End();
 }
 
 int SceneGame::CountAlliesFor(Player* leader) const

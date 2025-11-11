@@ -1,5 +1,4 @@
 #include "ProjectileStraite.h"
-#include "BuildingManager.h"
 #include "Collision.h"
 #include "Collider.h"
 
@@ -66,35 +65,6 @@ void ProjectileStraite::Update(float elapsedTime)
 
 	// ƒ‚ƒfƒ‹s—ñXV
 	model->UpdateTransform();
-
-	{
-		auto& bm = BuildingManager::Instance();
-		const int n = bm.GetFenceCount();
-		for (int i = 0; i < n; ++i) {
-			Fence* f = bm.GetFence(i);
-			if (!f || !f->IsAlive()) continue;
-			const OBB& box = f->GetOBB();
-			DirectX::XMFLOAT3 mtd;
-			if (Collision::IntersectSphereVsOBB(position, GetRadius(), box, &mtd)) {
-				// Žd—l‚É‰ž‚¶‚ÄFÁ–Å / ”½ŽË / Žh‚³‚é “™
-				f->TakeDamage(GetDamage());
-				Destroy();
-				return;
-			}
-		}
-	}
-
-	if (auto th = BuildingManager::Instance().GetTownHall(); th && th->IsAlive()) {
-		const auto& c = th->GetPosition();
-		const float dx = position.x - c.x; // Ž©’e‚ÌŒ»ÝˆÊ’u
-		const float dz = position.z - c.z;
-		const float sumR = radius + th->GetRadius(); // ’e‚Ì”¼Œa + Œš•¨‚Ì”¼Œa
-		if (dx * dx + dz * dz <= sumR * sumR) {
-			th->TakeDamage(GetDamage());
-			Destroy(); // Šù‘¶‚ÌŽ©‰óƒnƒ“ƒhƒ‰
-			return;
-		}
-	}
 }
 
 void ProjectileStraite::Render(const RenderContext& rc, ModelRenderer* renderer)

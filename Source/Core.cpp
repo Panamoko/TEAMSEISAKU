@@ -4,6 +4,7 @@
 #include "SceneManager.h"
 #include "SceneTitle.h"
 #include "SceneLoading.h"
+#include <imgui.h>
 
 Core::Core()
 {
@@ -72,6 +73,14 @@ void Core::OnCollision(GameObject* object)
 {
 	if (object->type == Type::PlayerAttack)
 	hp -= 10.0f;
+}
+
+void Core::OnImGui()
+{
+	if (ImGui::CollapsingHeader("Core"))
+	{
+		ImGui::DragFloat("HP", &hp, 0.1f, 0.0f, 1500.0f, "%.1f");
+	}
 }
 
 REGISTER_GAMEOBJECT(Core);
