@@ -9,27 +9,29 @@ class Gimmic_BreakWall : public GimmicBase
 public:
 	Gimmic_BreakWall();
 
-	//Õ“ËŒ‹‰Ê
+	//ï¿½Õ“ËŒï¿½ï¿½ï¿½
 	void OnCollision(GameObject* objects) override;
 
-	//ƒMƒ~ƒbƒNXVˆ—
+	//ï¿½Mï¿½~ï¿½bï¿½Nï¿½Xï¿½Vï¿½ï¿½ï¿½ï¿½
 	void Update(float elapsedTime)override;
 
-	//•`‰æˆ—
+	//ï¿½`ï¿½æˆï¿½ï¿½
 	void Render(const RenderContext& rc, ModelRenderer* renderer) override;
 
-	//ƒfƒoƒbƒO•`‰æ
+	//ï¿½fï¿½oï¿½bï¿½Oï¿½`ï¿½ï¿½
 	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) override;
 
 	void OnImGui();
 
-private:
-	bool isBroken = false;//‰ó‚ê‚½‚©‚Ç‚¤‚©
-	float hp = 2.0f;//‘Ï‹v“x
+	bool IsBroken() const { return isBroken; } // æ”»æ’ƒå¯¾è±¡åˆ¤å®šç”¨
 
-	float maxHp = 2.0f; // ƒŠƒ|ƒbƒv‚Ì‚½‚ß‚ÉÅ‘åHP‚ğ‹L‰¯
-	float respawnTime = 5.0f; // ƒŠƒ|ƒbƒv‚·‚é‚Ü‚Å‚ÌŠÔ (5•b)
-	float respawnTimer = 0.0f; // ƒŠƒ|ƒbƒvƒ^ƒCƒ}[
+private:
+	bool isBroken = false;//ï¿½ï¿½ê‚½ï¿½ï¿½ï¿½Ç‚ï¿½ï¿½ï¿½
+	float hp = 2.0f;//ï¿½Ï‹vï¿½x
+
+	float maxHp = 2.0f; // ï¿½ï¿½ï¿½|ï¿½bï¿½vï¿½ï¿½ï¿½Ì‚ï¿½ï¿½ß‚ÉÅ‘ï¿½HPï¿½ï¿½ï¿½Lï¿½ï¿½
+	float respawnTime = 5.0f; // ï¿½ï¿½ï¿½|ï¿½bï¿½vï¿½ï¿½ï¿½ï¿½Ü‚Å‚Ìï¿½ï¿½ï¿½ (5ï¿½b)
+	float respawnTimer = 0.0f; // ï¿½ï¿½ï¿½|ï¿½bï¿½vï¿½^ï¿½Cï¿½}ï¿½[
 
 	DirectX::XMFLOAT3 halfSize;
 	DirectX::XMFLOAT3 size;
