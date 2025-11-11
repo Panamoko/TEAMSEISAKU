@@ -67,6 +67,9 @@
     <Filter Include="Source\Collision\Collider">
       <UniqueIdentifier>{cf744a00-a40a-4416-9889-9ba4c96286ea}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Route_Search">
+      <UniqueIdentifier>{3bf54088-7a00-4356-b057-fb1cf783c55f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui-docking\imconfig.h">
@@ -264,6 +267,13 @@
     <ClInclude Include="GameObjectManager.h" />
     <ClInclude Include="Source\EnemySlimeMelee.h" />
     <ClInclude Include="Source\ITargetable.h" />
+    <ClInclude Include="Source\Yagura.h" />
+    <ClInclude Include="Source\GridMap.h">
+      <Filter>Source\Route_Search</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AStar.h">
+      <Filter>Source\Route_Search</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -448,6 +458,15 @@
     </ClCompile>
     <ClCompile Include="Source\Barracks.cpp">
       <Filter>Source\Gimmic</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Yagura.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GridMap.cpp">
+      <Filter>Source\Route_Search</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AStar.cpp">
+      <Filter>Source\Route_Search</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
