@@ -13,9 +13,7 @@ public:
 	float GetHp() { return hp; }//HPæ“¾
 
 private:
-	float attack_range;	//UŒ‚”ÍˆÍ
 	float hp;			//‘Ï‹v“x
-	float power;		//UŒ‚—Í
 	OBB* obb;
 };
 
