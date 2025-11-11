@@ -11,7 +11,9 @@ void GimmicManager::Update(float elapsedTime)
 {
 	for (auto& gimmic : gimmicks)
 	{
+		if (!gimmic)continue;
 		gimmic->Update(elapsedTime);
+
 	}
 	RemoveInactive();
 }
