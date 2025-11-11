@@ -443,11 +443,11 @@
     <ClCompile Include="Source\Core.cpp">
       <Filter>Source\Gimmic</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Barracks.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="Source\EnemySlimeMelee.cpp">
       <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Barracks.cpp">
+      <Filter>Source\Gimmic</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
