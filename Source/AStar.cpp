@@ -59,20 +59,43 @@ std::vector<std::pair<int, int>> AStar::FindPath(
             int neighborZ = neighbor.second;
 
             //クローズ済みならスキップ
-            if (closed_set.find({ neighborX,neighborZ }) != closed_set.end()); 
+            if (closed_set.find({ neighborX,neighborZ }) != closed_set.end())
             continue;
 
-            //新しいノードを作成
-            auto neighborNode = std::make_unique<Node>();
-            neighborNode->node_x = neighborX;
-            neighborNode->node_z = neighborZ;
-            neighborNode->goal_cost = currentNode->goal_cost + move_cost;
-            neighborNode->h_cost = Heuristic(neighborX, neighborZ, goal_cellX, goal_cellZ);
-            neighborNode->parent = currentNode;
+            //ノードが既に作成済みかチェック
+            Node* neighborNodeRtr = nullptr;
+            auto it = node_map.find({ neighborX,neighborZ });
+            if (it != node_map.end())
+            {
+                neighborNodeRtr = it->second;
 
-            Node* neighborNodePtr = neighborNode.get();
-            allNodes.push_back(std::move(neighborNode));
-            open_list.push(neighborNodePtr);
+                //既存ノードのコストを改善できるか判定
+                float new_goal_cost = currentNode->goal_cost + move_cost;
+                if (new_goal_cost < neighborNodeRtr->goal_cost)
+                {
+                    neighborNodeRtr->goal_cost = new_goal_cost;
+                    neighborNodeRtr->parent = currentNode;
+
+                    //オープンリストに再追加
+                    open_list.push(neighborNodeRtr);
+                }
+
+            }
+            else
+            {
+                //新しいノードを作成
+                auto neighborNode = std::make_unique<Node>();
+                neighborNode->node_x = neighborX;
+                neighborNode->node_z = neighborZ;
+                neighborNode->goal_cost = currentNode->goal_cost + move_cost;
+                neighborNode->h_cost = Heuristic(neighborX, neighborZ, goal_cellX, goal_cellZ);
+                neighborNode->parent = currentNode;
+
+                Node* neighborNodePtr = neighborNode.get();
+                allNodes.push_back(std::move(neighborNode));
+                node_map[{neighborX, neighborZ}] = neighborNodePtr;
+                open_list.push(neighborNodePtr);
+            }
         }
     }
 
@@ -101,13 +124,13 @@ std::vector<std::pair<int, int>> AStar::GetNeighbors(
     std::vector<std::pair<int, int>> neighbors;
 
     //4方向（左・右・上・下）
-    const float offsetX[4] = { -1,1,0,0 };
-    const float offsetZ[4] = { 0,0,-1,1 };
+    const int offsetX[4] = { -1,1,0,0 };
+    const int offsetZ[4] = { 0,0,-1,1 };
 
     for (int i = 0; i < 4; i++)
     {
-        float neighborX = cellX + offsetX[i];
-        float neighborZ = cellZ + offsetZ[i];
+        int neighborX = cellX + offsetX[i];
+        int neighborZ = cellZ + offsetZ[i];
 
         //通行可能なら隣接セルとして追加
         if (!grid_map.IsBloked(neighborX, neighborZ))

@@ -13,7 +13,8 @@
 #include "Collider.h"
 #include "CollisionManager.h"
 
-class Collider;
+struct Collider;
+struct OBB;
 class CollisionManager;
 
 class GameObject
@@ -36,7 +37,7 @@ public:
 
 	int GetID() { return id; }
 
-	OBB GameObject::GetOBB() const;
+	OBB GetOBB() const;
 
 public:
 	Model* model = nullptr;//実際のモデルデータ
