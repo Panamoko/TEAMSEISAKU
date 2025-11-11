@@ -22,6 +22,7 @@ static float DegToRed(float d) { return d * XM_PI / 180.0f; }
 void to_json(json& j, const GameObject& obj)
 {
 	j = json{
+		{"id",obj.id},
 		{"name",obj.name},
 		{"class_name",obj.class_name},
 		{"position",{obj.position.x,obj.position.y,obj.position.z}},
@@ -52,6 +53,7 @@ void to_json(json& j, const SpriteObject& sp)
 //JSONから復元
 void from_json(const json& j, GameObject& obj)
 {
+	obj.id = j.at("id").get<int>();
 	obj.name = j.at("name").get<std::string>();
 	obj.class_name = j.at("class_name").get<std::string>();
 	auto pos = j.at("position");
@@ -448,13 +450,14 @@ void editor::Draw3DEditor(
 		ImGui::Separator();
 		if (select_index >= 0 && select_index < (int)objects.size())
 		{
-			if (ImGui::CollapsingHeader("World matrix(debug)"))
+			if (ImGui::CollapsingHeader("World matrix(debug)&ID"))
 			{
 				for (int r = 0; r < 4; r++)
 				{
 					ImGui::Text("%.3f %.3f %.3f %.3f",
 						sel->transform.m[r][0], sel->transform.m[r][1], sel->transform.m[r][2], sel->transform.m[r][3]);
 				}
+				ImGui::Text("ID : %d", sel->id);
 			}
 		}
 		else

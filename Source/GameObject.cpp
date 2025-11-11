@@ -1,6 +1,8 @@
 #include "GameObject.h"
 #include "CollisionManager.h"
 
+int GameObject::nextID = 0;
+
 void GameObject::UpdateTransform()
 {
 	////スケール行列を作成
@@ -20,6 +22,8 @@ void GameObject::UpdateTransform()
 
 GameObject::GameObject() :name("Empty")
 {
+	id = nextID;
+	nextID++;
 	position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	angle = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
