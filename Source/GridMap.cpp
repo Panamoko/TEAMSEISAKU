@@ -1,15 +1,17 @@
 #include "GridMap.h"
 
 GridMap::GridMap(int map_width, int map_height, float cell)
-    :width(map_width)
+    :width(map_width), height(map_height), cell_size(cell)
 {
-
+    //各セルを空ベクターで初期化
+    grid.resize(width * height);
 }
 
 //ゲーム内のオブジェクトから障害物マップを作る
 void GridMap::Build(const std::vector<std::shared_ptr<GameObject>>& objects)
 {
-    grid.assign(width * height, 0); // 全セルを通れる状態に初期化
+    //全セルをクリア
+    for (auto& cell : grid)cell.clear();
 
     for (auto& obj : objects)
     {
@@ -28,45 +30,42 @@ void GridMap::Build(const std::vector<std::shared_ptr<GameObject>>& objects)
         };
         XMVECTOR center = XMLoadFloat3(&obb.center);
 
-        std::vector<XMFLOAT3> obbVertices;
-        obbVertices.reserve(8);
+        DirectX::XMFLOAT3 minPos = { FLT_MAX, FLT_MAX, FLT_MAX };
+        DirectX::XMFLOAT3 maxPos = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
+
         for (int dx = -1; dx <= 1; dx += 2)
         for (int dy = -1; dy <= 1; dy += 2)
         for (int dz = -1; dz <= 1; dz += 2)
         {
-            XMVECTOR vertex = center + dx * obb.half.x * axes[0]
+            XMVECTOR vertex = center 
+                + dx * obb.half.x * axes[0]
                 + dy * obb.half.y * axes[1]
                 + dz * obb.half.z * axes[2];
-            XMFLOAT3 p; XMStoreFloat3(&p, vertex);
-            obbVertices.push_back(p);
-        }
 
-        //OBBのワールドAABBを求める
-        DirectX::XMFLOAT3 min = obbVertices[0];
-        DirectX::XMFLOAT3 max = obbVertices[0];
-        for (auto& vertex : obbVertices)
-        {
-            min.x = (std::min)(min.x, vertex.x);
-            min.y = (std::min)(min.y, vertex.y);
-            min.z = (std::min)(min.z, vertex.z);
-                                      
-            max.x = (std::max)(max.x, vertex.x);
-            max.y = (std::max)(max.y, vertex.y);
-            max.z = (std::max)(max.z, vertex.z);
+            XMFLOAT3 pos;
+            XMStoreFloat3(&pos, vertex);
+
+            minPos.x = (std::min)(minPos.x, pos.x);
+            minPos.y = (std::min)(minPos.y, pos.y);
+            minPos.z = (std::min)(minPos.z, pos.z);
+                      
+            maxPos.x = (std::max)(maxPos.x, pos.x);
+            maxPos.y = (std::max)(maxPos.y, pos.y);
+            maxPos.z = (std::max)(maxPos.z, pos.z);
         }
 
         //グリッド範囲に変換
-        int gridXStart = (std::max)(0, int(min.x / cell_size));
-        int gridZStart = (std::max)(0, int(min.z / cell_size));
-        int gridXEnd = (std::min)(width - 1, int(max.x / cell_size));
-        int gridZEnd = (std::min)(height - 1, int(max.z / cell_size));
+        int startX = static_cast<int>(0, minPos.x / cell_size);
+        int startZ = static_cast<int>(0, minPos.z / cell_size);
+        int endX = static_cast<int>(width - 1, int(maxPos.x / cell_size));
+        int endZ = static_cast<int>(height - 1, int(maxPos.z / cell_size));
 
-        //対応するセルを障害物にする
-        for (int x = gridXStart; x <= gridXEnd; x++)
+        //グリッド範囲に収める
+        for (int x = startX; x <= endX; x++)
         {
-            for (int z = gridZStart; z <= gridZEnd; z++)
+            for (int z = startZ; z <= endZ; z++)
             {
-                grid[z * width + x] = 1;
+                grid[z * width + x].push_back(obj->GetID());
             }
         }
     }
@@ -74,5 +73,8 @@ void GridMap::Build(const std::vector<std::shared_ptr<GameObject>>& objects)
 
 bool GridMap::IsBloked(int x, int z) const
 {
-    return false;
+    //範囲外は強制的にブロック扱い
+    if (x < 0 || x >= width || z < 0 || z >= height)return true;
+
+    return !grid[z * width + x].empty();//空でなければブロック
 }

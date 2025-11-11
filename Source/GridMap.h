@@ -15,6 +15,6 @@
 	int width;//マップの横方向のセル数
 	int height;//マップの縦方向のセル数
 	float cell_size;//セルのサイズ
-	std::vector<int> grid;//0 通れる 1 障害物 
+	std::vector<std::vector<int>> grid;//0 通れる 1 障害物 
 	OBB obb;
  };
