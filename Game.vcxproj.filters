@@ -268,9 +268,10 @@
     <ClInclude Include="Source\AllyTargeting.h">
       <Filter>Source\Character\Player</Filter>
     </ClInclude>
-    <ClInclude Include="Source\EnemySlimeMelee.h">
-      <Filter>Source\Character\Enemy</Filter>
+    <ClInclude Include="Source\Core.h">
+      <Filter>Source\Gimmic</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Barracks.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -456,8 +457,11 @@
     <ClCompile Include="Source\Collider.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="Source\EnemySlimeMelee.cpp">
-      <Filter>Source\Character\Enemy</Filter>
+    <ClCompile Include="Source\Core.cpp">
+      <Filter>Source\Gimmic</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Barracks.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

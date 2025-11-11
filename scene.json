@@ -8,6 +8,7 @@
                 1.0,
                 1.0
             ],
+            "id": 9,
             "mesh_index": 4,
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku",
@@ -36,17 +37,18 @@
                 1.0,
                 1.0
             ],
+            "id": 10,
             "mesh_index": 2,
             "model_path": "Data/Model/Slime/Slime.mdl",
             "name": "Slime",
             "position": [
-                8.780418395996094,
+                -2.363168239593506,
                 0.0,
-                26.177228927612305
+                32.031089782714844
             ],
             "rotation": [
                 0.0,
-                -1.6391077041625977,
+                -3.2101218700408936,
                 0.0
             ],
             "scale": [
@@ -64,6 +66,7 @@
                 1.0,
                 1.0
             ],
+            "id": 12,
             "mesh_index": 0,
             "model_path": "Data/Model/Stage/Zimensi.mdl",
             "name": "Zimensi",
@@ -92,6 +95,7 @@
                 1.0,
                 1.0
             ],
+            "id": 14,
             "mesh_index": 3,
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku2",
@@ -120,6 +124,7 @@
                 1.0,
                 1.0
             ],
+            "id": 15,
             "mesh_index": 3,
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku3",
@@ -148,6 +153,7 @@
                 1.0,
                 1.0
             ],
+            "id": 16,
             "mesh_index": 3,
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku4",
@@ -176,6 +182,7 @@
                 1.0,
                 1.0
             ],
+            "id": 17,
             "mesh_index": 3,
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku5",
@@ -204,6 +211,7 @@
                 1.0,
                 1.0
             ],
+            "id": 18,
             "mesh_index": 3,
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku6",
@@ -232,6 +240,7 @@
                 1.0,
                 1.0
             ],
+            "id": 19,
             "mesh_index": 3,
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku7",
@@ -260,6 +269,7 @@
                 1.0,
                 1.0
             ],
+            "id": 20,
             "mesh_index": 3,
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku9",
@@ -288,6 +298,7 @@
                 1.0,
                 1.0
             ],
+            "id": 21,
             "mesh_index": 3,
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku10",
@@ -316,6 +327,7 @@
                 1.0,
                 1.0
             ],
+            "id": 22,
             "mesh_index": 3,
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku11",
@@ -344,6 +356,7 @@
                 1.0,
                 1.0
             ],
+            "id": 23,
             "mesh_index": 3,
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku12",
@@ -372,6 +385,7 @@
                 1.0,
                 1.0
             ],
+            "id": 24,
             "mesh_index": 3,
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku13",
@@ -400,6 +414,7 @@
                 1.0,
                 1.0
             ],
+            "id": 25,
             "mesh_index": 3,
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku14",
@@ -428,6 +443,7 @@
                 1.0,
                 1.0
             ],
+            "id": 26,
             "mesh_index": 3,
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku15",
@@ -456,6 +472,7 @@
                 1.0,
                 1.0
             ],
+            "id": 27,
             "mesh_index": 3,
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku16",
@@ -484,6 +501,7 @@
                 1.0,
                 1.0
             ],
+            "id": 28,
             "mesh_index": 3,
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku17",
@@ -512,6 +530,7 @@
                 1.0,
                 1.0
             ],
+            "id": 29,
             "mesh_index": 3,
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku18",
@@ -540,6 +559,7 @@
                 1.0,
                 1.0
             ],
+            "id": 30,
             "mesh_index": 3,
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku19",
@@ -568,6 +588,7 @@
                 1.0,
                 1.0
             ],
+            "id": 31,
             "mesh_index": 3,
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku20",
@@ -585,6 +606,35 @@
                 0.10000000149011612,
                 0.05000000074505806,
                 0.10000000149011612
+            ],
+            "type": 1
+        },
+        {
+            "class_name": "Core",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 32,
+            "mesh_index": 0,
+            "model_path": "Data/Model/bilud/Core.mdl",
+            "name": "Core",
+            "position": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                0.30000001192092896,
+                0.30000001192092896,
+                0.30000001192092896
             ],
             "type": 1
         }

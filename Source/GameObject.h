@@ -34,6 +34,8 @@ public:
 	bool IsActive() const { return is_active; }
 	void SetActive(bool active) { is_active = active; }
 
+	int GetID() { return id; }
+
 public:
 	Model* model = nullptr;//実際のモデルデータ
 	std::unique_ptr<Collider> collider;
@@ -46,6 +48,9 @@ public:
 	DirectX::XMFLOAT4X4 transform;//ワールド変換行列
 	int mesh_index;//framework側の配列インデックスbool
 	std::string model_path; // モデルのファイルパス
+	int id = 0;//個別のID
+	static int nextID;//次のIDを採番するための静的変数
+
 
 	bool dirty = false;
 	bool is_active = true;

@@ -22,7 +22,7 @@ using namespace DirectX;
 #include "SceneManager.h"
 #include "SceneTitle.h"
 #include "SceneLoading.h"
-#include "Editor.h"
+
 
 SceneGame::~SceneGame() = default;  // ★これを追加
 // 初期化
@@ -73,14 +73,14 @@ void SceneGame::Initialize()
 		//enemyManager.Register(slime);
 	//}
 
-	 BuildingManager::Instance().Initialize();
+	 //BuildingManager::Instance().Initialize();
 
-	 BuildingManager& bm = BuildingManager::Instance();
+	 //BuildingManager& bm = BuildingManager::Instance();
 
 	 // 例：(3, 0, 3) の位置に柵を1つ生成
 	 //bm.SpawnFence(DirectX::XMFLOAT3(3.0f, 0, 10.0f), 1.0f, 1.2f, /*maxHP=*/150, DirectX::XM_PIDIV2);
 
-	 //// 例：(-3, 0, 3) の位置に柵を1つ生成
+	 // 例：(-3, 0, 3) の位置に柵を1つ生成
 	 //bm.SpawnFence(DirectX::XMFLOAT3(-3.0f, 0, 10.0f));
 
 	 // 例：(3, 0, 5) の位置に別の設定で生成 (半径とHPを変更)
@@ -125,14 +125,13 @@ void SceneGame::Update(float elapsedTime)
 	cameraController->SetTarget(target);
 	cameraController->Update(elapsedTime);
 
-	BuildingManager::Instance().Update(elapsedTime);
+	//BuildingManager::Instance().Update(elapsedTime);
 	Player::UpdateActiveByKeyboard(players);
-	if (auto th = BuildingManager::Instance().GetTownHall(); th && th->IsDestroyed()) {
-		// コアが壊れたらローディングを挟んでタイトルへ
-		SceneManager::Instance().ChangeScene(new SceneLoading(new SceneTitle));
-		return;
-	}
-
+	//if (auto th = BuildingManager::Instance().GetTownHall(); th && th->IsDestroyed()) {
+	//	// コアが壊れたらローディングを挟んでタイトルへ
+	//	SceneManager::Instance().ChangeScene(new SceneLoading(new SceneTitle));
+	//	return;
+	//}
 
 	if (game_editor.PlayGame())
 	{
@@ -216,12 +215,10 @@ void SceneGame::Render()
 		// エネミー描画
 		EnemyManager::Instance().Render(rc, modelRenderer);
 
-		BuildingManager::Instance().Render(rc, modelRenderer);
+		//BuildingManager::Instance().Render(rc, modelRenderer);
 
 		//ギミック描画
-		GimmicManager::Instance().Render(rc, modelRenderer);
-
-		
+		GimmicManager::Instance().Render(rc, modelRenderer);		
 
 	}
 
@@ -248,9 +245,7 @@ void SceneGame::Render()
 			shapeRenderer->RenderCylinder(
 				rc, p->GetPosition(), 1.2f, 0.05f, DirectX::XMFLOAT4(1, 1, 0, 0.5f));
 		}
-		BuildingManager::Instance().DebugDraw(rc, shapeRenderer);
-
-
+		//BuildingManager::Instance().DebugDraw(rc, shapeRenderer);
 	}
 
 	// 2Dスプライト描画
