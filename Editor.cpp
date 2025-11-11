@@ -158,6 +158,8 @@ void LoadScene(
 			*sp = item.get<SpriteObject>();
 			sprites.push_back(std::move(sp));
 		}
+
+	FixDuplicateIDs(objects);
 }
 
 void ApplyTransform(GameObject& obj)

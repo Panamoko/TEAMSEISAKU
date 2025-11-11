@@ -71,3 +71,5 @@ public:
 	~GameObject();
 };
 
+void FixDuplicateIDs(std::vector<std::shared_ptr<GameObject>>& objects);
+
