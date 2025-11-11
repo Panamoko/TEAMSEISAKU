@@ -25,9 +25,9 @@ private:
 	struct Node
 	{
 		int node_x, node_z;//ノード座標
-		float g_cost = 0.0f;//スタートからこのノードまでの累計コスト
+		float goal_cost = 0.0f;//スタートからこのノードまでの累計コスト
 		float h_cost = 0.0f;//このノードからゴールまでの推定コスト
-		float fCost() const { return g_cost + h_cost; }//総コスト
+		float fCost() const { return goal_cost + h_cost; }//総コスト
 
 		Node* parent = nullptr;//経路復元用の親ノード
 	};
