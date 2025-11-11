@@ -32,6 +32,7 @@ void Gimmic_BreakWall::OnCollision(GameObject* objects)
     {
         isActive = false;
         GimmicManager::Instance().RemoveInactive();
+        CollisionManager::Instance().Remove(this);
     }
 }
 
