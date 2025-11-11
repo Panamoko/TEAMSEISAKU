@@ -220,7 +220,6 @@
     <ClInclude Include="Source\ModelManager.h">
       <Filter>Source\Model</Filter>
     </ClInclude>
-    <ClInclude Include="GameObjectManager.h" />
     <ClInclude Include="Source\AllySlime.h">
       <Filter>Source\Character\Player</Filter>
     </ClInclude>
@@ -232,15 +231,6 @@
     </ClInclude>
     <ClInclude Include="Source\RayCast.h">
       <Filter>Source\RayCast</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\BuildingManager.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ITargetable.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\TownHall.h">
-      <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="Source\Gimmic_BreakWall.h">
       <Filter>Source\Gimmic</Filter>
@@ -261,7 +251,6 @@
     <ClInclude Include="Source\StageManager.h">
       <Filter>Source\Stage</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Fence.h" />
     <ClInclude Include="Source\AllySlimeHoming.h">
       <Filter>Source\Character\Player</Filter>
     </ClInclude>
@@ -421,12 +410,6 @@
     <ClCompile Include="Source\RayCast.cpp">
       <Filter>Source\RayCast</Filter>
     </ClCompile>
-    <ClCompile Include="Source\BuildingManager.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\TownHall.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Gimmic_BreakWall.cpp">
       <Filter>Source\Gimmic</Filter>
     </ClCompile>
@@ -444,9 +427,6 @@
     </ClCompile>
     <ClCompile Include="Source\StageManager.cpp">
       <Filter>Source\Stage</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Fence.cpp">
-      <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="Source\AllySlimeHoming.cpp">
       <Filter>Source\Character\Player</Filter>

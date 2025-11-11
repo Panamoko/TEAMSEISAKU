@@ -120,13 +120,11 @@
     <ClInclude Include="External\imgui-docking\imstb_rectpack.h" />
     <ClInclude Include="External\imgui-docking\imstb_textedit.h" />
     <ClInclude Include="External\imgui-docking\imstb_truetype.h" />
-    <ClInclude Include="GameObjectManager.h" />
     <ClInclude Include="Source\AllySlime.h" />
     <ClInclude Include="Source\AllySlimeHoming.h" />
     <ClInclude Include="Source\AllyTargeting.h" />
     <ClInclude Include="Source\Animator.h" />
     <ClInclude Include="Source\Barracks.h" />
-    <ClInclude Include="Source\BuildingManager.h" />
     <ClInclude Include="Source\Camera.h" />
     <ClInclude Include="Source\CameraController.h" />
     <ClInclude Include="Source\Character.h" />
@@ -138,13 +136,11 @@
     <ClInclude Include="Source\EnemyManager.h" />
     <ClInclude Include="Source\EnemySlime.h" />
     <ClInclude Include="Source\Factory.h" />
-    <ClInclude Include="Source\Fence.h" />
     <ClInclude Include="Source\Framework.h" />
     <ClInclude Include="Source\GameObject.h" />
     <ClInclude Include="Source\GimmicBase.h" />
     <ClInclude Include="Source\GimmicManager.h" />
     <ClInclude Include="Source\Gimmic_BreakWall.h" />
-    <ClInclude Include="Source\ITargetable.h" />
     <ClInclude Include="Source\MathUtils.h" />
     <ClInclude Include="Source\ModelManager.h" />
     <ClInclude Include="Source\Player.h" />
@@ -181,7 +177,6 @@
     <ClInclude Include="Source\System\Shader.h" />
     <ClInclude Include="Source\System\ShapeRenderer.h" />
     <ClInclude Include="Source\System\Sprite.h" />
-    <ClInclude Include="Source\TownHall.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Editor.cpp" />
@@ -197,7 +192,6 @@
     <ClCompile Include="Source\AllyTargeting.cpp" />
     <ClCompile Include="Source\Animator.cpp" />
     <ClCompile Include="Source\Barracks.cpp" />
-    <ClCompile Include="Source\BuildingManager.cpp" />
     <ClCompile Include="Source\Camera.cpp" />
     <ClCompile Include="Source\CameraController.cpp" />
     <ClCompile Include="Source\Character.cpp" />
@@ -208,7 +202,6 @@
     <ClCompile Include="Source\Enemy.cpp" />
     <ClCompile Include="Source\EnemyManager.cpp" />
     <ClCompile Include="Source\EnemySlime.cpp" />
-    <ClCompile Include="Source\Fence.cpp" />
     <ClCompile Include="Source\Framework.cpp" />
     <ClCompile Include="Source\GameObject.cpp" />
     <ClCompile Include="Source\GimmicBase.cpp" />
@@ -246,7 +239,6 @@
     <ClCompile Include="Source\System\RenderState.cpp" />
     <ClCompile Include="Source\System\ShapeRenderer.cpp" />
     <ClCompile Include="Source\System\Sprite.cpp" />
-    <ClCompile Include="Source\TownHall.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shader\Basic.hlsli" />
