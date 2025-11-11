@@ -1,6 +1,7 @@
 #include "Yagura.h"
 #include "GimmicManager.h"
 #include "Player.h"
+#include "Factory.h"
 
 Yagura::Yagura()
 {
@@ -42,3 +43,5 @@ void Yagura::OnCollision(GameObject* object)
 void Yagura::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer)
 {
 }
+
+REGISTER_GAMEOBJECT(Yagura);
