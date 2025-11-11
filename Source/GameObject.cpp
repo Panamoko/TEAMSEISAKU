@@ -1,5 +1,6 @@
 #include "GameObject.h"
 #include "CollisionManager.h"
+#include <unordered_set>
 
 int GameObject::nextID = 0;
 
@@ -41,4 +42,36 @@ GameObject::~GameObject()
 {
 	CollisionManager::Instance().Remove(this);
 	std::cout << "Destroyed" << std::endl;
+}
+
+void FixDuplicateIDs(std::vector<std::shared_ptr<GameObject>>& objects)
+{
+	std::unordered_set<int> used;
+	int maxID = -1;
+
+	//最大のIDを検索
+	for (auto& obj : objects)
+	{
+		if (obj->id > maxID)
+			maxID = obj->id;
+	}
+
+	for (auto& obj : objects)
+	{
+		//IDが重複していたら新しいIDを割り当てる
+		if (used.find(obj->id) != used.end())
+		{
+			obj->id = maxID++;
+		}
+
+		used.insert(obj->id);
+
+		if (obj->id > maxID)
+		{
+			maxID = obj->id;
+		}
+	}
+
+	//nextIDをmaxID+1に更新する
+	GameObject::nextID = maxID + 1;
 }

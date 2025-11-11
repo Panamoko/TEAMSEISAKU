@@ -180,6 +180,7 @@
     <ClInclude Include="Source\System\Shader.h" />
     <ClInclude Include="Source\System\ShapeRenderer.h" />
     <ClInclude Include="Source\System\Sprite.h" />
+    <ClInclude Include="Source\Yagura.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Editor.cpp" />
@@ -243,6 +244,7 @@
     <ClCompile Include="Source\System\RenderState.cpp" />
     <ClCompile Include="Source\System\ShapeRenderer.cpp" />
     <ClCompile Include="Source\System\Sprite.cpp" />
+    <ClCompile Include="Source\Yagura.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shader\Basic.hlsli" />
