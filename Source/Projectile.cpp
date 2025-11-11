@@ -1,9 +1,12 @@
 #include "Projectile.h"
 #include "ProjectileManager.h"
+#include "CollisionManager.h"
 
 Projectile::Projectile(ProjectileManager* manager):manager(manager)//生成時にマネージャに登録する
 {
 	manager->Register(this);
+
+	CollisionManager::Instance().AddObject(this);
 }
 
 // デバッグプリミティブ描画
@@ -11,6 +14,18 @@ void Projectile::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* re
 {
 	//衝突判定用のデバッグ球を描画
 	renderer->RenderSphere(rc, position, radius, DirectX::XMFLOAT4(0, 0, 0, 1));//第4引数は色で黒
+}
+
+void Projectile::OnCollision(GameObject* object)
+{
+	// 衝突した相手が「ギミック」タイプかどうかを判別
+	// (Gimmic_BreakWall は GimmicBase を継承しており、
+	//  GimmicBase のコンストラクタで type = Type::Gimmic が設定されている)
+	if (object->type == Type::Gimmic)
+	{
+		// 相手がギミックなら、自分自身を破棄する
+		Destroy();
+	}
 }
 
 // 行列更新処理
@@ -88,4 +103,6 @@ void Projectile::UpdateTransform()
 void Projectile::Destroy()
 {
 	manager->Remove(this);
+
+	CollisionManager::Instance().Remove(this);
 }

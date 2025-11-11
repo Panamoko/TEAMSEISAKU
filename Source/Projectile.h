@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GameObject.h"
 #include "System/ModelRenderer.h"
 #include "System/ShapeRenderer.h"
 
@@ -8,7 +9,7 @@ class ProjectileManager;//相互インクルードしないように前方宣言する
 
 
 // 弾丸
-class Projectile
+class Projectile : public GameObject
 {
 public:
 	//Projectile() {};
@@ -23,6 +24,9 @@ public:
 
 	// デバッグプリミティブ描画
 	virtual void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer);
+
+	// OnCollision のオーバーライド宣言を追加 
+	void OnCollision(GameObject* object) override;
 
 	// 位置取得
 	const DirectX::XMFLOAT3& GetPosition() const { return position; }
@@ -47,10 +51,9 @@ protected:
 	void UpdateTransform();
 
 protected:
-	DirectX::XMFLOAT3		position = { 0, 0, 0 };
+
 	DirectX::XMFLOAT3		direction = { 0, 0, 1 };
-	DirectX::XMFLOAT3		scale = { 1, 1, 1 };
-	DirectX::XMFLOAT4X4		transform = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
+
 	ProjectileManager* manager = nullptr;
 
 	float radius = 0.5f;

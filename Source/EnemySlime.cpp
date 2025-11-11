@@ -311,6 +311,20 @@ void EnemySlime::UpdateAttackState(float elapsedTime)
 	if (stateTimer < 0.0f)
 	{
 		// ... (弾丸発射処理) ...
+		//前方向
+		DirectX::XMFLOAT3 dir;
+		dir.x = sinf(angle.y);
+		dir.y = 0.0f;
+		dir.z = cosf(angle.y);
+		//発射位置(プレイヤーの腰あたり)
+		DirectX::XMFLOAT3 pos;
+		pos.x = position.x;
+		pos.y = position.y + height * 0.5f;
+		pos.z = position.z;
+		//発射
+		ProjectileStraite* projectile = new ProjectileStraite(&projectileManager);
+		projectile->Launch(dir, pos);
+
 		stateTimer = 2.0f;
 	}
 

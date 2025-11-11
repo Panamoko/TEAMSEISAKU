@@ -78,10 +78,10 @@ void SceneGame::Initialize()
 	 BuildingManager& bm = BuildingManager::Instance();
 
 	 // 例：(3, 0, 3) の位置に柵を1つ生成
-	 bm.SpawnFence(DirectX::XMFLOAT3(3.0f, 0, 10.0f), 1.0f, 1.2f, /*maxHP=*/150, DirectX::XM_PIDIV2);
+	 //bm.SpawnFence(DirectX::XMFLOAT3(3.0f, 0, 10.0f), 1.0f, 1.2f, /*maxHP=*/150, DirectX::XM_PIDIV2);
 
-	 // 例：(-3, 0, 3) の位置に柵を1つ生成
-	 bm.SpawnFence(DirectX::XMFLOAT3(-3.0f, 0, 10.0f));
+	 //// 例：(-3, 0, 3) の位置に柵を1つ生成
+	 //bm.SpawnFence(DirectX::XMFLOAT3(-3.0f, 0, 10.0f));
 
 	 // 例：(3, 0, 5) の位置に別の設定で生成 (半径とHPを変更)
 	 //bm.SpawnFence(DirectX::XMFLOAT3(6.0f, 0, 10.0f), 1.0f, 1.2f, /*maxHP=*/150);

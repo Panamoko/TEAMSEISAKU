@@ -26,7 +26,7 @@ public:
 	//縄張り設定
 	void SetTerritory(const DirectX::XMFLOAT3& origin, float range);
 
-private:
+protected:
 	//ターゲット位置をランダム設定
 	void SetRandomTargerPosition();
 
@@ -49,16 +49,16 @@ private:
 	Player* SearchPlayer();
 
 	//攻撃ステートへ偏移
-	void SetAttackState(Player* target);
+	virtual void SetAttackState(Player* target);
 
 	//攻撃ステート更新処理
-	void UpdateAttackState(float elapsedTime);
+	virtual void UpdateAttackState(float elapsedTime);
 
 protected:
 	// 死亡した時に呼ばれる
 	void OnDead() override;
 
-private:
+protected:
 	//状態一覧
 	enum class State
 	{
@@ -70,7 +70,7 @@ private:
 		Attack
 	};
 
-private:
+
 	//std::vector<std::unique_ptr<Model>> models;
 
 	//Model* model = nullptr;
@@ -95,6 +95,9 @@ private:
 	Player* targetPlayer = nullptr;
 
 	ProjectileManager	projectileManager;
+
+
+private:
 
 	editor game_editor;
 	std::vector<std::unique_ptr<SpriteObject>> sprites2d;

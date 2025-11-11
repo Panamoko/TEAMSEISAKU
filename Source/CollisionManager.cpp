@@ -118,6 +118,18 @@ void CollisionManager::CheckAllCollision()
 					sphereA->center, sphereA->radius, *obb_B);
 			}
 
+			//OBB VS ‹… (Sphere vs OBB ‚Ì‹tƒpƒ^[ƒ“)
+			else if (objectA->collider->type == ColliderType::OBB &&
+				objectB->collider->type == ColliderType::Sphere)
+			{
+				OBB* obb_A = static_cast<OBB*>(objectA->collider.get());
+				SphereCollider* sphereB = static_cast<SphereCollider*>(objectB->collider.get());
+
+				// Collision::IntersectSphereVsOBB ‚Ìˆø”‚ð“ü‚ê‘Ö‚¦‚ÄŒÄ‚Ô
+				isCollisionDetected = Collision::IntersectSphereVsOBB(
+					sphereB->center, sphereB->radius, *obb_A);
+			}
+
 			//‰~’Œ@VS OBB
 			else if (objectA->collider->type == ColliderType::Cylinder &&
 					 objectB->collider->type == ColliderType::OBB)

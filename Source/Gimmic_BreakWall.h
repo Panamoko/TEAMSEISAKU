@@ -15,6 +15,9 @@ public:
 	//ギミック更新処理
 	void Update(float elapsedTime)override;
 
+	//描画処理
+	void Render(const RenderContext& rc, ModelRenderer* renderer) override;
+
 	//デバッグ描画
 	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) override;
 
@@ -23,6 +26,11 @@ public:
 private:
 	bool isBroken = false;//壊れたかどうか
 	float hp = 2.0f;//耐久度
+
+	float maxHp = 2.0f; // リポップ時のために最大HPを記憶
+	float respawnTime = 5.0f; // リポップするまでの時間 (5秒)
+	float respawnTimer = 0.0f; // リポップタイマー
+
 	DirectX::XMFLOAT3 halfSize;
 	DirectX::XMFLOAT3 size;
 

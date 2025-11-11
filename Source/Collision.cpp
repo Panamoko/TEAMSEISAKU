@@ -181,45 +181,62 @@ static inline XMFLOAT3 rotate_to_world_yaw(const XMFLOAT3& v, float yaw) {
 static inline float clampf(float a, float lo, float hi) { return (a < lo) ? lo : (a > hi) ? hi : a; }
 
 bool Collision::IntersectSphereVsOBB(
-	const XMFLOAT3& P, float r, const OBB& B, XMFLOAT3* outMTD)
+	const XMFLOAT3& sphereCenter,
+	float sphereRadius,
+	const OBB& obb,
+	XMFLOAT3* outMTD)
 {
-	// ワールド→OBBローカル（中心原点・yaw=0）
-	XMFLOAT3 v{ P.x - B.center.x, P.y - B.center.y, P.z - B.center.z };
-	XMFLOAT3 p = rotate_to_local_yaw(v, B.yaw);
+	// 球の中心 → OBB 中心までの差分ベクトル (ワールド座標系)
+	DirectX::XMFLOAT3 diffWorld{
+		sphereCenter.x - obb.center.x,
+		sphereCenter.y - obb.center.y,
+		sphereCenter.z - obb.center.z,
+	};
 
-	// OBB内の最近接点
-	XMFLOAT3 q;
-	q.x = clampf(p.x, -B.half.x, B.half.x);
-	q.y = clampf(p.y, -B.half.y, B.half.y);
-	q.z = clampf(p.z, -B.half.z, B.half.z);
+	// ワールド座標系の差分ベクトルを、OBBのローカル軸に射影（内積）する
+	auto dot = [](const DirectX::XMFLOAT3& a, const DirectX::XMFLOAT3& b)
+		{
+			return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
+		};
 
-	XMFLOAT3 d{ p.x - q.x, p.y - q.y, p.z - q.z };
-	float d2 = d.x * d.x + d.y * d.y + d.z * d.z;
+	float localX = dot(diffWorld, obb.axis[0]);
+	float localY = dot(diffWorld, obb.axis[1]);
+	float localZ = dot(diffWorld, obb.axis[2]);
 
-	if (d2 > r * r) return false; // 離れている
+	// OBBローカル空間における「球の中心から最も近い点」を探す
+	auto clampf = [](float v, float minV, float maxV)
+		{
+			return (v < minV) ? minV : (v > maxV ? maxV : v);
+		};
 
-	if (outMTD) {
-		// 外側衝突：球中心が外→最近接点までの方向に押し出し
-		if (d2 > 1e-12f) {
-			float dlen = sqrtf(d2);
-			float t = (r - dlen) / dlen;
-			XMFLOAT3 mtd_local{ d.x * t, d.y * t, d.z * t };
-			XMFLOAT3 mtd_world = rotate_to_world_yaw(mtd_local, B.yaw);
-			outMTD->x = mtd_world.x; outMTD->y = mtd_world.y; outMTD->z = mtd_world.z;
-		}
-		else {
-			// 内側衝突：最小オーバーラップ軸へ押し出し
-			float ox = B.half.x - fabsf(p.x);
-			float oy = B.half.y - fabsf(p.y);
-			float oz = B.half.z - fabsf(p.z);
-			XMFLOAT3 mtd_local{};
-			if (ox < oy && ox < oz) mtd_local = XMFLOAT3((p.x < 0 ? -ox : ox), 0, 0);
-			else if (oy < oz)       mtd_local = XMFLOAT3(0, (p.y < 0 ? -oy : oy), 0);
-			else                    mtd_local = XMFLOAT3(0, 0, (p.z < 0 ? -oz : oz));
-			XMFLOAT3 mtd_world = rotate_to_world_yaw(mtd_local, B.yaw);
-			outMTD->x = mtd_world.x; outMTD->y = mtd_world.y; outMTD->z = mtd_world.z;
-		}
+	float nearestX = clampf(localX, -obb.half.x, obb.half.x);
+	float nearestY = clampf(localY, -obb.half.y, obb.half.y);
+	float nearestZ = clampf(localZ, -obb.half.z, obb.half.z);
+
+	// 球の中心と「OBB上の最近接点」とのローカル空間での距離を計算
+	float diffNearestX = localX - nearestX;
+	float diffNearestY = localY - nearestY;
+	float diffNearestZ = localZ - nearestZ;
+
+	float distSq = (diffNearestX * diffNearestX) +
+		(diffNearestY * diffNearestY) +
+		(diffNearestZ * diffNearestZ);
+
+	// 距離の2乗が半径の2乗より大きければ、衝突していない
+	if (distSq > (sphereRadius * sphereRadius))
+	{
+		return false;
 	}
+
+	// (MTD計算は省略。必要なら CylinderVsOBB を参考に実装)
+	if (outMTD)
+	{
+		// TODO: MTD計算 (現在は未実装)
+		outMTD->x = 0;
+		outMTD->y = 0;
+		outMTD->z = 0;
+	}
+
 	return true;
 }
 
