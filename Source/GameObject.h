@@ -30,7 +30,7 @@ public:
 	virtual void UpdateTransform();
 	virtual void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) {};
 	virtual void OnImGui() {};
-	virtual void OnCollision(GameObject*object){}
+	virtual void OnCollision(GameObject* object);
 
 	bool IsActive() const { return is_active; }
 	void SetActive(bool active) { is_active = active; }
@@ -38,6 +38,8 @@ public:
 	int GetID() { return id; }
 
 	OBB GetOBB() const;
+
+	DirectX::XMFLOAT3 SetMTD(DirectX::XMFLOAT3 out_mtd) { mtd = out_mtd; }
 
 public:
 	Model* model = nullptr;//実際のモデルデータ
@@ -53,6 +55,10 @@ public:
 	std::string model_path; // モデルのファイルパス
 	int id = 0;//個別のID
 	static int nextID;//次のIDを採番するための静的変数
+	DirectX::XMFLOAT3 mtd;
+
+
+	float weight;
 
 
 	bool dirty = false;
