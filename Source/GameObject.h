@@ -13,7 +13,8 @@
 #include "Collider.h"
 #include "CollisionManager.h"
 
-class Collider;
+struct Collider;
+struct OBB;
 class CollisionManager;
 
 class GameObject
@@ -35,6 +36,8 @@ public:
 	void SetActive(bool active) { is_active = active; }
 
 	int GetID() { return id; }
+
+	OBB GetOBB() const;
 
 public:
 	Model* model = nullptr;//実際のモデルデータ

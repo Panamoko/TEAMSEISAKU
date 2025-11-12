@@ -125,6 +125,7 @@
     <ClInclude Include="Source\AllySlimeHoming.h" />
     <ClInclude Include="Source\AllyTargeting.h" />
     <ClInclude Include="Source\Animator.h" />
+    <ClInclude Include="Source\AStar.h" />
     <ClInclude Include="Source\Barracks.h" />
     <ClInclude Include="Source\Camera.h" />
     <ClInclude Include="Source\CameraController.h" />
@@ -143,6 +144,7 @@
     <ClInclude Include="Source\GimmicBase.h" />
     <ClInclude Include="Source\GimmicManager.h" />
     <ClInclude Include="Source\Gimmic_BreakWall.h" />
+    <ClInclude Include="Source\GridMap.h" />
     <ClInclude Include="Source\ITargetable.h" />
     <ClInclude Include="Source\MathUtils.h" />
     <ClInclude Include="Source\ModelManager.h" />
@@ -195,6 +197,7 @@
     <ClCompile Include="Source\AllySlimeHoming.cpp" />
     <ClCompile Include="Source\AllyTargeting.cpp" />
     <ClCompile Include="Source\Animator.cpp" />
+    <ClCompile Include="Source\AStar.cpp" />
     <ClCompile Include="Source\Barracks.cpp" />
     <ClCompile Include="Source\Camera.cpp" />
     <ClCompile Include="Source\CameraController.cpp" />
@@ -212,6 +215,7 @@
     <ClCompile Include="Source\GimmicBase.cpp" />
     <ClCompile Include="Source\GimmicManager.cpp" />
     <ClCompile Include="Source\Gimmic_BreakWall.cpp" />
+    <ClCompile Include="Source\GridMap.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\MathUtils.cpp" />
     <ClCompile Include="Source\ModelManager.cpp" />

@@ -3,33 +3,36 @@
 //
 
 #include "AllySlime.h"
-#include "Character.h"   // © ‚±‚±‚Å“ü‚ê‚éiƒwƒbƒ_‚©‚ç‚ÍŠO‚µ‚½j
-#include "Player.h"              // ƒvƒŒƒCƒ„[ˆÊ’uEŠp“x‚ğæ“¾‚µ‚Ä•Ò‘àƒAƒ“ƒJ[‚ğo‚·
-#include "EnemyManager.h"        // “G‚Ìæ“¾
-#include "ProjectileStraite.h"   // ’¼i’eiƒvƒŒƒCƒ„[‚Æ“¯‚¶‚à‚Ì‚ğg—pj
-#include "ModelManager.h"        // ƒ‚ƒfƒ‹ƒ[ƒh
-#include "Collision.h"           // ‹…~‰~’Œ‚È‚Ç‚Ì“–‚½‚è”»’è
-#include "AllyTargeting.h"   // © ’Ç‰Á
+#include "Character.h"   // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Å“ï¿½ï¿½ï¿½ï¿½iï¿½wï¿½bï¿½_ï¿½ï¿½ï¿½ï¿½ÍŠOï¿½ï¿½ï¿½ï¿½ï¿½j
+#include "Player.h"              // ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½Ê’uï¿½Eï¿½pï¿½xï¿½ï¿½ï¿½æ“¾ï¿½ï¿½ï¿½Ä•Ò‘ï¿½ï¿½Aï¿½ï¿½ï¿½Jï¿½[ï¿½ï¿½ï¿½oï¿½ï¿½
+#include "EnemyManager.h"        // ï¿½Gï¿½Ìæ“¾
+#include "ProjectileStraite.h"   // ï¿½ï¿½ï¿½iï¿½eï¿½iï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½Æ“ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì‚ï¿½ï¿½gï¿½pï¿½j
+#include "ModelManager.h"        // ï¿½ï¿½ï¿½fï¿½ï¿½ï¿½ï¿½ï¿½[ï¿½h
+#include "Collision.h"           // ï¿½ï¿½ï¿½~ï¿½~ï¿½ï¿½ï¿½È‚Ç‚Ì“ï¿½ï¿½ï¿½ï¿½è”»ï¿½ï¿½
+#include "AllyTargeting.h"
+#include "GimmicManager.h"        // BreakWallã¨Coreã‚’å–å¾—ã™ã‚‹ãŸã‚
+#include "Gimmic_BreakWall.h"    // BreakWallåˆ¤å®šç”¨
+#include "Core.h"                // Coreåˆ¤å®šç”¨   // ï¿½ï¿½ ï¿½Ç‰ï¿½
 #include <cmath>
 #include <cfloat>
 
 using namespace DirectX;
 
-// ‚¿‚å‚¢•Ö—˜‚È‰‰ZqiXMFLOAT3 ‚Í‰‰Zq‚ª–³‚¢‚±‚Æ‚ª‘½‚¢‚Ì‚Å©‘O‚Å—pˆÓj
+// ï¿½ï¿½ï¿½å‚¢ï¿½Ö—ï¿½ï¿½È‰ï¿½ï¿½Zï¿½qï¿½iXMFLOAT3 ï¿½Í‰ï¿½ï¿½Zï¿½qï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì‚Åï¿½ï¿½Oï¿½Å—pï¿½Ój
 static inline XMFLOAT3 operator+(const XMFLOAT3& a, const XMFLOAT3& b) { return { a.x + b.x, a.y + b.y, a.z + b.z }; }
 static inline XMFLOAT3 operator-(const XMFLOAT3& a, const XMFLOAT3& b) { return { a.x - b.x, a.y - b.y, a.z - b.z }; }
 static inline XMFLOAT3 operator*(const XMFLOAT3& a, float s) { return { a.x * s, a.y * s, a.z * s }; }
-// --- ƒRƒAæ“¾i‚ ‚È‚½‚ÌŠÂ‹«‚É‡‚í‚¹‚Ä‚Ç‚¿‚ç‚©j ---
+// --- ï¿½Rï¿½Aï¿½æ“¾ï¿½iï¿½ï¿½ï¿½È‚ï¿½ï¿½ÌŠÂ‹ï¿½ï¿½Éï¿½ï¿½í‚¹ï¿½Ä‚Ç‚ï¿½ï¿½ç‚©ï¿½j ---
 AllySlime::AllySlime(int formationIndex)
     : index(formationIndex)
 {
-    // Œ©‚½–Ú‚Í“GƒXƒ‰ƒCƒ€‚ğ—¬—piEnemySlime ‚Æ“¯‚¶ƒpƒX^ƒXƒP[ƒ‹‚É‘µ‚¦‚éj
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Ú‚Í“Gï¿½Xï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½ğ—¬—pï¿½iEnemySlime ï¿½Æ“ï¿½ï¿½ï¿½ï¿½pï¿½Xï¿½^ï¿½Xï¿½Pï¿½[ï¿½ï¿½ï¿½É‘ï¿½ï¿½ï¿½ï¿½ï¿½j
     slimeModel = ModelManager::Instance().Load("Data/Model/Slime/suraimukari.mdl");
-    scale = { 0.002f, 0.002f, 0.002f }; // ƒ‚ƒfƒ‹‚ª‘å‚«‚¢‘O’ñ‚Ì‚½‚ßk¬
-    radius = 0.5f;                  // “–‚½‚è”¼Œai“G‚Æ“¯“™j
-    height = 1.0f;                  // “–‚½‚è‚‚³
+    scale = { 0.002f, 0.002f, 0.002f }; // ï¿½ï¿½ï¿½fï¿½ï¿½ï¿½ï¿½ï¿½å‚«ï¿½ï¿½ï¿½Oï¿½ï¿½Ì‚ï¿½ï¿½ßkï¿½ï¿½
+    radius = 0.5f;                  // ï¿½ï¿½ï¿½ï¿½ï¿½è”¼ï¿½aï¿½iï¿½Gï¿½Æ“ï¿½ï¿½ï¿½ï¿½j
+    height = 1.0f;                  // ï¿½ï¿½ï¿½ï¿½ï¿½è‚ï¿½ï¿½
 
-    // ‰ŠúˆÊ’u‚ÍƒvƒŒƒCƒ„[‚Ì‹ß‚­iÀÛ‚Ì®—ñ‚Í UpdateAnchor ‚Ås‚¤j
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Ê’uï¿½Íƒvï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½Ì‹ß‚ï¿½ï¿½iï¿½ï¿½ï¿½Û‚Ìï¿½ï¿½ï¿½ï¿½ UpdateAnchor ï¿½Åsï¿½ï¿½ï¿½j
     {
         const Player& ref = (leader ? *leader : Player::Instance());
         position = ref.GetPosition();
@@ -39,86 +42,131 @@ AllySlime::AllySlime(int formationIndex)
 
 void AllySlime::UpdateAnchor()
 {
-    // ƒvƒŒƒCƒ„[‚ÌˆÊ’uEŠp“xiY=ƒˆ[Špj‚ğæ“¾
+    // ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½ÌˆÊ’uï¿½Eï¿½pï¿½xï¿½iY=ï¿½ï¿½ï¿½[ï¿½pï¿½jï¿½ï¿½ï¿½æ“¾
     const Player& ref = (leader ? *leader : Player::Instance());
     const XMFLOAT3& p = ref.GetPosition();
     const XMFLOAT3& a = ref.GetAngle();
 
-    // ‰EèÀ•WŒnF‘O•û=+Z ‚Æ‚µ‚ÄAƒˆ[Šp‚©‚ç‘O•û/‰EƒxƒNƒgƒ‹‚ğZo
+    // ï¿½Eï¿½ï¿½ï¿½ï¿½Wï¿½nï¿½Fï¿½Oï¿½ï¿½=+Z ï¿½Æ‚ï¿½ï¿½ÄAï¿½ï¿½ï¿½[ï¿½pï¿½ï¿½ï¿½ï¿½Oï¿½ï¿½/ï¿½Eï¿½xï¿½Nï¿½gï¿½ï¿½ï¿½ï¿½ï¿½Zï¿½o
     XMFLOAT3 fwd = { std::sinf(a.y), 0.0f,  std::cosf(a.y) };
     XMFLOAT3 rgt = { std::cosf(a.y), 0.0f, -std::sinf(a.y) };
 
-    // ©g‚Ì index ‚©‚ç gsicj/—ñi‰¡jh ‚ğŒˆ’è
-    const int row = index / rowWidth;  // ‰½’i–Ú‚©i‰œ‚És‚­‚Ù‚Ç’l‚ª‘å‚«‚¢j
-    const int col = index % rowWidth;  // ‚»‚Ì’i‚Ì‰½—ñ–Ú‚©i¶‰Ej
+    // ï¿½ï¿½ï¿½gï¿½ï¿½ index ï¿½ï¿½ï¿½ï¿½ ï¿½gï¿½sï¿½iï¿½cï¿½j/ï¿½ï¿½iï¿½ï¿½ï¿½jï¿½h ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    const int row = index / rowWidth;  // ï¿½ï¿½ï¿½iï¿½Ú‚ï¿½ï¿½iï¿½ï¿½ï¿½Ésï¿½ï¿½ï¿½Ù‚Ç’lï¿½ï¿½ï¿½å‚«ï¿½ï¿½ï¿½j
+    const int col = index % rowWidth;  // ï¿½ï¿½ï¿½Ì’iï¿½Ì‰ï¿½ï¿½ï¿½Ú‚ï¿½ï¿½iï¿½ï¿½ï¿½Eï¿½j
 
-    // ‰¡•ûŒü‚Ì’†‰›Šî€‚É•À‚×‚é‚½‚ßA-(rowWidth-1)/2..+(rowWidth-1)/2 ‚É•½sˆÚ“®
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì’ï¿½ï¿½ï¿½ï¿½î€ï¿½É•ï¿½ï¿½×‚é‚½ï¿½ßA-(rowWidth-1)/2..+(rowWidth-1)/2 ï¿½É•ï¿½ï¿½sï¿½Ú“ï¿½
     const float rightOffset = (col - (rowWidth - 1) * 0.5f) * lateralSpacing;
-    const float backOffset = (row + 1) * followDistance; // ƒvƒŒƒCƒ„[gŒã•ûh‚È‚Ì‚Å +back ‚ğ -fwd ‘¤‚Éæ‚é
+    const float backOffset = (row + 1) * followDistance; // ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½gï¿½ï¿½ï¿½ï¿½hï¿½È‚Ì‚ï¿½ +back ï¿½ï¿½ -fwd ï¿½ï¿½ï¿½Éï¿½ï¿½
 
-    // –Ú•WƒAƒ“ƒJ[À•WFƒvƒŒƒCƒ„[ˆÊ’u + ‰E~rightOffset - ‘O~backOffset
+    // ï¿½Ú•Wï¿½Aï¿½ï¿½ï¿½Jï¿½[ï¿½ï¿½ï¿½Wï¿½Fï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½Ê’u + ï¿½Eï¿½~rightOffset - ï¿½Oï¿½~backOffset
     anchor = p + (rgt * rightOffset) + (fwd * (-backOffset));
-    anchor.y = p.y; // ’n–ÊŠî€‚ÉŒÅ’èi’i·‘Î‰‚ª•K—v‚È‚ç•Ê“rƒŒƒCƒLƒƒƒXƒg‚È‚Ç‚ğŒŸ“¢j
+    anchor.y = p.y; // ï¿½nï¿½ÊŠî€ï¿½ÉŒÅ’ï¿½iï¿½iï¿½ï¿½ï¿½Î‰ï¿½ï¿½ï¿½ï¿½Kï¿½vï¿½È‚ï¿½Ê“rï¿½ï¿½ï¿½Cï¿½Lï¿½ï¿½ï¿½Xï¿½gï¿½È‚Ç‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½j
 }
 
 void AllySlime::AutoAttackUpdate(float elapsedTime)
 {
     if (!autoAttackEnabled) return;
 
-    // ˜AËƒN[ƒ‹ƒ_ƒEƒ“
+    // ï¿½Aï¿½ËƒNï¿½[ï¿½ï¿½ï¿½_ï¿½Eï¿½ï¿½
     if (autoAttackTimer > 0.0f) {
         autoAttackTimer -= elapsedTime;
         return;
     }
 
-    // Ë’ö“à‚ÌgÅŠñ‚èh‚Ì“G‚ğ’Tõ
+    // ï¿½Ë’ï¿½ï¿½ï¿½ï¿½Ìgï¿½ÅŠï¿½ï¿½hï¿½Ì“Gï¿½ï¿½Tï¿½ï¿½
     EnemyManager& em = EnemyManager::Instance();
-    const int enemyCount = em.GetEnemyCount();
-    if (enemyCount <= 0) return;
+    const XMFLOAT3 pos = { position.x, position.y + height * 0.5f, position.z };
+    const float rangeSq = autoAttackRange * autoAttackRange;
 
     float bestDistSq = FLT_MAX;
-    std::shared_ptr<Enemy> bestEnemy = nullptr;
+    XMFLOAT3 bestTarget = { 0, 0, 0 };
+    bool hasTarget = false;
 
+    const int enemyCount = em.GetEnemyCount();
     for (int i = 0; i < enemyCount; ++i) {
         std::shared_ptr<Enemy> enemy = em.GetEnemy(i);
         if (!enemy) continue;
 
-        // ©•ª’†S¨“Gã”¼g‚ ‚½‚è‚Ü‚Å‚Ì‹——£iY‚Íã”¼g“¯m‚Å‡‚í‚¹‚éj
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Sï¿½ï¿½ï¿½Gï¿½ã”¼ï¿½gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü‚Å‚Ì‹ï¿½ï¿½ï¿½ï¿½iYï¿½Íã”¼ï¿½gï¿½ï¿½ï¿½mï¿½Åï¿½ï¿½í‚¹ï¿½ï¿½j
         const XMFLOAT3& ep = enemy->GetPosition();
         float dx = ep.x - position.x;
         float dy = (ep.y + enemy->GetHeight() * 0.5f) - (position.y + height * 0.5f);
         float dz = ep.z - position.z;
         const float distSq = dx * dx + dy * dy + dz * dz;
 
-        if (distSq <= autoAttackRange * autoAttackRange && distSq < bestDistSq) {
+        if (distSq <= rangeSq && distSq < bestDistSq) {
             bestDistSq = distSq;
-            bestEnemy = enemy;
+            bestTarget = ep;
+            bestTarget.y += enemy->GetHeight() * 0.5f;
+            hasTarget = true;
         }
     }
-    if (!bestEnemy) return; // Ë’ö“à‚É‚¢‚È‚¢
+    GimmicManager& gm = GimmicManager::Instance();
+    auto& gimmicks = gm.GetAll();
+    for (auto& gimmic : gimmicks) {
+        if (!gimmic) continue;
+        if (!gimmic->IsActive()) continue;
 
-    // ”­ËˆÊ’ui‹¹Œ³‚­‚ç‚¢j
-    const XMFLOAT3 pos = { position.x, position.y + height * 0.5f, position.z };
+        bool isTarget = false;
+        float targetHeight = 0.0f;
 
-    // “Giã”¼gj•ûŒü‚Ì³‹K‰»ƒxƒNƒgƒ‹‚ğZo
-    XMFLOAT3 target = bestEnemy->GetPosition();
-    target.y += bestEnemy->GetHeight() * 0.5f;
-    XMFLOAT3 dir = { target.x - pos.x, target.y - pos.y, target.z - pos.z };
+        std::shared_ptr<GimmicBase> gimmicPtr = gimmic; // å‚ç…§ã‚’ä¿æŒ
+        if (!gimmicPtr) continue;
+
+        if (gimmicPtr->class_name == "Gimmic_BreakWall") {
+            Gimmic_BreakWall* breakWall = dynamic_cast<Gimmic_BreakWall*>(gimmicPtr.get());
+            if (breakWall && !breakWall->IsBroken()) {
+                isTarget = true;
+                targetHeight = gimmicPtr->scale.y * 2.0f;
+            }
+        }
+        else if (gimmicPtr->class_name == "Core") {
+            Core* core = dynamic_cast<Core*>(gimmicPtr.get());
+            if (core && core->GetHP() > 0.0f) {
+                isTarget = true;
+                targetHeight = 7.0f;
+            }
+        }
+
+        if (isTarget) {
+            const XMFLOAT3& gp = gimmicPtr->position;
+            float dx = gp.x - position.x;
+            float dy = (gp.y + targetHeight * 0.5f) - (position.y + height * 0.5f);
+            float dz = gp.z - position.z;
+            const float distSq = dx * dx + dy * dy + dz * dz;
+
+            if (distSq <= rangeSq && distSq < bestDistSq) {
+                bestDistSq = distSq;
+                bestTarget = gp;
+                bestTarget.y += targetHeight * 0.5f;
+                hasTarget = true;
+            }
+        }
+    }
+
+    if (!hasTarget) return; // ï¿½Ë’ï¿½ï¿½ï¿½ï¿½É‚ï¿½ï¿½È‚ï¿½
+
+    // ï¿½ï¿½ï¿½ËˆÊ’uï¿½iï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ç‚¢ï¿½j
+    
+
+    // ï¿½Gï¿½iï¿½ã”¼ï¿½gï¿½jï¿½ï¿½ï¿½ï¿½ï¿½Ìï¿½ï¿½Kï¿½ï¿½ï¿½xï¿½Nï¿½gï¿½ï¿½ï¿½ï¿½ï¿½Zï¿½o
+    XMFLOAT3 dir = { bestTarget.x - pos.x, bestTarget.y - pos.y, bestTarget.z - pos.z };
     const float len = std::sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
     if (len < 0.001f) return;
     dir.x /= len; dir.y /= len; dir.z /= len;
 
-    // ’¼i’e‚ğ¶¬¨”­ËiPlayer ‚Æ“¯‚¶ ProjectileStraite ‚ğg—pj
-    auto* proj = new ProjectileStraite(&projectileManager); // ŠÇ—‚Í©‘O‚Ì projectileManager
+    // ï¿½ï¿½ï¿½iï¿½eï¿½ğ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ËiPlayer ï¿½Æ“ï¿½ï¿½ï¿½ ProjectileStraite ï¿½ï¿½ï¿½gï¿½pï¿½j
+    auto* proj = new ProjectileStraite(&projectileManager); // ï¿½Ç—ï¿½ï¿½Íï¿½ï¿½Oï¿½ï¿½ projectileManager
     proj->Launch(dir, pos);
 
-    // ƒN[ƒ‹ƒ_ƒEƒ“ŠJn
+    // ï¿½Nï¿½[ï¿½ï¿½ï¿½_ï¿½Eï¿½ï¿½ï¿½Jï¿½n
     autoAttackTimer = autoAttackInterval;
 }
 
 void AllySlime::CollisionProjectilesVsEnemies()
 {
-    // ©•ª‚Ì’e vs “G‚Ì‰~’Œ“–‚½‚è”»’è
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Ì’e vs ï¿½Gï¿½Ì‰~ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½è”»ï¿½ï¿½
     EnemyManager& em = EnemyManager::Instance();
 
     const int projectileCount = projectileManager.GetProjectileCount();
@@ -126,14 +174,14 @@ void AllySlime::CollisionProjectilesVsEnemies()
 
     for (int i = 0; i < projectileCount; ++i) {
         Projectile* projectile = projectileManager.GetProjectile(i);
-        if (!projectile) continue; // Šù‚É”jŠüÏ‚İƒXƒƒbƒg‚È‚Ç
+        if (!projectile) continue; // ï¿½ï¿½ï¿½É”jï¿½ï¿½ï¿½Ï‚İƒXï¿½ï¿½ï¿½bï¿½gï¿½È‚ï¿½
 
         for (int j = 0; j < enemyCount; ++j) {
             std::shared_ptr<Enemy> enemy = em.GetEnemy(j);
             if (!enemy) continue;
 
             XMFLOAT3 outPos;
-            // ‹…i’ej~‰~’Œi“Gj”»’èFƒvƒƒWƒFƒNƒg‚Ì‹¤’Ê Collision ‚ğg—p
+            // ï¿½ï¿½ï¿½iï¿½eï¿½jï¿½~ï¿½~ï¿½ï¿½ï¿½iï¿½Gï¿½jï¿½ï¿½ï¿½ï¿½Fï¿½vï¿½ï¿½ï¿½Wï¿½Fï¿½Nï¿½gï¿½Ì‹ï¿½ï¿½ï¿½ Collision ï¿½ï¿½ï¿½gï¿½p
             const bool hit = Collision::IntersectSphereVsCylinder(
                 projectile->GetPosition(),
                 projectile->GetRadius(),
@@ -144,9 +192,9 @@ void AllySlime::CollisionProjectilesVsEnemies()
 
             if (!hit) continue;
 
-            // ƒqƒbƒgFƒ_ƒ[ƒWi–³“G0.5s‚Í Player ‚Æ‘µ‚¦j
+            // ï¿½qï¿½bï¿½gï¿½Fï¿½_ï¿½ï¿½ï¿½[ï¿½Wï¿½iï¿½ï¿½ï¿½G0.5sï¿½ï¿½ Player ï¿½Æ‘ï¿½ï¿½ï¿½ï¿½j
             if (enemy->ApplyDamage(1, 0.5f)) {
-                // Œy‚¢ƒmƒbƒNƒoƒbƒNiXZ •½–ÊŠî€j
+                // ï¿½yï¿½ï¿½ï¿½mï¿½bï¿½Nï¿½oï¿½bï¿½Nï¿½iXZ ï¿½ï¿½ï¿½ÊŠî€ï¿½j
                 XMFLOAT3 impulse{};
                 const float power = 10.0f;
                 const XMFLOAT3& e = enemy->GetPosition();
@@ -156,70 +204,124 @@ void AllySlime::CollisionProjectilesVsEnemies()
                 const float lenXZ = std::sqrt(vx * vx + vz * vz);
                 if (lenXZ > 0.0001f) { vx /= lenXZ; vz /= lenXZ; }
                 impulse.x = vx * power;
-                impulse.y = power * 0.5f; // ­‚µ•‚‚©‚¹‚é
+                impulse.y = power * 0.5f; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 impulse.z = vz * power;
                 enemy->AddImpulse(impulse);
             }
 
-            // ’e‚Íˆê‘Ì‚É“–‚½‚Á‚½‚ç”jŠü
+            // ï¿½eï¿½Íˆï¿½Ì‚É“ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½jï¿½ï¿½
             projectile->Destroy();
             break;
+        }
+
+        // 2) BreakWallã¨Coreã¨ã®è¡çªåˆ¤å®š
+        if (!projectile) continue;
+
+        GimmicManager& gm = GimmicManager::Instance();
+        auto& gimmicks = gm.GetAll();
+        for (auto& gimmic : gimmicks) {
+            if (!gimmic) continue;
+            if (!gimmic->IsActive()) continue;
+
+            std::shared_ptr<GimmicBase> gimmicPtr = gimmic; // å‚ç…§ã‚’ä¿æŒ
+            if (!gimmicPtr) continue;
+
+            if (gimmicPtr->class_name == "Gimmic_BreakWall") {
+                Gimmic_BreakWall* breakWall = dynamic_cast<Gimmic_BreakWall*>(gimmicPtr.get());
+                if (!breakWall || breakWall->IsBroken()) continue;
+
+                if (gimmicPtr->collider && gimmicPtr->collider->type == ColliderType::OBB) {
+                    OBB* obb = static_cast<OBB*>(gimmicPtr->collider.get());
+                    XMFLOAT3 outMTD;
+                    if (Collision::IntersectSphereVsOBB(
+                        projectile->GetPosition(),
+                        projectile->GetRadius(),
+                        *obb,
+                        &outMTD))
+                    {
+                        breakWall->OnCollision(projectile);
+                        projectile->Destroy();
+                        break;
+                    }
+                }
+            }
+            else if (gimmicPtr->class_name == "Core") {
+                Core* core = dynamic_cast<Core*>(gimmicPtr.get());
+                if (!core || core->GetHP() <= 0.0f) continue;
+
+                if (gimmicPtr->collider && gimmicPtr->collider->type == ColliderType::Cylinder) {
+                    CylinderCollider* cylinder = static_cast<CylinderCollider*>(gimmicPtr->collider.get());
+                    XMFLOAT3 outPos;
+                    if (Collision::IntersectSphereVsCylinder(
+                        projectile->GetPosition(),
+                        projectile->GetRadius(),
+                        cylinder->center,
+                        cylinder->radius,
+                        cylinder->height,
+                        outPos))
+                    {
+                        core->OnCollision(projectile);
+                        projectile->Destroy();
+                        break;
+                    }
+                }
+            }
         }
     }
 }
 
 void AllySlime::Update(float elapsedTime)
 {
-    // 1) •Ò‘àƒAƒ“ƒJ[iƒvƒŒƒCƒ„[Œã•û‚Ì–Ú•Wj‚ğXV
+    // 1) ï¿½Ò‘ï¿½ï¿½Aï¿½ï¿½ï¿½Jï¿½[ï¿½iï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½ï¿½Ì–Ú•Wï¿½jï¿½ï¿½ï¿½Xï¿½V
     UpdateAnchor();
 
-    // 2) –Ú•WƒAƒ“ƒJ[‚ÖˆÚ“®‚·‚é‚½‚ß‚Ì“ü—ÍƒxƒNƒgƒ‹‚ğZoiXZ ‚Ì‚İj
+    // 2) ï¿½Ú•Wï¿½Aï¿½ï¿½ï¿½Jï¿½[ï¿½ÖˆÚ“ï¿½ï¿½ï¿½ï¿½é‚½ï¿½ß‚Ì“ï¿½ï¿½Íƒxï¿½Nï¿½gï¿½ï¿½ï¿½ï¿½ï¿½Zï¿½oï¿½iXZ ï¿½Ì‚İj
     float vx = anchor.x - position.x;
     float vz = anchor.z - position.z;
     float d = std::sqrt(vx * vx + vz * vz);
     if (d > 0.0001f) { vx /= d; vz /= d; }
     else { vx = vz = 0.0f; }
 
-    // 3) Šù‘¶‚Ì Character API ‚ğ—˜—p‚µ‚ÄA©‘R‚È‰Á‘¬/Œ¸‘¬•ù‰ñ‚Å’Ç]
+    // 3) ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Character API ï¿½ğ—˜—pï¿½ï¿½ï¿½ÄAï¿½ï¿½ï¿½Rï¿½È‰ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å’Ç]
     Move(elapsedTime, vx, vz, moveSpeed);
     Turn(elapsedTime, vx, vz, turnSpeed);
 
-    // 4) ©“®UŒ‚i”­Ëƒ^ƒCƒ~ƒ“ƒO‚ÌŠÇ—‚Æ’e¶¬j
+    // 4) ï¿½ï¿½ï¿½ï¿½ï¿½Uï¿½ï¿½ï¿½iï¿½ï¿½ï¿½Ëƒ^ï¿½Cï¿½~ï¿½ï¿½ï¿½Oï¿½ÌŠÇ—ï¿½ï¿½Æ’eï¿½ï¿½ï¿½ï¿½ï¿½j
     AutoAttackUpdate(elapsedTime);
 
-    // 5) ‘¬“xXVE–³“Gƒ^ƒCƒ}[Eƒ[ƒ‹ƒhs—ñ‚ÌXViCharacter ‘¤‚Ì•W€ˆ—j
+    // 5) ï¿½ï¿½ï¿½xï¿½Xï¿½Vï¿½Eï¿½ï¿½ï¿½Gï¿½^ï¿½Cï¿½}ï¿½[ï¿½Eï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½hï¿½sï¿½ï¿½ÌXï¿½Vï¿½iCharacter ï¿½ï¿½ï¿½Ì•Wï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½j
     UpdateVelocity(elapsedTime);
     UpdateInvincibleTimer(elapsedTime);
     UpdateTransform();
 
-    // 6) ©•ª‚Ì’e‚ÌXV•“G‚Æ‚Ì“–‚½‚è”»’è
+    // 6) ï¿½ï¿½ï¿½ï¿½ï¿½Ì’eï¿½ÌXï¿½Vï¿½ï¿½ï¿½Gï¿½Æ‚Ì“ï¿½ï¿½ï¿½ï¿½è”»ï¿½ï¿½
     projectileManager.Update(elapsedTime);
     CollisionProjectilesVsEnemies();
 }
 
 void AllySlime::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
-    // –{‘Ìƒ‚ƒfƒ‹‚Ì•`‰æiLambert “™A“GƒXƒ‰ƒCƒ€‚Æ‘µ‚¦‚éj
+    // ï¿½{ï¿½Ìƒï¿½ï¿½fï¿½ï¿½ï¿½Ì•`ï¿½ï¿½iLambert ï¿½ï¿½ï¿½Aï¿½Gï¿½Xï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½Æ‘ï¿½ï¿½ï¿½ï¿½ï¿½j
     renderer->Render(rc, transform, slimeModel, ShaderId::Lambert);
 
-    // ©•ª‚Ì’e‚Ì•`‰æ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Ì’eï¿½Ì•`ï¿½ï¿½
     projectileManager.Render(rc, renderer);
 }
 
 void AllySlime::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer)
 {
-    // Character Šî’ê‚ÌƒfƒoƒbƒO“–‚½‚èi‰~’Œ‚È‚Çj
+    // Character ï¿½ï¿½ï¿½Ìƒfï¿½oï¿½bï¿½Oï¿½ï¿½ï¿½ï¿½ï¿½ï¿½iï¿½~ï¿½ï¿½ï¿½È‚Çj
     Character::RenderDebugPrimitive(rc, renderer);
 
-    // ©•ª‚Ì’e‚ÌƒfƒoƒbƒO•`‰æ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Ì’eï¿½Ìƒfï¿½oï¿½bï¿½Oï¿½`ï¿½ï¿½
     projectileManager.RenderDebugPrimitive(rc, renderer);
 
-    // Ë’ö‚Ì‰Â‹‰»iON‚Ì‚İjF—Î‚Ì”¼“§–¾‰~’Œ
+    // ï¿½Ë’ï¿½ï¿½Ì‰Âï¿½ï¿½ï¿½ï¿½iONï¿½ï¿½ï¿½Ì‚İjï¿½Fï¿½Î‚Ì”ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½~ï¿½ï¿½
     if (autoAttackEnabled) {
         const XMFLOAT3 center = { position.x, position.y, position.z };
         renderer->RenderCylinder(rc, center, autoAttackRange, height, XMFLOAT4(0, 1, 0, 0.2f));
     }
 
-    // ’Ç]ƒAƒ“ƒJ[‚Ì–Úˆói‰©F‚Ì¬‹…j
+    // ï¿½Ç]ï¿½Aï¿½ï¿½ï¿½Jï¿½[ï¿½Ì–Úˆï¿½iï¿½ï¿½ï¿½Fï¿½Ìï¿½ï¿½ï¿½ï¿½j
     renderer->RenderSphere(rc, anchor, 0.15f, XMFLOAT4(1, 1, 0, 1));
 }

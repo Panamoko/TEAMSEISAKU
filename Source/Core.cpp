@@ -38,15 +38,19 @@ void Core::init()
 
 void Core::Update(float elapsedTime)
 {
-	animator.Update(elapsedTime);
-
-	cylinder->center = position;
-
 	if (hp <= 0.0f)
 	{
 		GimmicManager::Instance().Remove(this);
 		CollisionManager::Instance().Remove(this);
 		SceneManager::Instance().ChangeScene(new SceneLoading(new SceneTitle));
+		return;
+	}
+
+	animator.Update(elapsedTime);
+
+	if (cylinder)
+	{
+		cylinder->center = position;
 	}
 }
 
@@ -59,20 +63,26 @@ void Core::Render(const RenderContext& rc, ModelRenderer* renderer)
 
 void Core::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer)
 {
-	// Œš•¨‚Ì“–‚½‚èi‰~’Œj‚ğ‰Â‹‰»FÔ
+	if (hp <= 0.0f || !cylinder) return;
+
+	// ã‚³ã‚¢ã®å½“ãŸã‚Šåˆ¤å®šï¼ˆå††æŸ±ï¼‰ã‚’èµ¤è‰²ã§è¡¨ç¤º
 	renderer->RenderCylinder(
 		rc,
-		cylinder->center,    // ’†Si’n–Ê‚É’u‚­‘z’èj
-		cylinder->radius,      // …•½”¼Œa
-		cylinder->height,      // ‚‚³
+		cylinder->center,    // ä¸­å¿ƒï¼ˆåœ°é¢ã«ç½®ãåº§æ¨™ï¼‰
+		cylinder->radius,      // åŠå¾„
+		cylinder->height,      // é«˜ã•
 		XMFLOAT4(1, 0, 0, 1)
 	);
 }
 
 void Core::OnCollision(GameObject* object)
 {
+	if (hp <= 0.0f) return;
+
 	if (object->type == Type::PlayerAttack)
-	hp -= 10.0f;
+	{
+		hp -= 10.0f;
+	}
 }
 
 void Core::OnImGui()
