@@ -39,7 +39,7 @@ public:
 
 	OBB GetOBB() const;
 
-	DirectX::XMFLOAT3 SetMTD(DirectX::XMFLOAT3 out_mtd) { mtd = out_mtd; }
+	DirectX::XMFLOAT3 SetMTD(DirectX::XMFLOAT3 out_mtd) { return mtd = out_mtd; }
 
 public:
 	Model* model = nullptr;//実際のモデルデータ

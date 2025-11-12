@@ -98,6 +98,10 @@ void SceneGame::Finalize()
 	//エネミーの終了化
 	EnemyManager::Instance().Clear();
 
+	CollisionManager::Instance().Clear();
+
+	GimmicManager::Instance().Clear();
+
 	//カメラコントローラー終了化
 	if (cameraController != nullptr)
 	{
