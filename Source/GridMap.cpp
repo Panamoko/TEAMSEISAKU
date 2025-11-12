@@ -71,10 +71,20 @@ void GridMap::Build(const std::vector<std::shared_ptr<GameObject>>& objects)
     }
 }
 
-bool GridMap::IsBloked(int x, int z) const
+bool GridMap::IsBlocked(int x, int z) const
 {
     //範囲外は強制的にブロック扱い
     if (x < 0 || x >= width || z < 0 || z >= height)return true;
 
-    return !grid[z * width + x].empty();//空でなければブロック
+    //セル内に何かデータが存在する場合は通行不可とする
+    return !grid[z * width + x].empty();
+}
+
+//動的ブロック管理
+void GridMap::SetBlocked(int x, int z, bool blocked)
+{
+    if (x < 0 || x >= width || z < 0 || z >= height)
+        return;
+
+    grid[z][x] = blocked ? 1 : 0;
 }

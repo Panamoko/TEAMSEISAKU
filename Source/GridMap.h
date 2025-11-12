@@ -10,10 +10,13 @@
 	//ゲーム内のオブジェクトを見て障害物マップを作る
 	void Build(const std::vector < std::shared_ptr<GameObject>>& objects);
 	//指定セルが障害物かどうか調べる
-	bool IsBloked(int x, int z)const;
+	bool IsBlocked(int x, int z)const;
 
-	int GetWidth() { return width; }
-	int GetHeight() { return height; }
+	//動的ブロック管理
+	void SetBlocked(int x, int z, bool blocked);
+
+	int GetWidth()const { return width; }
+	int GetHeight()const { return height; }
 
  private:
 	int width;//マップの横方向のセル数
