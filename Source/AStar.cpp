@@ -109,46 +109,156 @@ std::vector<std::pair<int, int>> AStar::FindPath(
     5 : 経路が有効なら再利用
 */
 
-
 //動的再探索
 std::vector<std::pair<int, int>> AStar::ReplanPath(
     int startX, int startZ,
     int goalX, int goalZ,
-    const GridMap& gridMap)
+    const GridMap& gridMap,
+    int agent_cellX,int agent_cellZ)
 {
-    //ノードプールを初期化しない → 再利用
-    //既存の経路が有効か確認
-    bool pathBlocked = false;
-
-    for (auto& [key, node] : node_map)
+    //ゴールチェック 
+    if (gridMap.IsBlocked(goalX, goalZ))
     {
-        if (gridMap.IsBlocked(node->node_x, node->node_z))
+        //ゴールが塞がれていたら、近傍セルに代替ゴールを探す
+        auto neighbors = GetNeighbors(goalX, goalZ, gridMap);
+        bool found = false;
+        for (auto& [nx, nz] : neighbors)
         {
-            pathBlocked = true;
-            break;
+            if (!gridMap.IsBlocked(nx, nz))
+            {
+                goalX = nx;
+                goalZ = nz;
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            //周囲すべて障害物 → 経路破綻
+            last_path.clear();
+            return last_path;
         }
     }
 
-    //経路が無効なら再探索
-    if (pathBlocked)
+    //自身の位置がふさがれていた場合
+    if (gridMap.IsBlocked(agent_cellX, agent_cellZ))
     {
-        node_pool.Reset();
-        node_map.clear();
-        return FindPath(startX, startZ, goalX, goalZ, gridMap);
+        //周囲に空いているセルを探す
+        auto neighbors = GetNeighbors(agent_cellX, agent_cellZ, gridMap);
+        bool found = false;
+        for (auto& [nx, nz] : neighbors)
+        {
+            if (!gridMap.IsBlocked(nx, nz))
+            {
+                agent_cellX = nx;
+                agent_cellZ = nz;
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            //周囲すべて障害物 → 経路破綻
+            last_path.clear();
+            return last_path;
+        }
     }
 
-    //経路がまだ有効なら、そのまま前回のpathを返す
-    std::vector<std::pair<int, int>> currentPath;
-    Node* node = node_map[{goalX, goalZ}];
-    while (node)
+    //経路上の障害物検出
+    bool pathBlocked = false;
+    int replanStartIndex = 0;
+
+    if (!last_path.empty())
     {
-        currentPath.emplace_back(node->node_x, node->node_z);
-        node = node->parent;
+        //実際の現在位置に最も近いインデックスを探す
+        float min_dist = (std::numeric_limits<float>::max)();
+        for (int i = 0; i < static_cast<int>(last_path.size()); i++)
+        {
+            float dx = static_cast<float>(last_path[i].first - agent_cellX);
+            float dz = static_cast<float>(last_path[i].second - agent_cellZ);
+            float dist = (dx * dx) + (dz * dz);
+            if (dist < min_dist)
+            {
+                min_dist = dist;
+                replanStartIndex = i;
+            }
+        }
+
+        //経路上に障害物があるかチェック
+        for (int i = replanStartIndex; i < static_cast<int>(last_path.size()); i++)
+        {
+            auto [x, z] = last_path[i];
+            if (gridMap.IsBlocked(x, z))
+            {
+                pathBlocked = true;
+                break;
+            }
+        }
     }
 
-    std::reverse(currentPath.begin(), currentPath.end());
+    //経路が問題なければそのまま返す
+    if (!pathBlocked && !last_path.empty())
+        return last_path;
 
-    return currentPath;
+    //ノード再利用による部分再探索 
+    for (auto it = node_map.begin(); it != node_map.end();)
+    {
+        auto [x, z] = it->first;
+        //近傍範囲のみをクリア
+        if (gridMap.IsBlocked(x, z) ||
+            abs(x - agent_cellX) > 5 ||
+            abs(z - agent_cellZ) > 5)
+        {
+            it = node_map.erase(it);
+        }
+        else
+        {
+            it++;
+        }
+    }
+
+    node_pool.Reset();//メモリプールリセット
+
+    //部分再探索開始セルを決定
+    auto replan_start = (last_path.empty())
+        ? std::make_pair(startX, startZ)
+        : last_path[replanStartIndex];
+
+    //部分再探索実行
+    auto new_segment = FindPath(
+        replan_start.first, replan_start.second,
+        goalX, goalZ, gridMap
+    );
+
+    if (new_segment.empty())
+    {
+        //再探索失敗 → 前回の経路をそのまま返す
+        return last_path;
+    }
+
+    //経路結合
+    std::vector<std::pair<int, int>> new_path;
+    if (!last_path.empty())
+    {
+        new_path.insert(
+            new_path.end(),
+            last_path.begin(),
+            last_path.begin() + replanStartIndex + 1
+        );
+    }
+
+    if (!last_path.empty() && replanStartIndex < static_cast<int>(last_path.size()) - 1)
+    {
+        new_path.insert(
+            new_path.end(),
+            last_path.begin(),
+            last_path.begin() + replanStartIndex + 1
+        );
+    }
+    last_path = new_path;
+    return last_path;
 }
 
 float AStar::Heuristic(

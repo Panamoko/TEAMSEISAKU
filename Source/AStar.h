@@ -24,7 +24,8 @@ public:
 	std::vector<std::pair<int, int>> ReplanPath(
 		int startX, int startZ,
 		int goalX, int goalZ,
-		const GridMap& gridMap
+		const GridMap& gridMap,
+		int agent_cellX, int agent_cellZ
 	);
 
 private:
@@ -104,5 +105,7 @@ private:
 
 	//ノード管理用マップ
 	std::unordered_map<std::pair<int, int>, Node*, pair_hash> node_map;
+
+	std::vector<std::pair<int, int>> last_path; // 前回の経路
 };
 
