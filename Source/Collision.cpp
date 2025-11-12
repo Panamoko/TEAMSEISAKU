@@ -35,6 +35,45 @@ bool Collision::IntersectSphereVsSphere(
 }
 
 // ‰~’Œ‚Æ‰~’Œ‚ÌŒğ·”»’è
+bool Collision::IntersectCylinderVsCylinder2(
+	const DirectX::XMFLOAT3& positionA,
+	float radiusA,
+	float heightA,
+	const DirectX::XMFLOAT3& positionB,
+	float radiusB,
+	float heightB,
+	DirectX::XMFLOAT3& outPositionB)
+{
+	// A‚Ì‘«Œ³‚ªB‚Ì“ª‚æ‚èã‚È‚ç“–‚½‚Á‚Ä‚¢‚È‚¢
+	if (positionA.y > positionB.y + heightB)
+	{
+		return false;
+	}
+	// A‚Ì“ª‚ªB‚Ì‘«Œ³‚æ‚è‰º‚È‚ç“–‚½‚Á‚Ä‚¢‚È‚¢
+	if (positionA.y + heightA < positionB.y)
+	{
+		return false;
+	}
+	// XZ•½–Ê‚Å‚Ì”ÍˆÍƒ`ƒFƒbƒN
+	float vx = positionB.x - positionA.x;
+	float vz = positionB.z - positionA.z;
+	float range = radiusA + radiusB;
+	float distXZ = sqrtf(vx * vx + vz * vz);
+	if (distXZ > range)
+	{
+		return false;
+	}
+	// A‚ªB‚ğ‰Ÿ‚µo‚·
+	vx /= distXZ;
+	vz /= distXZ;
+	outPositionB.x = positionA.x + (vx * range);
+	outPositionB.y = positionB.y;
+	outPositionB.z = positionA.z + (vz * range);
+
+	return true;
+}
+
+// ‰~’Œ‚Æ‰~’Œ‚ÌŒğ·”»’è
 bool Collision::IntersectCylinderVsCylinder(
 	const DirectX::XMFLOAT3& positionA,
 	float radiusA,

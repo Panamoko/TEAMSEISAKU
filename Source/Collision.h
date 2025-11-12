@@ -24,6 +24,17 @@ public:
 	);
 
 	// ‰~’Œ‚Æ‰~’Œ‚ÌŒğ·”»’è
+	static bool IntersectCylinderVsCylinder2(
+		const DirectX::XMFLOAT3& positionA,
+		float radiusA,
+		float heightA,
+		const DirectX::XMFLOAT3& positionB,
+		float radiusB,
+		float heightB,
+		DirectX::XMFLOAT3& outPositionB
+	);
+
+	// ‰~’Œ‚Æ‰~’Œ‚ÌŒğ·”»’è
 	static bool IntersectCylinderVsCylinder(
 		const DirectX::XMFLOAT3& positionA,
 		float radiusA,

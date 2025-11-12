@@ -249,7 +249,7 @@ void Player::CollisionPlayerVsEnemies()
 		// Õ“Ëˆ—
 		DirectX::XMFLOAT3 outPosition;
 
-		if (Collision::IntersectCylinderVsCylinder(
+		if (Collision::IntersectCylinderVsCylinder2(
 			position, 
 			radius,
 			height,
