@@ -27,7 +27,7 @@ ModelRenderer::ModelRenderer(ID3D11Device* device)
 }
 
 // •`‰æŽÀs
-void ModelRenderer::Render(const RenderContext& rc, const DirectX::XMFLOAT4X4& worldTransform, const Model* model, ShaderId shaderId)
+void ModelRenderer::Render(const RenderContext& rc, const DirectX::XMFLOAT4X4& worldTransform, const Model* model, ShaderId shaderId, const DirectX::XMFLOAT4& color)
 {
 	ID3D11DeviceContext* dc = rc.deviceContext;
 
@@ -113,7 +113,7 @@ void ModelRenderer::Render(const RenderContext& rc, const DirectX::XMFLOAT4X4& w
 		// •`‰æ
 		for (const ModelResource::Subset& subset : mesh.subsets)
 		{
-			shader->Update(rc, *subset.material);
+			shader->Update(rc, *subset.material, color);
 
 			dc->DrawIndexed(subset.indexCount, subset.startIndex, 0);
 		}

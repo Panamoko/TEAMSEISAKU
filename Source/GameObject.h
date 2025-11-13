@@ -24,7 +24,7 @@ public:
 	virtual void Render(const RenderContext& rc, ModelRenderer* renderer)
 	{
 		if (model)
-			renderer->Render(rc, transform, model, ShaderId::Lambert);
+			renderer->Render(rc, transform, model, ShaderId::Lambert, color);
 	}
 
 	virtual void UpdateTransform();
