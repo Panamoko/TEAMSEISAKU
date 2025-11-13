@@ -6,6 +6,9 @@ class GimmicBase :public GameObject
 {
 public:
 	GimmicBase() {
+		model = ModelManager::Instance().Load("Data/Model/bilud/takadai.mdl");
+		model = ModelManager::Instance().Load("Data/Model/bilud/ie.mdl");
+
 		class_name = "GimmicBase";
 		type = Type::Gimmic;
 		weight = 5.0f;
