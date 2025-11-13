@@ -445,15 +445,11 @@ void Collision::OBBtoAABB(
 void Collision::ApplyPushOutWithWeight(
 	GameObject* objA,
 	GameObject* objB,
-	const DirectX::XMFLOAT3& mtd)
+	const DirectX::XMFLOAT3& normal,
+	float penetration
+)
 {
-	//両方が存在しない or MTDがほぼゼロなら処理不要
-	DirectX::XMVECTOR mtd_vec = DirectX::XMLoadFloat3(&mtd);
-	float mtd_length = DirectX::XMVectorGetX(DirectX::XMVector3Length(mtd_vec));
-	if (mtd_length < 1e-6f)return;
-
-	//正規化ベクトル
-	DirectX::XMVECTOR mtd_norm = DirectX::XMVector3Normalize(mtd_vec);
+	if (penetration <= 1e-6f)return;
 
 	//重さ比率を計算
 	//weightが小さいほどよく動く
@@ -471,12 +467,9 @@ void Collision::ApplyPushOutWithWeight(
 	float move_rarioB = (weightA) / total_weight;
 
 	//移動量ベクトルを計算（Aはマイナス方向、Bはプラス方向）
-	DirectX::XMVECTOR moveA = DirectX::XMVectorScale(mtd_norm, -mtd_length * move_rarioA);
-	DirectX::XMVECTOR moveB = DirectX::XMVectorScale(mtd_norm, mtd_length * move_rarioB);
-
-	//実際に位置を更新
-	DirectX::XMVECTOR posA = DirectX::XMLoadFloat3(&objA->position);
-	DirectX::XMVECTOR posB = DirectX::XMLoadFloat3(&objB->position);
+	DirectX::XMVECTOR n = XMLoadFloat3(&normal);
+	DirectX::XMVECTOR moveA = DirectX::XMVectorScale(n, -penetration * move_rarioA);
+	DirectX::XMVECTOR moveB = DirectX::XMVectorScale(n, penetration * move_rarioB);
 
 	DirectX::XMFLOAT3 mtdA, mtdB;
 	DirectX::XMStoreFloat3(&mtdA, moveA);
@@ -484,5 +477,52 @@ void Collision::ApplyPushOutWithWeight(
 
 	objA->SetMTD(mtdA);
 	objB->SetMTD(mtdB);
+}
+
+bool Collision::IntersectCylinder_Vs_Cylinder(
+	CylinderCollider* cylinderA,
+	CylinderCollider* cylinderB,
+	DirectX::XMFLOAT3& outNormal,
+	float& outPenetrarion)
+{
+	//Y軸方向の重なりチェック 
+	float minA = cylinderA->center.y;
+	float maxA = cylinderA->center.y + cylinderA->height;
+	float minB = cylinderB->center.y;
+	float maxB = cylinderB->center.y + cylinderB->height;
+
+	if (maxA < minB || maxB < minA)
+	{
+		//高さが重なっていない
+		outNormal = { 0,0,0 };
+		outPenetrarion = 0.0f;
+		return false;
+	}
+
+	//水平方向距離
+	float dx = cylinderB->center.x - cylinderA->center.x;
+	float dz = cylinderB->center.z - cylinderA->center.z;
+	float distSq = (dx * dx) + (dz * dz);
+	float hitDist = cylinderA->radius + cylinderB->radius;
+
+	//距離が十分離れていれば衝突していない
+	if (distSq >= hitDist * hitDist)
+	{
+		outNormal = { 0,0,0 };
+		outPenetrarion = 0.0f;
+		return false;
+	}
+
+	float dist = std::sqrtf(distSq);
+	if (dist <= 1e-6f)
+	{
+		outNormal = { 0,0,0 };
+		outPenetrarion = 0.0f;
+		return false;
+	}
+
+	outNormal = { dx / dist,0.0f,dz / dist };
+	outPenetrarion = hitDist - dist;
+	return true;
 }
 
