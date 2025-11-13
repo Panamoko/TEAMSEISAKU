@@ -493,6 +493,7 @@ bool Collision::IntersectCylinder_Vs_Cylinder(
 
 	if (maxA < minB || maxB < minA)
 	{
+		//‚‚³‚ªd‚È‚Á‚Ä‚¢‚È‚¢
 		outNormal = { 0,0,0 };
 		outPenetrarion = 0.0f;
 		return false;
@@ -504,6 +505,7 @@ bool Collision::IntersectCylinder_Vs_Cylinder(
 	float distSq = (dx * dx) + (dz * dz);
 	float hitDist = cylinderA->radius + cylinderB->radius;
 
+	//‹——£‚ª\•ª—£‚ê‚Ä‚¢‚ê‚ÎÕ“Ë‚µ‚Ä‚¢‚È‚¢
 	if (distSq >= hitDist * hitDist)
 	{
 		outNormal = { 0,0,0 };
