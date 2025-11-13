@@ -15,6 +15,7 @@ Yagura::Yagura()
 	//Šî‘bİ’è
 	class_name = "Yagura";
 	hp = 100.0f;
+	scale = { 0.01,0.01,0.01 };
 }
 
 Yagura::~Yagura()

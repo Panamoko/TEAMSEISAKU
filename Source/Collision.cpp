@@ -585,7 +585,67 @@ bool Collision::IntersectCylinder_Vs_OBB(
 	float clampedX = (std::max)(-obb_B->half.x, (std::min)(localX, obb_B->half.x));
 	float clampedY = (std::max)(-obb_B->half.y, (std::min)(localX, obb_B->half.y));
 	float clampedZ = (std::max)(-obb_B->half.z, (std::min)(localX, obb_B->half.z));
+	DirectX::XMFLOAT3 closest_local{ clampedX, clampedY, clampedZ };
 
-	return false;
+	//最近点をワールド座標に戻す
+	DirectX::XMVECTOR closest_world =
+		obb_center +
+		DirectX::XMLoadFloat3(&obb_B->axis[0]) * clampedX +
+		DirectX::XMLoadFloat3(&obb_B->axis[1]) * clampedY +
+		DirectX::XMLoadFloat3(&obb_B->axis[2]) * clampedZ;
+
+	//XZ平面での距離チェック
+	DirectX::XMFLOAT3 cA = cylinderA->center;
+	DirectX::XMFLOAT3 closest;
+	DirectX::XMStoreFloat3(&closest, closest_world);
+
+	float dx = closest.x - cA.x;
+	float dz = closest.z - cA.z;
+	float distSq = (dx * dx) + (dz * dz);
+	float radius = cylinderA->radius;
+
+	//半径より遠ければ衝突していない
+	if (distSq > radius * radius)
+	{
+		outNormal = { 0,0,0 };
+		outPenetraion = 0.0f;
+		return false;
+	}
+
+	//Y軸方向（高さ）の重なりを確認
+	float half_heightA = cylinderA->height * 0.5f;
+	float half_heightB = obb_B->half.y;
+
+	float topA = cA.y + half_heightA;
+	float bottomA = cA.y + half_heightA;
+
+	float topB = obb_B->center.y + half_heightB;
+	float bottomB = obb_B->center.y - half_heightB;
+
+	//垂直方向に重なりがない場合
+	if (topA < bottomB || topB < bottomA)
+	{
+		outNormal = { 0,0,0 };
+		outPenetraion = 0.0f;
+		return false;
+	}
+
+	//法線ベクトルと貫入量を計算
+	float dist = std::sqrtf(distSq);
+
+	if (dist < 1e-6f)
+	{
+		//ほぼ同位置 → 適当な法線
+		outNormal = { 1,0,0 };
+		outPenetraion = radius;
+		return true;
+	}
+
+	float penetration = radius - dist;
+
+	outNormal = { dx / dist,0.0f,dz / dist };
+	outPenetraion = penetration;
+
+	return true;
 }
 
