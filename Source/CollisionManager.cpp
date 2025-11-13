@@ -156,8 +156,10 @@ void CollisionManager::CheckAllCollision()
 			{
 				CylinderCollider* cylinderA = static_cast<CylinderCollider*>(objectA->collider.get());
 				OBB* obb_B = static_cast<OBB*>(objectB->collider.get());
-				isCollisionDetected = Collision::IntersectCylinderVsOBB(
-					cylinderA->center, cylinderA->radius, cylinderA->height, *obb_B, &mtd);
+				isCollisionDetected = Collision::IntersectCylinder_Vs_OBB(
+					cylinderA, obb_B, normal, penetrarion);
+				if (isCollisionDetected)
+					Collision::ApplyPushOutWithWeight(objectA, objectB, normal, penetrarion);
 			}
 
 			//‰~’Œ VS AABB
