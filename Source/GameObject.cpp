@@ -70,8 +70,6 @@ GameObject::GameObject() :name("Empty")
 		0,0,1,0,
 		0,0,0,1
 	};
-
-	//GameObjectManager::Instance().AddObject()
 }
 
 GameObject::~GameObject()

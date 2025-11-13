@@ -10,6 +10,14 @@
 //	float yaw;                // Y軸回転（ラジアン）
 //};
 
+
+// 前方宣言
+class GameObject;
+struct CylinderCollider;
+struct SphereCollider;
+struct BoxCollider;
+struct OBB;
+
 // コリジョン
 class Collision
 {

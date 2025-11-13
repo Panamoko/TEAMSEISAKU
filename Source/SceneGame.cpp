@@ -13,6 +13,7 @@
 #include "CollisionManager.h"
 #include "GimmicManager.h"
 #include "StageManager.h"
+#include "GameObjectManager.h"
 #include <cmath>
 #include <DirectXMath.h>
 #include <algorithm>
@@ -89,7 +90,7 @@ void SceneGame::Initialize()
 
 	 LoadScene(objects, sprites2d, "scene.json");
 
-	 grid_map.Initialize(41, 41, 4);
+	 grid_map.Initialize(101, 101, 1.1);
 }
 
 // 終了化
@@ -101,6 +102,8 @@ void SceneGame::Finalize()
 	CollisionManager::Instance().Clear();
 
 	GimmicManager::Instance().Clear();
+
+	GameObjectManager::Instance().Clear();
 
 	//カメラコントローラー終了化
 	if (cameraController != nullptr)
@@ -161,6 +164,8 @@ void SceneGame::Update(float elapsedTime)
 		for (auto& a : alliesHoming)  a->Update(elapsedTime);
 
 		CollisionManager::Instance().CheckAllCollision();
+
+		grid_map.Build(GameObjectManager::Instance().GetAllObjects());
 	}
 
 	// === 追加: C/Vでスポーン ===

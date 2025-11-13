@@ -2,6 +2,7 @@
 #include "GimmicManager.h"
 #include "CollisionManager.h"
 #include "EnemyManager.h"
+#include "GameObjectManager.h"
 
 
 Barracks::Barracks()
@@ -52,6 +53,7 @@ void Barracks::Update(float elapsedTime)
 		enemys->SetPosition(spawn_positon);			//ƒXƒ|[ƒ“ˆÊ’u–{İ’è
 		EnemyManager::Instance().Register(enemys);	//“G‚ğ“o˜^
 		spawned_enemies.push_back(enemys);			//•ºÉ‚É‚à“G‚ğ“o˜^
+		GameObjectManager::Instance().AddObject(objects);
 	}
 
 	//•ºÉ‚ªŠÇ—‚·‚é“G‚Ì€‘Ì‚ğ®—

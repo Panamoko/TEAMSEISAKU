@@ -2,6 +2,7 @@
 #include "GimmicManager.h"
 #include "EnemyManager.h"
 #include "StageManager.h"
+#include "GameObjectManager.h"
 
 std::unordered_map<std::string, Factory::CreateFunc>& Factory::Registry()
 {
@@ -47,6 +48,8 @@ std::shared_ptr<GameObject> Factory::Create(const std::string& className)
 
         default: break;
     }
+
+    GameObjectManager::Instance().AddObject(object);
 
     return object;
 }

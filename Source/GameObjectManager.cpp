@@ -17,6 +17,8 @@ void GameObjectManager::AddObject(const std::shared_ptr<GameObject>& object)
 
 void GameObjectManager::RemoveObject(int id)
 {
+	if (objectTable.empty())return;
+
 	auto it = objectTable.find(id);
 	if (it != objectTable.end())
 	{

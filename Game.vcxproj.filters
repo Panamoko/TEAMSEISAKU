@@ -276,7 +276,6 @@
     <ClInclude Include="Source\GameObjectManager.h">
       <Filter>Source\GameObjcet</Filter>
     </ClInclude>
-    <ClInclude Include="GAMEOBJECTMANAGER.H" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -375,9 +374,6 @@
     <ClCompile Include="Source\CameraController.cpp">
       <Filter>Source\Camera</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Collision.cpp">
-      <Filter>Source\Collision</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Framework.cpp">
       <Filter>Source\Framwork</Filter>
     </ClCompile>
@@ -473,6 +469,9 @@
     </ClCompile>
     <ClCompile Include="Source\GameObjectManager.cpp">
       <Filter>Source\GameObjcet</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Collision.cpp">
+      <Filter>Source\Collision\Collider</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

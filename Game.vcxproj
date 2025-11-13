@@ -120,7 +120,6 @@
     <ClInclude Include="External\imgui-docking\imstb_rectpack.h" />
     <ClInclude Include="External\imgui-docking\imstb_textedit.h" />
     <ClInclude Include="External\imgui-docking\imstb_truetype.h" />
-    <ClInclude Include="GAMEOBJECTMANAGER.H" />
     <ClInclude Include="Source\AllySlime.h" />
     <ClInclude Include="Source\AllySlimeHoming.h" />
     <ClInclude Include="Source\AllyTargeting.h" />
