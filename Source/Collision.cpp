@@ -486,3 +486,35 @@ void Collision::ApplyPushOutWithWeight(
 	objB->SetMTD(mtdB);
 }
 
+bool Collision::IntersectCylinder_Vs_Cylinder(
+	CylinderCollider* cylinderA,
+	CylinderCollider* cylinderB,
+	DirectX::XMFLOAT3& outNormal,
+	float& outPenetrarion)
+{
+	//Y軸方向の重なりチェック 
+	float minA = cylinderA->center.y;
+	float maxA = cylinderA->center.y + cylinderA->height;
+	float minB = cylinderB->center.y;
+	float maxB = cylinderB->center.y + cylinderB->height;
+
+	if (maxA < minB || maxB < minA)
+	{
+		outNormal = { 0,0,0 };
+		outPenetrarion = 0.0f;
+		return false;
+	}
+
+	//水平方向距離
+	float dx = cylinderB->center.x - cylinderA->center.x;
+	float dz = cylinderB->center.z - cylinderA->center.z;
+	float distSq = (dx * dx) + (dz * dz);
+	float hitDist = cylinderA->radius + cylinderB->radius;
+
+	if (distSq >= hitDist * hitDist)
+	{
+
+	}
+
+}
+

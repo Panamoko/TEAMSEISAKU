@@ -89,4 +89,12 @@ public:
 		GameObject* objB,
 		const DirectX::XMFLOAT3& mtd
 	);
+
+	//‰~’Œ‚Æ‰~’Œ‚ÌŒğ·”»’èiMTD‚ğŒvZ‚¹‚¸AÕ“Ëî•ñ‚Ì‚İ•Ô‚·j
+	static bool IntersectCylinder_Vs_Cylinder(
+		CylinderCollider* cylinderA,
+		CylinderCollider* cylinderB,
+		DirectX::XMFLOAT3& outNormal,
+		float& outPenetrarion
+	);
 };
