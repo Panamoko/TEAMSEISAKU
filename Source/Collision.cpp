@@ -569,82 +569,136 @@ bool Collision::IntersectCylinder_Vs_OBB(
 	CylinderCollider* cylinderA,
 	OBB* obb_B,
 	DirectX::XMFLOAT3& outNormal,
-	float& outPenetraion)
+	float& outPenetration)
 {
-	//円柱中心をOBBローカル空間に変換
-	DirectX::XMVECTOR c_world = DirectX::XMLoadFloat3(&cylinderA->center);
-	DirectX::XMVECTOR obb_center = DirectX::XMLoadFloat3(&obb_B->center);
-	DirectX::XMVECTOR local = DirectX::XMVectorSubtract(c_world, obb_center);
+	using namespace DirectX;
 
-	//OBB軸方向成分を計算
-	float localX = DirectX::XMVectorGetX(DirectX::XMVector3Dot(local, DirectX::XMLoadFloat3(&obb_B->axis[0])));
-	float localY = DirectX::XMVectorGetX(DirectX::XMVector3Dot(local, DirectX::XMLoadFloat3(&obb_B->axis[1])));
-	float localZ = DirectX::XMVectorGetX(DirectX::XMVector3Dot(local, DirectX::XMLoadFloat3(&obb_B->axis[2])));
+	// 円柱中心をOBBローカル空間に変換
+	XMVECTOR c_world = XMLoadFloat3(&cylinderA->center);
+	XMVECTOR obb_center = XMLoadFloat3(&obb_B->center);
+	XMVECTOR local = XMVectorSubtract(c_world, obb_center);
 
-	//AABB空間で最近点を求める
-	float clampedX = (std::max)(-obb_B->half.x, (std::min)(localX, obb_B->half.x));
-	float clampedY = (std::max)(-obb_B->half.y, (std::min)(localX, obb_B->half.y));
-	float clampedZ = (std::max)(-obb_B->half.z, (std::min)(localX, obb_B->half.z));
-	DirectX::XMFLOAT3 closest_local{ clampedX, clampedY, clampedZ };
+	// OBB軸方向成分
+	float localX = XMVectorGetX(XMVector3Dot(local, XMLoadFloat3(&obb_B->axis[0])));
+	float localY = XMVectorGetX(XMVector3Dot(local, XMLoadFloat3(&obb_B->axis[1])));
+	float localZ = XMVectorGetX(XMVector3Dot(local, XMLoadFloat3(&obb_B->axis[2])));
 
-	//最近点をワールド座標に戻す
-	DirectX::XMVECTOR closest_world =
+	// AABB空間での最近点を求める
+	float clampedX = std::clamp(localX, -obb_B->half.x, obb_B->half.x);
+	float clampedY = std::clamp(localY, -obb_B->half.y, obb_B->half.y);
+	float clampedZ = std::clamp(localZ, -obb_B->half.z, obb_B->half.z);
+	XMFLOAT3 closest_local{ clampedX, clampedY, clampedZ };
+
+	// 最近点をワールド座標に戻す
+	XMVECTOR closest_world =
 		obb_center +
-		DirectX::XMLoadFloat3(&obb_B->axis[0]) * clampedX +
-		DirectX::XMLoadFloat3(&obb_B->axis[1]) * clampedY +
-		DirectX::XMLoadFloat3(&obb_B->axis[2]) * clampedZ;
+		XMLoadFloat3(&obb_B->axis[0]) * clampedX +
+		XMLoadFloat3(&obb_B->axis[1]) * clampedY +
+		XMLoadFloat3(&obb_B->axis[2]) * clampedZ;
 
-	//XZ平面での距離チェック
-	DirectX::XMFLOAT3 cA = cylinderA->center;
-	DirectX::XMFLOAT3 closest;
-	DirectX::XMStoreFloat3(&closest, closest_world);
+	// XZ平面での距離チェック
+	XMFLOAT3 cA = cylinderA->center;
+	XMFLOAT3 closest;
+	XMStoreFloat3(&closest, closest_world);
 
 	float dx = closest.x - cA.x;
 	float dz = closest.z - cA.z;
 	float distSq = (dx * dx) + (dz * dz);
 	float radius = cylinderA->radius;
 
-	//半径より遠ければ衝突していない
+	// 半径より遠ければ衝突していない
 	if (distSq > radius * radius)
 	{
 		outNormal = { 0,0,0 };
-		outPenetraion = 0.0f;
+		outPenetration = 0.0f;
 		return false;
 	}
 
-	//Y軸方向（高さ）の重なりを確認
+	// 高さ方向の重なり確認
 	float half_heightA = cylinderA->height * 0.5f;
-	float half_heightB = obb_B->half.y;
-
 	float topA = cA.y + half_heightA;
-	float bottomA = cA.y + half_heightA;
+	float bottomA = cA.y - half_heightA;
 
-	float topB = obb_B->center.y + half_heightB;
-	float bottomB = obb_B->center.y - half_heightB;
+	float topB = obb_B->center.y + obb_B->half.y;
+	float bottomB = obb_B->center.y - obb_B->half.y;
 
-	//垂直方向に重なりがない場合
 	if (topA < bottomB || topB < bottomA)
 	{
 		outNormal = { 0,0,0 };
-		outPenetraion = 0.0f;
+		outPenetration = 0.0f;
 		return false;
 	}
 
-	//法線ベクトルと貫入量を計算
+	// XZ平面での法線・貫入量
 	float dist = std::sqrtf(distSq);
+	float penetration = radius - dist;
 
+	outNormal = { dx / dist, 0.0f, dz / dist };
+	outPenetration = penetration;
+
+	// 上下方向にも軽く補正したい場合
+	float yOverlap = (std::min)(topA, topB) - (std::max)(bottomA, bottomB);
+	if (yOverlap > 0.0f && yOverlap < penetration)
+	{
+		outNormal = { 0.0f, (cA.y > obb_B->center.y) ? 1.0f : -1.0f, 0.0f };
+		outPenetration = yOverlap;
+	}
+
+	return true;
+}
+
+bool Collision::IntersectCylinder_Vs_Box(
+	CylinderCollider* cylinder,
+	BoxCollider* box,
+	DirectX::XMFLOAT3& outNormal,
+	float& outPenetration)
+{
+	using namespace DirectX;
+
+	const XMFLOAT3& cPos = cylinder->center;
+	float radius = cylinder->radius;
+	float height = cylinder->height;
+
+	// Cylinder の底と上のY座標
+	float cylMinY = cPos.y;
+	float cylMaxY = cPos.y + height;
+
+	// Y方向の重なりチェック
+	if (cylMaxY < box->box_min.y || cylMinY > box->box_max.y)
+	{
+		outNormal = { 0,0,0 };
+		outPenetration = 0.0f;
+		return false;
+	}
+
+	// Cylinder 中心のXZから最近接点を求める
+	float closestX = std::clamp(cPos.x, box->box_min.x, box->box_max.x);
+	float closestZ = std::clamp(cPos.z, box->box_min.z, box->box_max.z);
+
+	float dx = cPos.x - closestX;
+	float dz = cPos.z - closestZ;
+	float distSq = dx * dx + dz * dz;
+
+	// 接触チェック
+	if (distSq >= radius * radius)
+	{
+		outNormal = { 0,0,0 };
+		outPenetration = 0.0f;
+		return false;
+	}
+
+	float dist = std::sqrtf(distSq);
 	if (dist < 1e-6f)
 	{
-		//ほぼ同位置 → 適当な法線
-		outNormal = { 1,0,0 };
-		outPenetraion = radius;
+		// 中心が完全に中にあるケース
+		outNormal = { 0,1,0 }; // 適当（上方向）に出す
+		outPenetration = radius;
 		return true;
 	}
 
-	float penetration = radius - dist;
-
-	outNormal = { dx / dist,0.0f,dz / dist };
-	outPenetraion = penetration;
+	// 法線と貫入量計算
+	outNormal = { dx / dist, 0.0f, dz / dist };
+	outPenetration = radius - dist;
 
 	return true;
 }

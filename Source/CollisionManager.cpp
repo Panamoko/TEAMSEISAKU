@@ -170,7 +170,6 @@ void CollisionManager::CheckAllCollision()
 				BoxCollider* boxB = static_cast<BoxCollider*>(objectB->collider.get());
 				isCollisionDetected = Collision::IntersectCylinderVsAABB(
 					cylinderA, boxB);
-
 			}
 
 			////â~íåÅ@VS â~íå
@@ -185,6 +184,18 @@ void CollisionManager::CheckAllCollision()
 				if(isCollisionDetected)
 				Collision::ApplyPushOutWithWeight(objectA, objectB, normal, penetrarion);
 			}
+
+			else if (objectA->collider->type == ColliderType::Cylinder &&
+					 objectB->collider->type == ColliderType::Box)
+				{
+					CylinderCollider* cylinderA = static_cast<CylinderCollider*>(objectA->collider.get());
+					BoxCollider* boxB = static_cast<BoxCollider*>(objectB->collider.get());
+					isCollisionDetected = Collision::IntersectCylinder_Vs_Box(
+						cylinderA, boxB, normal, penetrarion
+					);
+					if (isCollisionDetected)
+					Collision::ApplyPushOutWithWeight(objectA, objectB, normal, penetrarion);
+				}
 
 			//è’ìÀÇµÇΩèÍçá
 			if (isCollisionDetected)

@@ -99,7 +99,7 @@ public:
 		GameObject* objA,
 		GameObject* objB,
 		const DirectX::XMFLOAT3& normal,
-		float penetration
+		float outPenetration
 	);
 
 	//‰~’Œ‚Æ‰~’Œ‚ÌŒğ·”»’èiMTD‚ğŒvZ‚¹‚¸AÕ“Ëî•ñ‚Ì‚İ•Ô‚·j
@@ -108,6 +108,14 @@ public:
 		CylinderCollider* cylinderB,
 		DirectX::XMFLOAT3& outNormal,
 		float& outPenetrarion
+	);
+
+	//‰~’Œ‚ÆAABB
+	static bool IntersectCylinder_Vs_Box(
+		CylinderCollider* cylinder,
+		BoxCollider* box,
+		DirectX::XMFLOAT3& outNormal,
+		float& outPenetration
 	);
 
 	static bool IntersectCylinder_Vs_OBB(
