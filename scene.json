@@ -42,13 +42,13 @@
             "model_path": "Data/Model/Slime/Slime.mdl",
             "name": "Slime",
             "position": [
-                -1.1010937690734863,
+                -0.44669288396835327,
                 0.0,
-                11.530406951904297
+                0.9005768299102783
             ],
             "rotation": [
                 0.0,
-                -3.645998954772949,
+                -6.381755828857422,
                 0.0
             ],
             "scale": [
@@ -621,35 +621,6 @@
             "mesh_index": 0,
             "model_path": "Data/Model/bilud/Core.mdl",
             "name": "Core",
-            "position": [
-                0.0,
-                0.0,
-                0.0
-            ],
-            "rotation": [
-                0.0,
-                0.0,
-                0.0
-            ],
-            "scale": [
-                0.30000001192092896,
-                0.30000001192092896,
-                0.30000001192092896
-            ],
-            "type": 1
-        },
-        {
-            "class_name": "Core",
-            "color": [
-                1.0,
-                1.0,
-                1.0,
-                1.0
-            ],
-            "id": 46,
-            "mesh_index": 5,
-            "model_path": "Data/Model/bilud/Core.mdl",
-            "name": "Core2",
             "position": [
                 0.0,
                 0.0,

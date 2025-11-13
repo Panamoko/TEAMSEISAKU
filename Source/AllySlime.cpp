@@ -3,36 +3,36 @@
 //
 
 #include "AllySlime.h"
-#include "Character.h"   // �� �����œ����i�w�b�_����͊O�����j
-#include "Player.h"              // �v���C���[�ʒu�E�p�x���擾���ĕґ��A���J�[���o��
-#include "EnemyManager.h"        // �G�̎擾
-#include "ProjectileStraite.h"   // ���i�e�i�v���C���[�Ɠ������̂��g�p�j
-#include "ModelManager.h"        // ���f�����[�h
-#include "Collision.h"           // ���~�~���Ȃǂ̓����蔻��
+#include "Character.h"           // キャラクター共通の処理を参照
+#include "Player.h"              // プレイヤー位置や方向を取得して隊列アンカーに反映
+#include "EnemyManager.h"        // 敵の取得に使用
+#include "ProjectileStraite.h"   // 味方が撃つ直線弾を生成するために使用
+#include "ModelManager.h"        // モデル読み込み
+#include "Collision.h"           // 各種衝突判定ユーティリティ
 #include "AllyTargeting.h"
 #include "GimmicManager.h"        // BreakWallとCoreを取得するため
 #include "Gimmic_BreakWall.h"    // BreakWall判定用
-#include "Core.h"                // Core判定用   // �� �ǉ�
+#include "Core.h"                // コア判定用
 #include <cmath>
 #include <cfloat>
 
 using namespace DirectX;
 
-// ���傢�֗��ȉ��Z�q�iXMFLOAT3 �͉��Z�q���������Ƃ������̂Ŏ��O�ŗp�Ӂj
+// 以降で使いやすいように XMFLOAT3 の演算子を簡単に定義
 static inline XMFLOAT3 operator+(const XMFLOAT3& a, const XMFLOAT3& b) { return { a.x + b.x, a.y + b.y, a.z + b.z }; }
 static inline XMFLOAT3 operator-(const XMFLOAT3& a, const XMFLOAT3& b) { return { a.x - b.x, a.y - b.y, a.z - b.z }; }
 static inline XMFLOAT3 operator*(const XMFLOAT3& a, float s) { return { a.x * s, a.y * s, a.z * s }; }
-// --- �R�A�擾�i���Ȃ��̊��ɍ��킹�Ăǂ��炩�j ---
+// --- コンストラクタ（必要な初期化をまとめて実施） ---
 AllySlime::AllySlime(int formationIndex)
     : index(formationIndex)
 {
-    // �����ڂ͓G�X���C���𗬗p�iEnemySlime �Ɠ����p�X�^�X�P�[���ɑ�����j
+    // モデルは敵スライムと共通のものを小さくして利用
     slimeModel = ModelManager::Instance().Load("Data/Model/Slime/suraimukari.mdl");
-    scale = { 0.002f, 0.002f, 0.002f }; // ���f�����傫���O��̂��ߏk��
-    radius = 0.5f;                  // �����蔼�a�i�G�Ɠ����j
-    height = 1.0f;                  // �����荂��
+    scale = { 0.002f, 0.002f, 0.002f }; // モデルの縮尺を調整
+    radius = 0.5f;                      // 当たり判定半径（敵と共通）
+    height = 1.0f;                      // 当たり判定の高さ
 
-    // �����ʒu�̓v���C���[�̋߂��i���ۂ̐���� UpdateAnchor �ōs���j
+    // 初期位置はプレイヤー付近（正確な配置は UpdateAnchor で決定）
     {
         const Player& ref = (leader ? *leader : Player::Instance());
         position = ref.GetPosition();
@@ -42,39 +42,39 @@ AllySlime::AllySlime(int formationIndex)
 
 void AllySlime::UpdateAnchor()
 {
-    // �v���C���[�̈ʒu�E�p�x�iY=���[�p�j���擾
+    // プレイヤーの位置と向き（Y=ヨー角）を取得
     const Player& ref = (leader ? *leader : Player::Instance());
     const XMFLOAT3& p = ref.GetPosition();
     const XMFLOAT3& a = ref.GetAngle();
 
-    // �E����W�n�F�O��=+Z �Ƃ��āA���[�p����O��/�E�x�N�g�����Z�o
+    // 座標系前提: 前方向=+Z を基準に、プレイヤー向きから前/右ベクトルを算出
     XMFLOAT3 fwd = { std::sinf(a.y), 0.0f,  std::cosf(a.y) };
     XMFLOAT3 rgt = { std::cosf(a.y), 0.0f, -std::sinf(a.y) };
 
-    // ���g�� index ���� �g�s�i�c�j/��i���j�h ������
-    const int row = index / rowWidth;  // ���i�ڂ��i���ɍs���قǒl���傫���j
-    const int col = index % rowWidth;  // ���̒i�̉���ڂ��i���E�j
+    // 隊列の index から 縦（row）/横（col）を算出
+    const int row = index / rowWidth;  // 縦方向の段（後方に並ぶほど値が大きい）
+    const int col = index % rowWidth;  // 横方向の並び（左から右）
 
-    // �������̒�����ɕ��ׂ邽�߁A-(rowWidth-1)/2..+(rowWidth-1)/2 �ɕ��s�ړ�
+    // 中央から左右に配置するため -(rowWidth-1)/2..+(rowWidth-1)/2 にオフセット
     const float rightOffset = (col - (rowWidth - 1) * 0.5f) * lateralSpacing;
-    const float backOffset = (row + 1) * followDistance; // �v���C���[�g����h�Ȃ̂� +back �� -fwd ���Ɏ��
+    const float backOffset = (row + 1) * followDistance; // プレイヤーの背後に並ぶので +back = -fwd 方向
 
-    // �ڕW�A���J�[���W�F�v���C���[�ʒu + �E�~rightOffset - �O�~backOffset
+    // 目標アンカー座標 = プレイヤー位置 + 右方向 * rightOffset - 前方向 * backOffset
     anchor = p + (rgt * rightOffset) + (fwd * (-backOffset));
-    anchor.y = p.y; // �n�ʊ�ɌŒ�i�i���Ή����K�v�Ȃ�ʓr���C�L���X�g�Ȃǂ������j
+    anchor.y = p.y; // 高さはプレイヤーと同じ（必要に応じて地形追従などを追加）
 }
 
 void AllySlime::AutoAttackUpdate(float elapsedTime)
 {
     if (!autoAttackEnabled) return;
 
-    // �A�˃N�[���_�E��
+    // クールダウン処理
     if (autoAttackTimer > 0.0f) {
         autoAttackTimer -= elapsedTime;
         return;
     }
 
-    // �˒����́g�Ŋ��h�̓G��T��
+    // 射程内の敵をサーチ
     EnemyManager& em = EnemyManager::Instance();
     const XMFLOAT3 pos = { position.x, position.y + height * 0.5f, position.z };
     const float rangeSq = autoAttackRange * autoAttackRange;
@@ -88,7 +88,7 @@ void AllySlime::AutoAttackUpdate(float elapsedTime)
         std::shared_ptr<Enemy> enemy = em.GetEnemy(i);
         if (!enemy) continue;
 
-        // �������S���G�㔼�g������܂ł̋����iY�͏㔼�g���m�ō��킹��j
+        // 敵の中心位置と高さを考慮して距離を算出（Y は中心を合わせる）
         const XMFLOAT3& ep = enemy->GetPosition();
         float dx = ep.x - position.x;
         float dy = (ep.y + enemy->GetHeight() * 0.5f) - (position.y + height * 0.5f);
@@ -145,28 +145,28 @@ void AllySlime::AutoAttackUpdate(float elapsedTime)
         }
     }
 
-    if (!hasTarget) return; // �˒����ɂ��Ȃ�
+    if (!hasTarget) return; // 射程内にターゲットがいない
 
-    // ���ˈʒu�i�������炢�j
+    // 発射位置（スライムの頭上付近）
     
 
-    // �G�i�㔼�g�j�����̐��K���x�N�g�����Z�o
+    // 敵との方向ベクトルを計算
     XMFLOAT3 dir = { bestTarget.x - pos.x, bestTarget.y - pos.y, bestTarget.z - pos.z };
     const float len = std::sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
     if (len < 0.001f) return;
     dir.x /= len; dir.y /= len; dir.z /= len;
 
-    // ���i�e�𐶐������ˁiPlayer �Ɠ��� ProjectileStraite ���g�p�j
-    auto* proj = new ProjectileStraite(&projectileManager); // �Ǘ��͎��O�� projectileManager
+    // 弾を生成して発射（ProjectileStraite を利用）
+    auto* proj = new ProjectileStraite(&projectileManager); // 管理はメンバの projectileManager が担当
     proj->Launch(dir, pos);
 
-    // �N�[���_�E���J�n
+    // クールダウンを再スタート
     autoAttackTimer = autoAttackInterval;
 }
 
 void AllySlime::CollisionProjectilesVsEnemies()
 {
-    // �����̒e vs �G�̉~�������蔻��
+    // 味方の弾 vs 敵の衝突判定
     EnemyManager& em = EnemyManager::Instance();
 
     const int projectileCount = projectileManager.GetProjectileCount();
@@ -174,14 +174,14 @@ void AllySlime::CollisionProjectilesVsEnemies()
 
     for (int i = 0; i < projectileCount; ++i) {
         Projectile* projectile = projectileManager.GetProjectile(i);
-        if (!projectile) continue; // ���ɔj���ς݃X���b�g�Ȃ�
+        if (!projectile) continue; // 既に破棄されたスロットは無視
 
         for (int j = 0; j < enemyCount; ++j) {
             std::shared_ptr<Enemy> enemy = em.GetEnemy(j);
             if (!enemy) continue;
 
             XMFLOAT3 outPos;
-            // ���i�e�j�~�~���i�G�j����F�v���W�F�N�g�̋��� Collision ���g�p
+            // 弾（球）と敵（円柱）の衝突判定: Collision ユーティリティを使用
             const bool hit = Collision::IntersectSphereVsCylinder(
                 projectile->GetPosition(),
                 projectile->GetRadius(),
@@ -192,9 +192,9 @@ void AllySlime::CollisionProjectilesVsEnemies()
 
             if (!hit) continue;
 
-            // �q�b�g�F�_���[�W�i���G0.5s�� Player �Ƒ����j
+            // ヒット時にダメージ（無敵 0.5s は Player と合わせる）
             if (enemy->ApplyDamage(1, 0.5f)) {
-                // �y���m�b�N�o�b�N�iXZ ���ʊ�j
+                // ノックバック（XZ 平面中心）を付与
                 XMFLOAT3 impulse{};
                 const float power = 10.0f;
                 const XMFLOAT3& e = enemy->GetPosition();
@@ -204,17 +204,17 @@ void AllySlime::CollisionProjectilesVsEnemies()
                 const float lenXZ = std::sqrt(vx * vx + vz * vz);
                 if (lenXZ > 0.0001f) { vx /= lenXZ; vz /= lenXZ; }
                 impulse.x = vx * power;
-                impulse.y = power * 0.5f; // ������������
+                impulse.y = power * 0.5f; // 上方向にも少し付与
                 impulse.z = vz * power;
                 enemy->AddImpulse(impulse);
             }
 
-            // �e�͈�̂ɓ���������j��
+            // 弾は一度当たったら破棄
             projectile->Destroy();
             break;
         }
 
-        // 2) BreakWallとCoreとの衝突判定
+        // 2) BreakWall と Core との衝突判定
         if (!projectile) continue;
 
         GimmicManager& gm = GimmicManager::Instance();
@@ -223,7 +223,7 @@ void AllySlime::CollisionProjectilesVsEnemies()
             if (!gimmic) continue;
             if (!gimmic->IsActive()) continue;
 
-            std::shared_ptr<GimmicBase> gimmicPtr = gimmic; // 参照を保持
+            std::shared_ptr<GimmicBase> gimmicPtr = gimmic; // 共有ポインタを保持
             if (!gimmicPtr) continue;
 
             if (gimmicPtr->class_name == "Gimmic_BreakWall") {
@@ -272,56 +272,56 @@ void AllySlime::CollisionProjectilesVsEnemies()
 
 void AllySlime::Update(float elapsedTime)
 {
-    // 1) �ґ��A���J�[�i�v���C���[����̖ڕW�j���X�V
+    // 1) 隊列アンカー（プレイヤー周辺の基準位置）を更新
     UpdateAnchor();
 
-    // 2) �ڕW�A���J�[�ֈړ����邽�߂̓��̓x�N�g�����Z�o�iXZ �̂݁j
+    // 2) 目標アンカーへ移動するための方向ベクトルを算出（XZ 平面のみ）
     float vx = anchor.x - position.x;
     float vz = anchor.z - position.z;
     float d = std::sqrt(vx * vx + vz * vz);
     if (d > 0.0001f) { vx /= d; vz /= d; }
     else { vx = vz = 0.0f; }
 
-    // 3) ������ Character API �𗘗p���āA���R�ȉ���/����������ŒǏ]
+    // 3) Character API を用いて移動／回転処理を実行
     Move(elapsedTime, vx, vz, moveSpeed);
     Turn(elapsedTime, vx, vz, turnSpeed);
 
-    // 4) �����U���i���˃^�C�~���O�̊Ǘ��ƒe�����j
+    // 4) 自動攻撃（クールタイム管理やターゲット探索）
     AutoAttackUpdate(elapsedTime);
 
-    // 5) ���x�X�V�E���G�^�C�}�[�E���[���h�s��̍X�V�iCharacter ���̕W�������j
+    // 5) 速度・無敵タイマー・ワールド変換などの更新（Character 側の処理）
     UpdateVelocity(elapsedTime);
     UpdateInvincibleTimer(elapsedTime);
     UpdateTransform();
 
-    // 6) �����̒e�̍X�V���G�Ƃ̓����蔻��
+    // 6) 弾の更新と敵・ギミックとの衝突判定
     projectileManager.Update(elapsedTime);
     CollisionProjectilesVsEnemies();
 }
 
 void AllySlime::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
-    // �{�̃��f���̕`��iLambert ���A�G�X���C���Ƒ�����j
+    // メインモデルの描画（Lambert シェーダを使用）
     renderer->Render(rc, transform, slimeModel, ShaderId::Lambert);
 
-    // �����̒e�̕`��
+    // 弾の描画
     projectileManager.Render(rc, renderer);
 }
 
 void AllySlime::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer)
 {
-    // Character ���̃f�o�b�O������i�~���Ȃǁj
+    // Character 基底クラスのデバッグ描画（当たり判定など）
     Character::RenderDebugPrimitive(rc, renderer);
 
-    // �����̒e�̃f�o�b�O�`��
+    // 弾のデバッグ描画
     projectileManager.RenderDebugPrimitive(rc, renderer);
 
-    // �˒��̉����iON���̂݁j�F�΂̔������~��
+    // 射程の可視化（ON のときのみ）: 緑のワイヤーシリンダ
     if (autoAttackEnabled) {
         const XMFLOAT3 center = { position.x, position.y, position.z };
         renderer->RenderCylinder(rc, center, autoAttackRange, height, XMFLOAT4(0, 1, 0, 0.2f));
     }
 
-    // �Ǐ]�A���J�[�̖ڈ�i���F�̏����j
+    // 追従アンカーの目印（黄色い球）
     renderer->RenderSphere(rc, anchor, 0.15f, XMFLOAT4(1, 1, 0, 1));
 }

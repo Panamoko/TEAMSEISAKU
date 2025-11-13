@@ -9,16 +9,16 @@ class Gimmic_BreakWall : public GimmicBase
 public:
 	Gimmic_BreakWall();
 
-	//�Փˌ���
+	// 衝突処理
 	void OnCollision(GameObject* objects) override;
 
-	//�M�~�b�N�X�V����
+	// ギミック更新処理
 	void Update(float elapsedTime)override;
 
-	//�`�揈��
+	// 描画処理
 	void Render(const RenderContext& rc, ModelRenderer* renderer) override;
 
-	//�f�o�b�O�`��
+	// デバッグ描画
 	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) override;
 
 	void OnImGui();
@@ -26,12 +26,12 @@ public:
 	bool IsBroken() const { return isBroken; } // 攻撃対象判定用
 
 private:
-	bool isBroken = false;//��ꂽ���ǂ���
-	float hp = 2.0f;//�ϋv�x
+	bool isBroken = false; // 壊れているかどうか
+	float hp = 2.0f; // 耐久値
 
 	float maxHp = 2.0f; // ���|�b�v���̂��߂ɍő�HP���L��
-	float respawnTime = 5.0f; // ���|�b�v����܂ł̎��� (5�b)
-	float respawnTimer = 0.0f; // ���|�b�v�^�C�}�[
+	float respawnTime = 5.0f; // リスポーンするまでの時間 (5秒)
+	float respawnTimer = 0.0f; // リスポーンタイマー
 
 	DirectX::XMFLOAT3 halfSize;
 	DirectX::XMFLOAT3 size;
