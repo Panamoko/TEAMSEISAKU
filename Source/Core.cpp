@@ -6,8 +6,15 @@
 #include "SceneLoading.h"
 #include <imgui.h>
 
+Core* Core::sInstance = nullptr;
+
+Core* Core::Instance() { return sInstance; }
+
 Core::Core()
 {
+	//生成時に自身を登録
+	sInstance = this;
+
 	model = ModelManager::Instance().Load("Data/Model/bilud/Core.mdl");
 
 	animator.SetModel(model /* or model.get() */);
@@ -29,6 +36,10 @@ Core::Core()
 
 Core::~Core()
 {
+	if (sInstance == this)
+	{
+		sInstance = nullptr;
+	}
 }
 
 void Core::init()
