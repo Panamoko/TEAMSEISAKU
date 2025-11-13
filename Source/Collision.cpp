@@ -526,3 +526,27 @@ bool Collision::IntersectCylinder_Vs_Cylinder(
 	return true;
 }
 
+bool Collision::IntersectCylinder_Vs_OBB(
+	CylinderCollider* cylinderA,
+	OBB* obb_B,
+	DirectX::XMFLOAT3& outNormal,
+	float& outPenetraion)
+{
+	//‰~’Œ’†S‚ğOBBƒ[ƒJƒ‹‹óŠÔ‚É•ÏŠ·
+	DirectX::XMVECTOR c_world = DirectX::XMLoadFloat3(&cylinderA->center);
+	DirectX::XMVECTOR obb_center = DirectX::XMLoadFloat3(&obb_B->center);
+	DirectX::XMVECTOR local = DirectX::XMVectorSubtract(c_world, obb_center);
+
+	//OBB²•ûŒü¬•ª‚ğŒvZ
+	float localX = DirectX::XMVectorGetX(DirectX::XMVector3Dot(local, DirectX::XMLoadFloat3(&obb_B->axis[0])));
+	float localY = DirectX::XMVectorGetX(DirectX::XMVector3Dot(local, DirectX::XMLoadFloat3(&obb_B->axis[1])));
+	float localZ = DirectX::XMVectorGetX(DirectX::XMVector3Dot(local, DirectX::XMLoadFloat3(&obb_B->axis[2])));
+
+	//AABB‹óŠÔ‚ÅÅ‹ß“_‚ğ‹‚ß‚é
+	float clampedX = (std::max)(-obb_B->half.x, (std::min)(localX, obb_B->half.x));
+	float clampedY = (std::max)(-obb_B->half.y, (std::min)(localX, obb_B->half.y));
+	float clampedZ = (std::max)(-obb_B->half.z, (std::min)(localX, obb_B->half.z));
+
+	return false;
+}
+

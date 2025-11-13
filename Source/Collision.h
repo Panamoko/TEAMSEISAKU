@@ -98,4 +98,11 @@ public:
 		DirectX::XMFLOAT3& outNormal,
 		float& outPenetrarion
 	);
+
+	static bool IntersectCylinder_Vs_OBB(
+		CylinderCollider* cylinderA,
+		OBB* obb_B,
+		DirectX::XMFLOAT3& outNormal,
+		float& outPenetraion
+	);
 };
