@@ -94,5 +94,10 @@ public:
 		DirectX::XMFLOAT3& outSize
 	);
 
-
+	//重さ考慮付き押し出し処理
+	static void ApplyPushOutWithWeight(
+		GameObject* objA,
+		GameObject* objB,
+		const DirectX::XMFLOAT3& mtd
+	);
 };

@@ -479,3 +479,49 @@ void Collision::OBBtoAABB(
 	};
 
 }
+
+///重さ考慮付きMTD計算
+void Collision::ApplyPushOutWithWeight(
+	GameObject* objA,
+	GameObject* objB,
+	const DirectX::XMFLOAT3& mtd)
+{
+	//両方が存在しない or MTDがほぼゼロなら処理不要
+	DirectX::XMVECTOR mtd_vec = DirectX::XMLoadFloat3(&mtd);
+	float mtd_length = DirectX::XMVectorGetX(DirectX::XMVector3Length(mtd_vec));
+	if (mtd_length < 1e-6f)return;
+
+	//正規化ベクトル
+	DirectX::XMVECTOR mtd_norm = DirectX::XMVector3Normalize(mtd_vec);
+
+	//重さ比率を計算
+	//weightが小さいほどよく動く
+	float weightA = objA->weight;
+	float weightB = objB->weight;
+
+	//どちらも固定ならスキップ
+	if (weightA <= 0.0f && weightB <= 0.0f)return;
+
+	float total_weight = weightA + weightB;
+	if (total_weight <= 0.0f)return;
+
+	//比率(相手が重いほど自分が多く動く)
+	float move_rarioA = (weightB) / total_weight;
+	float move_rarioB = (weightA) / total_weight;
+
+	//移動量ベクトルを計算（Aはマイナス方向、Bはプラス方向）
+	DirectX::XMVECTOR moveA = DirectX::XMVectorScale(mtd_norm, -mtd_length * move_rarioA);
+	DirectX::XMVECTOR moveB = DirectX::XMVectorScale(mtd_norm, mtd_length * move_rarioB);
+
+	//実際に位置を更新
+	DirectX::XMVECTOR posA = DirectX::XMLoadFloat3(&objA->position);
+	DirectX::XMVECTOR posB = DirectX::XMLoadFloat3(&objB->position);
+
+	DirectX::XMFLOAT3 mtdA, mtdB;
+	DirectX::XMStoreFloat3(&mtdA, moveA);
+	DirectX::XMStoreFloat3(&mtdB, moveB);
+
+	objA->SetMTD(mtdA);
+	objB->SetMTD(mtdB);
+}
+

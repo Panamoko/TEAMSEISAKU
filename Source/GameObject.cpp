@@ -21,6 +21,16 @@ void GameObject::UpdateTransform()
 	DirectX::XMStoreFloat4x4(&transform, W);
 }
 
+void GameObject::OnCollision(GameObject* object)
+{
+	if (fabsf(mtd.x) > 1e-6f || fabsf(mtd.y) > 1e-6f || fabsf(mtd.z) > 1e-6f)
+	{
+		position.x += mtd.x;
+		position.y += mtd.y;
+		position.z += mtd.z;
+	}
+}
+
 OBB GameObject::GetOBB() const
 {
 	OBB box;
@@ -50,6 +60,8 @@ GameObject::GameObject() :name("Empty")
 	angle = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
 	color = { 1.0f,1.0f,1.0f,1.0f };
+	weight = 1.0f;
+	mtd = { 0.0f,0.0f,0.0f };
 	transform = DirectX::XMFLOAT4X4
 	{
 		1,0,0,0,

@@ -36,6 +36,11 @@ void GimmicManager::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer*
 	}
 }
 
+void GimmicManager::Clear()
+{
+	gimmicks.clear();
+}
+
 //ƒMƒ~ƒbƒNíœ
 void GimmicManager::RemoveInactive()
 {

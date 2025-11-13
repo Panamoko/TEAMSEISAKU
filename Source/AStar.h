@@ -20,11 +20,19 @@ public:
 		const GridMap& gridMap
 	);
 
+	//動的再探索
+	std::vector<std::pair<int, int>> ReplanPath(
+		int startX, int startZ,
+		int goalX, int goalZ,
+		const GridMap& gridMap,
+		int agent_cellX, int agent_cellZ
+	);
+
 private:
 
 	float move_cost = 1.0f;//移動コスト
 
-	//探索ノード
+	//A*探索の最小単位、セルごとの情報を持つ
 	struct Node
 	{
 		int node_x, node_z;//ノード座標
@@ -33,17 +41,48 @@ private:
 		float fCost() const { return goal_cost + h_cost; }//総コスト
 
 		Node* parent = nullptr;//経路復元用の親ノード
+
+		void Reset()
+		{
+			goal_cost = 0.0f;
+			h_cost = 0.0f;
+			parent = nullptr;
+			node_x = node_z = 0;
+		}
 	};
+
+	class NodePool
+	{
+	public:
+		void Reserve(size_t size) { pool.reserve(size); }
+		void Reset() { next_free_index = 0; }
+		Node* GetNode()
+		{
+			if (next_free_index >= pool.size())
+			{
+				pool.emplace_back();
+			}
+			return &pool[next_free_index++];
+		}
+	private:
+		std::vector<Node> pool;
+		size_t next_free_index = 0;
+	};
+
+	NodePool node_pool;
 
 	//ノード比較用（優先度付きキューでfCostが小さい順）
 	struct CompareNode
 	{
 		bool operator()(const Node* nodeA, const Node* nodeB)const
 		{
+			if (nodeA->fCost() == nodeB->fCost())
+				return nodeA->h_cost > nodeB->h_cost;//同値なら推定コストが小さい方を優先
 			return nodeA->fCost() > nodeB->fCost();
 		}
 	};
 
+	//(x,z) の座標ペアを unordered_map で使うためのハッシュ関数
 	struct pair_hash
 	{
 		template<class T1,class T2>
@@ -66,5 +105,7 @@ private:
 
 	//ノード管理用マップ
 	std::unordered_map<std::pair<int, int>, Node*, pair_hash> node_map;
+
+	std::vector<std::pair<int, int>> last_path; // 前回の経路
 };
 

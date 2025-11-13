@@ -10,6 +10,8 @@
 #include "AllySlimeHoming.h"
 #include "System/ModelRenderer.h"
 #include <cfloat>   // ← 追加（FLT_MAX 用）
+#include "GridMap.h"
+
 class Player;
 class AllySlime;         // 既存＝直線弾
 class SceneGame : public Scene
@@ -50,6 +52,7 @@ private:
 	std::vector<std::unique_ptr<SpriteObject>> sprites2d;
 
 	Stage* stage = nullptr;
+	GridMap grid_map;
 	// 追加ヘルパ
 
 	void AddAllyStraightFor(Player* leader);

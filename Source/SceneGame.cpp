@@ -64,6 +64,8 @@ void SceneGame::Initialize()
 	// エネミー初期化
 	EnemyManager& enemyManager = EnemyManager::Instance();
 
+	GimmicManager::Instance().GetAll();
+
 	//for (int i = 0; i < 2; ++i)
 	//{
 	//	EnemySlime* slime = new EnemySlime();
@@ -86,6 +88,8 @@ void SceneGame::Initialize()
 	 //bm.SpawnFence(DirectX::XMFLOAT3(6.0f, 0, 10.0f), 1.0f, 1.2f, /*maxHP=*/150);
 
 	 LoadScene(objects, sprites2d, "scene.json");
+
+	 grid_map.Initialize(41, 41, 4);
 }
 
 // 終了化
@@ -93,6 +97,10 @@ void SceneGame::Finalize()
 {
 	//エネミーの終了化
 	EnemyManager::Instance().Clear();
+
+	CollisionManager::Instance().Clear();
+
+	GimmicManager::Instance().Clear();
 
 	//カメラコントローラー終了化
 	if (cameraController != nullptr)
@@ -168,7 +176,6 @@ void SceneGame::Update(float elapsedTime)
 			AddAllyHomingFor(active);
 		}
 	}
-
 	// === 直線・追尾をそれぞれ更新 ===
 
 
@@ -245,6 +252,7 @@ void SceneGame::Render()
 				rc, p->GetPosition(), 1.2f, 0.05f, DirectX::XMFLOAT4(1, 1, 0, 0.5f));
 		}
 		//BuildingManager::Instance().DebugDraw(rc, shapeRenderer);
+		//grid_map.RenderDebugPrimitive(rc, shapeRenderer);
 	}
 
 	// 2Dスプライト描画
