@@ -87,7 +87,8 @@ public:
 	static void ApplyPushOutWithWeight(
 		GameObject* objA,
 		GameObject* objB,
-		const DirectX::XMFLOAT3& mtd
+		const DirectX::XMFLOAT3& normal,
+		float penetration
 	);
 
 	//円柱と円柱の交差判定（MTDを計算せず、衝突情報のみ返す）
