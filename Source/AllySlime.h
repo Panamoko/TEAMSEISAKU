@@ -1,65 +1,65 @@
 #pragma once
 //
 // AllySlime.h
-// ƒvƒŒƒCƒ„[‚ÌuŒã•û‚É®—ñ‚µ‚Ä’Ç]v‚µA“G‚ğ©“®UŒ‚‚·‚ég‚¿‚ÑƒXƒ‰ƒCƒ€hB
-// E‘à—ñi•Ò‘àjƒAƒ“ƒJ[‚ğƒvƒŒƒCƒ„[Œã•û‚É•~‚«A‚»‚±‚Ö’Ç]
-// EÅŠñ‚è‚Ì“G‚ªË’ö‚É“ü‚Á‚½‚çAƒvƒŒƒCƒ„[“¯—l‚Ì’¼i’e‚ğ”­Ë
-// E’e‚ÌXV^“–‚½‚è”»’è‚Í AllySlime “à‚ÅŠ®Œ‹
+// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®å¾Œæ–¹ã§éšŠåˆ—ã‚’çµ„ã¿ã¤ã¤è¿½å¾“ã—ã€æ•µã‚’æ”»æ’ƒã™ã‚‹å‘³æ–¹ã‚¹ãƒ©ã‚¤ãƒ ã€‚
+// ãƒ»éšŠåˆ—ï¼ˆç¸¦åˆ—ï¼‰ã§ãƒ•ã‚©ãƒ¼ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚’ç¶­æŒã—ãªãŒã‚‰ç§»å‹•
+// ãƒ»å‘¨å›²ã®æ•µã‚„ã‚®ãƒŸãƒƒã‚¯ã‚’è‡ªå‹•æ”»æ’ƒã—ã¦æ´è­·
+// ãƒ»æ›´æ–°å‡¦ç†ã‚„è¡çªåˆ¤å®šã¯ã“ã®ã‚¯ãƒ©ã‚¹å†…ã§å®Œçµ
 //
 
 #include "System/Model.h"
 #include "System/ModelRenderer.h"
-#include "Character.h"          // ¦ŠÂ‹«‚É‚æ‚Á‚Ä "character.h" ‚©‚àBƒvƒƒWƒFƒNƒg‚É‡‚í‚¹‚Ä‚­‚¾‚³‚¢B
-#include "ProjectileManager.h"  // ƒvƒŒƒCƒ„[‚Å‚àg‚Á‚Ä‚¢‚é’eƒ}ƒl[ƒWƒƒ
+#include "Character.h"          // ä¸€éƒ¨ç’°å¢ƒã§ã¯ "character.h" ã«ãªã‚‹ãŸã‚ã€ãƒ—ãƒ­ã‚¸ã‚§ã‚¯ãƒˆè¨­å®šã‚’ç¢ºèªã™ã‚‹ã“ã¨
+#include "ProjectileManager.h"  // å‘³æ–¹ãŒæ”¾ã¤å¼¾ã‚’ç®¡ç†ã™ã‚‹ãƒãƒãƒ¼ã‚¸ãƒ£
 
-class Player; // š’Ç‰Á: ‘O•ûéŒ¾
+class Player; // å‰æ–¹å®£è¨€
 
 class AllySlime : public Character
 {
 public:
-    // formationIndex: •Ò‘à“à‚Å‚ÌƒXƒƒbƒg”Ô†i0n‚Ü‚èj
+    // formationIndex: éšŠåˆ—å†…ã§ã®ã‚¹ãƒ­ãƒƒãƒˆç•ªå·ï¼ˆ0 å§‹ã¾ã‚Šï¼‰
     explicit AllySlime(int formationIndex);
     ~AllySlime() override {}
 
-    // –ˆƒtƒŒ[ƒ€XV^•`‰æ
+    // ãƒ¡ã‚¤ãƒ³ãƒ•ãƒ¬ãƒ¼ãƒ æ›´æ–°å‡¦ç†
     void Update(float elapsedTime);
     void Render(const RenderContext& rc, ModelRenderer* renderer);
     void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) override;
 
-    void SetIndex(int idx) { index = idx; } // “r’†‚Å•À‚Ñ‘Ö‚¦‚½‚¢‚Æ‚«—p
+    void SetIndex(int idx) { index = idx; } // éšŠåˆ—ã§ã®é…ç½®ã‚’å…¥ã‚Œæ›¿ãˆã‚‹éš›ã«ä½¿ç”¨
 
-    // š’Ç‰Á: ƒŠ[ƒ_[İ’è/æ“¾
+    // ãƒªãƒ¼ãƒ€ãƒ¼ã®è¨­å®šï¼å–å¾—
     void SetLeader(Player* p) { leader = p; }
     Player* GetLeader() const { return leader; }
 
 private:
-    // “à•”ˆ—F•Ò‘àƒAƒ“ƒJ[XV^©“®UŒ‚XV^’e‚Æ“G‚Ì“–‚½‚è”»’è
+    // å†…éƒ¨å‡¦ç†: éšŠåˆ—ã‚¢ãƒ³ã‚«ãƒ¼ã‚„è‡ªå‹•æ”»æ’ƒã€è¡çªåˆ¤å®šã‚’æ›´æ–°
     void UpdateAnchor();
     void AutoAttackUpdate(float elapsedTime);
     void CollisionProjectilesVsEnemies();
 
 private:
-    // ====== ‘à—ñi•Ò‘àjƒpƒ‰ƒ[ƒ^ ======
-    int   index = 0;                          // ©•ª‚Ì•Ò‘àƒCƒ“ƒfƒbƒNƒX
-    int   rowWidth = 4;                       // ‰¡‚É•À‚×‚é‘Ì”i—áF4‚È‚ç 0..3 ‚ª1—ñ–Új
-    float followDistance = 1.2f;              // c•ûŒüi‘OŒãj‚ÌŠÔŠu
-    float lateralSpacing = 0.9f;              // ‰¡•ûŒü‚ÌŠÔŠu
-    float moveSpeed = 4.0f;                   // ’Ç]‚ÌÅ‘åˆÚ“®‘¬“x
-    float turnSpeed = DirectX::XMConvertToRadians(540); // ’Ç]‚Ìù‰ñ‘¬“xi“x/•b ¨ ƒ‰ƒWƒAƒ“j
+    // ====== éšŠåˆ—ï¼ˆãƒ•ã‚©ãƒ¼ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ï¼‰ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ ======
+    int   index = 0;                          // è‡ªèº«ã®éšŠåˆ—ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+    int   rowWidth = 4;                       // æ¨ªæ–¹å‘ã®äººæ•°ï¼ˆä¾‹: 4 ãªã‚‰ 0..3 ãŒ 1 è¡Œç›®ï¼‰
+    float followDistance = 1.2f;              // ç¸¦æ–¹å‘ã®é–“éš”
+    float lateralSpacing = 0.9f;              // æ¨ªæ–¹å‘ã®é–“éš”
+    float moveSpeed = 4.0f;                   // è¿½å¾“æ™‚ã®æœ€å¤§ç§»å‹•é€Ÿåº¦
+    float turnSpeed = DirectX::XMConvertToRadians(540); // æ—‹å›é€Ÿåº¦ï¼ˆåº¦/ç§’ã‚’å¼§åº¦æ³•ã«å¤‰æ›ï¼‰
 
-    // ====== ƒI[ƒgƒAƒ^ƒbƒNİ’èiƒvƒŒƒCƒ„[Šù’è‚É‡‚í‚¹‚½‰Šú’lj ======
-    bool  autoAttackEnabled = true;         // ON/OFF
-    float autoAttackRange = 8.0f;         // Ë’ö
-    float autoAttackInterval = 1.5f;         // ˜AËŠÔŠui•bj
-    float autoAttackTimer = 0.0f;         // c‚èƒN[ƒ‹ƒ_ƒEƒ“
+    // ====== ã‚ªãƒ¼ãƒˆã‚¢ã‚¿ãƒƒã‚¯è¨­å®šï¼ˆå‘³æ–¹è¡Œå‹•ã®åˆ¶å¾¡ï¼‰ ======
+    bool  autoAttackEnabled = true;           // ON / OFF
+    float autoAttackRange = 8.0f;             // å°„ç¨‹
+    float autoAttackInterval = 1.5f;          // æ”»æ’ƒé–“éš”ï¼ˆç§’ï¼‰
+    float autoAttackTimer = 0.0f;             // ã‚¯ãƒ¼ãƒ«ãƒ€ã‚¦ãƒ³ã‚¿ã‚¤ãƒãƒ¼
 
-    // ====== Œ©‚½–Ú‚Æ“à•”ó‘Ô ======
-    DirectX::XMFLOAT3 anchor = { 0,0,0 };       // ’Ç]ƒ^[ƒQƒbƒgiƒvƒŒƒCƒ„[Œã•û‚Ìg–Ú•WÀ•Whj
-    Model* slimeModel = nullptr;              // •\¦—pƒ‚ƒfƒ‹i“GƒXƒ‰ƒCƒ€‚Æ‹¤—pj
+    // ====== éšŠåˆ—ã‚¢ãƒ³ã‚«ãƒ¼é–¢é€£ ======
+    DirectX::XMFLOAT3 anchor = { 0,0,0 };     // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼å‘¨è¾ºã«è¨­å®šã™ã‚‹è¿½å¾“åŸºæº–ä½ç½®
+    Model* slimeModel = nullptr;              // æç”»ç”¨ãƒ¢ãƒ‡ãƒ«ï¼ˆå‘³æ–¹ã‚¹ãƒ©ã‚¤ãƒ ï¼‰
 
-    // š‚±‚ê‚ª–³‚¢‚ÆuprojectileManager ‚ª–¢’è‹`vƒGƒ‰[‚É‚È‚è‚Ü‚·
-    ProjectileManager projectileManager;      // ©g‚Ì’eŠÇ—i¶¬/XV/•`‰æ/”jŠüj
+    // ProjectileManager ã‚’ç›´æ¥ãƒ¡ãƒ³ãƒã«æŒã¡ã€ç”Ÿæˆ/æ›´æ–°/æç”»ã‚’ä¸€æ‹¬ç®¡ç†
+    ProjectileManager projectileManager;      // ç™ºå°„ä½“ã®ç”Ÿæˆãƒ»æ›´æ–°ãƒ»æç”»ç®¡ç†
 
-    // š’Ç‰Á: ’Ç]æƒvƒŒƒCƒ„[inull‚È‚ç Player::Instance() ‚ğg‚¤Œã•ûŒİŠ·j
+    // è¿½å¾“å¯¾è±¡ã®ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ï¼ˆnull ã®å ´åˆã¯ Player::Instance() ã‚’åˆ©ç”¨ï¼‰
     Player* leader = nullptr;
 };
