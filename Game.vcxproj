@@ -120,7 +120,7 @@
     <ClInclude Include="External\imgui-docking\imstb_rectpack.h" />
     <ClInclude Include="External\imgui-docking\imstb_textedit.h" />
     <ClInclude Include="External\imgui-docking\imstb_truetype.h" />
-    <ClInclude Include="GameObjectManager.h" />
+    <ClInclude Include="GAMEOBJECTMANAGER.H" />
     <ClInclude Include="Source\AllySlime.h" />
     <ClInclude Include="Source\AllySlimeHoming.h" />
     <ClInclude Include="Source\AllyTargeting.h" />
@@ -141,6 +141,7 @@
     <ClInclude Include="Source\Factory.h" />
     <ClInclude Include="Source\Framework.h" />
     <ClInclude Include="Source\GameObject.h" />
+    <ClInclude Include="Source\GameObjectManager.h" />
     <ClInclude Include="Source\GimmicBase.h" />
     <ClInclude Include="Source\GimmicManager.h" />
     <ClInclude Include="Source\Gimmic_BreakWall.h" />
@@ -212,6 +213,7 @@
     <ClCompile Include="Source\EnemySlimeMelee.cpp" />
     <ClCompile Include="Source\Framework.cpp" />
     <ClCompile Include="Source\GameObject.cpp" />
+    <ClCompile Include="Source\GameObjectManager.cpp" />
     <ClCompile Include="Source\GimmicBase.cpp" />
     <ClCompile Include="Source\GimmicManager.cpp" />
     <ClCompile Include="Source\Gimmic_BreakWall.cpp" />

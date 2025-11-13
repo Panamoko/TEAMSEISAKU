@@ -264,7 +264,6 @@
       <Filter>Source\Gimmic</Filter>
     </ClInclude>
     <ClInclude Include="Source\Barracks.h" />
-    <ClInclude Include="GameObjectManager.h" />
     <ClInclude Include="Source\EnemySlimeMelee.h" />
     <ClInclude Include="Source\ITargetable.h" />
     <ClInclude Include="Source\Yagura.h" />
@@ -274,6 +273,10 @@
     <ClInclude Include="Source\AStar.h">
       <Filter>Source\Route_Search</Filter>
     </ClInclude>
+    <ClInclude Include="Source\GameObjectManager.h">
+      <Filter>Source\GameObjcet</Filter>
+    </ClInclude>
+    <ClInclude Include="GAMEOBJECTMANAGER.H" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -467,6 +470,9 @@
     </ClCompile>
     <ClCompile Include="Source\AStar.cpp">
       <Filter>Source\Route_Search</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GameObjectManager.cpp">
+      <Filter>Source\GameObjcet</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
