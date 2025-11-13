@@ -87,6 +87,15 @@ public:
 	static void ApplyPushOutWithWeight(
 		GameObject* objA,
 		GameObject* objB,
-		const DirectX::XMFLOAT3& mtd
+		const DirectX::XMFLOAT3& normal,
+		float penetration
+	);
+
+	//‰~’Œ‚Æ‰~’Œ‚ÌŒğ·”»’èiMTD‚ğŒvZ‚¹‚¸AÕ“Ëî•ñ‚Ì‚İ•Ô‚·j
+	static bool IntersectCylinder_Vs_Cylinder(
+		CylinderCollider* cylinderA,
+		CylinderCollider* cylinderB,
+		DirectX::XMFLOAT3& outNormal,
+		float& outPenetrarion
 	);
 };

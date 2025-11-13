@@ -56,6 +56,9 @@ void CollisionManager::CheckAllCollision()
 	{
 		for (size_t j = i + 1; j < objects.size(); j++)
 		{
+			DirectX::XMFLOAT3 normal;
+			float penetrarion;
+
 			GameObject* objectA = objects[i];
 			GameObject* objectB = objects[j];
 
@@ -174,16 +177,17 @@ void CollisionManager::CheckAllCollision()
 			{
 				CylinderCollider* cylinderA = static_cast<CylinderCollider*>(objectA->collider.get());
 				CylinderCollider* cylinderB = static_cast<CylinderCollider*>(objectB->collider.get());
-				isCollisionDetected = Collision::IntersectCylinderVsCylinder(
-					cylinderA->center, cylinderA->radius, cylinderA->height,
-					cylinderB->center, cylinderB->radius, cylinderB->height,
-					mtd
+				isCollisionDetected = Collision::IntersectCylinder_Vs_Cylinder(
+					cylinderA, cylinderB, normal, penetrarion
 				);
+				if(isCollisionDetected)
+				Collision::ApplyPushOutWithWeight(objectA, objectB, normal, penetrarion);
 			}
 
 			//Õ“Ë‚µ‚½ê‡
 			if (isCollisionDetected)
 			{
+
 				objectA->OnCollision(objectB);
 				objectB->OnCollision(objectA);
 			}
