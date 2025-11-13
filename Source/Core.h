@@ -19,7 +19,11 @@ public:
 	void OnCollision(GameObject* object)override;
 	void OnImGui()override;
 	float GetHP() { return hp; };
+
+	static Core* Instance();
 private:
+	static Core* sInstance;
+
 	Animator animator;               // ’Ç‰Á
 	CylinderCollider* cylinder;
 	float hp;

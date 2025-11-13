@@ -1,5 +1,7 @@
 #include "Gimmic_BreakWall.h"
 #include "Factory.h"
+#include "Player.h"
+#include "Core.h"
 #include <imgui.h>
 #include <imstb_truetype.h>
 #include <DirectXTex.h>
@@ -61,14 +63,66 @@ void Gimmic_BreakWall::Update(float elapsedTime)
     if (isBroken)
     {
         respawnTimer -= elapsedTime;
+
+        // タイマーが0以下になったら判定開始
         if (respawnTimer <= 0.0f)
         {
-            isBroken = false;
-            hp = maxHp; 
-            respawnTimer = 0.0f;
+            bool canRespawn = true; // デフォルトは許可
 
-            // リポップしたので、当たり判定(CollisionManager)に再登録する
-            CollisionManager::Instance().AddObject(this);
+            // コアの位置取得
+            Core* core = Core::Instance();
+
+            // 全プレイヤーリストを取得
+            const std::vector<Player*>& allPlayers = Player::GetAllPlayers();
+
+            if (core && !allPlayers.empty())
+            {
+                DirectX::XMFLOAT3 corePos = core->position;
+                DirectX::XMFLOAT3 wallPos = this->position;
+
+                // 距離計算用ラムダ式
+                auto DistSqXZ = [](const DirectX::XMFLOAT3& a, const DirectX::XMFLOAT3& b) {
+                    float dx = a.x - b.x;
+                    float dz = a.z - b.z;
+                    return dx * dx + dz * dz;
+                    };
+
+                // 壁とコアの距離（基準）
+                float distCoreToWall = DistSqXZ(corePos, wallPos);
+
+                // 全プレイヤーをチェック
+                for (Player* player : allPlayers)
+                {
+                    if (!player) continue;
+
+                    DirectX::XMFLOAT3 playerPos = player->position; // GetPosition()がない場合はposition直接参照
+                    float distCoreToPlayer = DistSqXZ(corePos, playerPos);
+
+                    // 「誰か一人でも」壁より内側（コアに近い）なら
+                    if (distCoreToPlayer < distCoreToWall)
+                    {
+                        canRespawn = false; // リポップ不可
+                        break; // 一人でも内側にいればこれ以上調べる必要はないのでループを抜ける
+                    }
+                }
+            }
+
+            // リポップ処理
+            if (canRespawn)
+            {
+                isBroken = false;
+                hp = maxHp;
+                respawnTimer = 0.0f;
+
+                // リポップしたので、当たり判定(CollisionManager)に再登録する
+                CollisionManager::Instance().AddObject(this);
+            }
+            else
+            {
+                // リポップ条件を満たしていないので、次回フレームで再チェックさせる
+                // タイマーを0のままにしておくと毎フレームチェックが走る
+                respawnTimer = 0.0f;
+            }
         }
         return;
     }
