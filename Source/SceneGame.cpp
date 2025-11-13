@@ -40,8 +40,8 @@ void SceneGame::Initialize()
 	players[1]->Initialize();
 
 	// 配置
-	players[0]->SetPosition(DirectX::XMFLOAT3(-2, 0, -35));
-	players[1]->SetPosition(DirectX::XMFLOAT3(2, 0, -35));
+	players[0]->SetPosition(DirectX::XMFLOAT3(-2, 0, -55));
+	players[1]->SetPosition(DirectX::XMFLOAT3(2, 0, -55));
 
 	// 最初は 0 番をアクティブに
 	Player::SetActive(players[0].get());
