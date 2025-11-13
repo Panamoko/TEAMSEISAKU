@@ -8,7 +8,7 @@ public:
 	GimmicBase() {
 		class_name = "GimmicBase";
 		type = Type::Gimmic;
-		weight = 0.0f;
+		weight = 5.0f;
 	}
 
 	virtual ~GimmicBase() = default;
