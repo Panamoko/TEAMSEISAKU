@@ -13,7 +13,7 @@ public:
 	virtual void Begin(const RenderContext& rc) = 0;
 
 	// XVˆ—
-	virtual void Update(const RenderContext& rc, const ModelResource::Material& material) = 0;
+	virtual void Update(const RenderContext& rc, const ModelResource::Material& material, const DirectX::XMFLOAT4& color) = 0;
 
 	// I—¹ˆ—
 	virtual void End(const RenderContext& rc) = 0;

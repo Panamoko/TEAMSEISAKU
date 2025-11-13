@@ -33,6 +33,10 @@ private:
 	float respawnTime = 5.0f; // リスポーンするまでの時間 (5秒)
 	float respawnTimer = 0.0f; // リスポーンタイマー
 
+	bool isRespawning = false;      // フェードイン中か
+	float fadeInDuration = 1.5f;    // フェードインにかかる時間（1.5秒）
+	float fadeInTimer = 0.0f;       // フェードイン用タイマー
+
 	DirectX::XMFLOAT3 halfSize;
 	DirectX::XMFLOAT3 size;
 

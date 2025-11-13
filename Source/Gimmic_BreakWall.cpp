@@ -6,7 +6,9 @@
 #include <imstb_truetype.h>
 #include <DirectXTex.h>
 #include <DDS.h>
+#include <algorithm> // これが必要です
 
+using namespace std;
 //a
 
 Gimmic_BreakWall::Gimmic_BreakWall()
@@ -25,7 +27,11 @@ Gimmic_BreakWall::Gimmic_BreakWall()
     maxHp = 2.0f; 
     hp = maxHp;
     isBroken = false;
+    isRespawning = false;
     respawnTimer = 0.0f;
+    fadeInTimer = 0.0f; 
+
+    color.w = 1.0f;
 
     CollisionManager::Instance().AddObject(this);
 }
@@ -33,13 +39,14 @@ Gimmic_BreakWall::Gimmic_BreakWall()
 //衝突結果
 void Gimmic_BreakWall::OnCollision(GameObject* objects)
 {
-    if (isBroken) return;
+    if (isBroken || isRespawning) return;
 
     if (objects->type == Type::PlayerAttack)
         hp--;
     if (hp <= 0.0f)
     {
         isBroken = true;
+        isRespawning = false;
         respawnTimer = respawnTime;
         CollisionManager::Instance().Remove(this);
     }
@@ -50,15 +57,63 @@ void Gimmic_BreakWall::Update(float elapsedTime)
 {
     if (!collider || !model) return;
 
-    DirectX::XMFLOAT3 center;
-    DirectX::XMFLOAT3 half;
-    DirectX::XMFLOAT3 axis[3];
+    if (isRespawning)
+    {
+        fadeInTimer += elapsedTime;
 
-    DirectX::XMFLOAT3 rotation = {
-        DirectX::XMConvertToRadians(angle.x),
-        DirectX::XMConvertToRadians(angle.y),
-        DirectX::XMConvertToRadians(angle.z)
-    };
+        // フェードインの進行度 (0.0 -> 1.0) を計算
+        float alpha = std::min<float>(fadeInTimer / fadeInDuration, 1.0f);
+        color.w = alpha; // アルファ値を更新
+
+        // フェードインが完了したら
+        if (fadeInTimer >= fadeInDuration)
+        {
+            isRespawning = false;
+            fadeInTimer = 0.0f;
+            color.w = 1.0f; // 完全に不透明に
+
+            // ここで当たり判定を有効化する
+            CollisionManager::Instance().AddObject(this);
+        }
+
+        DirectX::XMFLOAT3 center;
+        DirectX::XMFLOAT3 half;
+        DirectX::XMFLOAT3 axis[3];
+
+        DirectX::XMFLOAT3 rotation = {
+            DirectX::XMConvertToRadians(angle.x),
+            DirectX::XMConvertToRadians(angle.y),
+            DirectX::XMConvertToRadians(angle.z)
+        };
+
+        // モデルの OBB を取得
+        if (model->GetModelOBB(
+            model,
+            position,
+            rotation,
+            scale,
+            center,
+            half,
+            axis))
+        {
+            box->center = center;
+            box->half = half;
+
+            box->axis[0] = axis[0];
+            box->axis[1] = axis[1];
+            box->axis[2] = axis[2];
+
+            if (model) {
+                printf("OBB center = (%f,%f,%f)\n", center.x, center.y, center.z);
+                printf("OBB half   = (%f,%f,%f)\n", half.x, half.y, half.z);
+                printf("axis0 = (%f,%f,%f)\n", axis[0].x, axis[0].y, axis[0].z);
+                printf("axis1 = (%f,%f,%f)\n", axis[1].x, axis[1].y, axis[1].z);
+                printf("axis2 = (%f,%f,%f)\n", axis[2].x, axis[2].y, axis[2].z);
+            }
+        }
+
+        return;
+    }
 
     if (isBroken)
     {
@@ -111,11 +166,14 @@ void Gimmic_BreakWall::Update(float elapsedTime)
             if (canRespawn)
             {
                 isBroken = false;
+                isRespawning = true;
                 hp = maxHp;
                 respawnTimer = 0.0f;
+                fadeInTimer = 0.0f;
+                color.w = 0.0f;
 
-                // リポップしたので、当たり判定(CollisionManager)に再登録する
-                CollisionManager::Instance().AddObject(this);
+
+
             }
             else
             {
@@ -126,6 +184,16 @@ void Gimmic_BreakWall::Update(float elapsedTime)
         }
         return;
     }
+
+    DirectX::XMFLOAT3 center;
+    DirectX::XMFLOAT3 half;
+    DirectX::XMFLOAT3 axis[3];
+
+    DirectX::XMFLOAT3 rotation = {
+        DirectX::XMConvertToRadians(angle.x),
+        DirectX::XMConvertToRadians(angle.y),
+        DirectX::XMConvertToRadians(angle.z)
+    };
 
     // モデルの OBB を取得
     if (model->GetModelOBB(

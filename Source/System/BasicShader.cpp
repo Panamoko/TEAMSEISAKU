@@ -45,13 +45,17 @@ void BasicShader::Begin(const RenderContext& rc)
 }
 
 // 更新処理
-void BasicShader::Update(const RenderContext& rc, const ModelResource::Material& material)
+void BasicShader::Update(const RenderContext& rc, const ModelResource::Material& material, const DirectX::XMFLOAT4& color)
 {
 	ID3D11DeviceContext* dc = rc.deviceContext;
 
 	// マテリアル用定数バッファ更新
 	CbMaterial cbMaterial{};
-	cbMaterial.materialColor = material.color;
+	cbMaterial.materialColor.x = material.color.x * color.x;
+	cbMaterial.materialColor.y = material.color.y * color.y;
+	cbMaterial.materialColor.z = material.color.z * color.z;
+	cbMaterial.materialColor.w = material.color.w * color.w;
+
 	dc->UpdateSubresource(constantBuffer.Get(), 0, 0, &cbMaterial, 0, 0);
 
 	// シェーダーリソースビュー設定

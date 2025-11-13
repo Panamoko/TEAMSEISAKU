@@ -12,7 +12,7 @@ public:
 	void Begin(const RenderContext& rc) override;
 
 	// XVˆ—
-	void Update(const RenderContext& rc, const ModelResource::Material& material) override;
+	void Update(const RenderContext& rc, const ModelResource::Material& material, const DirectX::XMFLOAT4& color) override;
 
 	// I—¹ˆ—
 	void End(const RenderContext& rc) override;
