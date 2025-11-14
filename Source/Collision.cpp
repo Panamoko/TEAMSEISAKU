@@ -703,3 +703,12 @@ bool Collision::IntersectCylinder_Vs_Box(
 	return true;
 }
 
+bool Collision::RayCast(
+	const DirectX::XMFLOAT3& rayOrigin,
+	const DirectX::XMFLOAT3& rayDir,
+	const std::vector<GameObject*>& objects,
+	RayCastHit& outHit)
+{
+	return false;
+}
+

@@ -132,4 +132,11 @@ public:
 		DirectX::XMFLOAT3& outNormal,
 		float& outPenetraion
 	);
+
+	static bool RayCast(
+		const DirectX::XMFLOAT3& rayOrigin,
+		const DirectX::XMFLOAT3& rayDir,
+		const std::vector<GameObject*>& objects,
+		RayCastHit& outHit
+	);
 };

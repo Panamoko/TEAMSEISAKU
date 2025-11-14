@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GameObject.h"
+#include <cfloat>
 
 class GameObject;
 
@@ -39,6 +40,13 @@ struct OBB :public Collider
 	DirectX::XMFLOAT3 half;   // ハーフサイズ（X,Y,Z）
 	DirectX::XMFLOAT3 axis[3];//X,Y,Z方向ベクトル
 	//float yaw;                // Y軸回転（ラジアン）
+};
+
+struct RayCastHit
+{
+	GameObject* hitObject = nullptr;	//衝突したオブジェクト
+	DirectX::XMFLOAT3 hitPoint = {};	//衝突した点
+	float distance = FLT_MAX;			//カメラからの距離
 };
 
 static bool IsPointInsideOBB(const OBB* obb, DirectX::XMFLOAT3& p)
