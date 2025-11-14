@@ -292,6 +292,9 @@
     <ClInclude Include="Source\MathUtils.h">
       <Filter>Source\MathUtls</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Picking_Ray.h">
+      <Filter>Source\RayCast</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -488,6 +491,9 @@
     </ClCompile>
     <ClCompile Include="Source\MathUtils.cpp">
       <Filter>Source\MathUtls</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Picking_Ray.cpp">
+      <Filter>Source\RayCast</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

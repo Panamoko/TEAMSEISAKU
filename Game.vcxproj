@@ -148,6 +148,7 @@
     <ClInclude Include="Source\ITargetable.h" />
     <ClInclude Include="Source\MathUtils.h" />
     <ClInclude Include="Source\ModelManager.h" />
+    <ClInclude Include="Source\Picking_Ray.h" />
     <ClInclude Include="Source\Player.h" />
     <ClInclude Include="Source\Projectile.h" />
     <ClInclude Include="Source\ProjectileHoming.h" />
@@ -220,6 +221,7 @@
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\MathUtils.cpp" />
     <ClCompile Include="Source\ModelManager.cpp" />
+    <ClCompile Include="Source\Picking_Ray.cpp" />
     <ClCompile Include="Source\Player.cpp" />
     <ClCompile Include="Source\Projectile.cpp" />
     <ClCompile Include="Source\ProjectileHoming.cpp" />
