@@ -435,9 +435,6 @@
     <ClCompile Include="Source\CollisionManager.cpp">
       <Filter>Source\Collision</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Animator.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="Source\StageManager.cpp">
       <Filter>Source\Stage</Filter>
     </ClCompile>

@@ -7,14 +7,18 @@
 #include <cfloat>
 
 // コンストラクタ
-EnemySlime::EnemySlime()
+EnemySlime::EnemySlime(const char* modelPath)
 {
 	class_name = "EnemySlime";
 
 	// ModelManager からスライムモデル取得
-	model = ModelManager::Instance().Load("Data/Model/chara/teki.mdl");
+	model = ModelManager::Instance().Load(modelPath);
 	//models.push_back(std::make_unique<Model>("Data/Model/Slime/Slime.mdl"));
 
+	if (model) {
+		animator.SetModel(model);
+		animator.Play("NIC_Idle", true); // 最初はIdle
+	}
 
 	// モデルが大きいのでスケーリング
 	scale.x = scale.y = scale.z = 0.01f;
@@ -64,6 +68,8 @@ void EnemySlime::Update(float elapsedTime)
 		UpdateAttackState(elapsedTime);
 		break;
 	}
+
+	animator.Update(elapsedTime);
 
 	//速力処理更新
 	UpdateVelocity(elapsedTime);
@@ -182,6 +188,8 @@ void EnemySlime::SetWanderState()
 
 	//目標地点設定
 	SetRandomTargerPosition();
+
+	animator.Play("NIC_Fwd_Run", true);
 }
 
 //徘徊ステート更新処理
@@ -215,6 +223,8 @@ void EnemySlime::SetIdleState()
 
 	//タイマーをランダム設定
 	stateTimer = MathUtils::RandomRenge(3.0f, 5.0f);
+
+	animator.Play("NIC_Idle", true);
 }
 
 //待機ステート更新処理
@@ -273,6 +283,12 @@ void EnemySlime::SetAttackState(Player* target)
 	state = State::Attack;
 	stateTimer = 0.0f;
 	targetPlayer = target; // ターゲットを記憶
+
+	// アニメーション再生開始
+	animator.Play("NIC_Attack", true);
+
+	// フラグをリセット（まだ撃っていない）
+	isAttackFired = false;
 }
 
 //攻撃ステート更新処理
@@ -291,26 +307,38 @@ void EnemySlime::UpdateAttackState(float elapsedTime)
 	//目標地点へ移動 (旋回のみ)
 	MoveToTarget(elapsedTime, 0.0f, 1.0f);
 
-	//タイマー処理
-	stateTimer -= elapsedTime;
-	if (stateTimer < 0.0f)
+	// 現在のアニメーション再生時間を取得
+	float currentAnimTime = animator.GetCurrentSeconds();
+
+	float fireTimingSeconds = 12.0f / 60.0f;
+
+	// まだ撃っていなくて、かつ再生時間が発射タイミングを超えたら発射
+	if (!isAttackFired && currentAnimTime >= fireTimingSeconds)
 	{
-		// ... (弾丸発射処理) ...
-		//前方向
+		// --- 弾丸発射処理 (元のコードを使用) ---
 		DirectX::XMFLOAT3 dir;
 		dir.x = sinf(angle.y);
 		dir.y = 0.0f;
 		dir.z = cosf(angle.y);
-		//発射位置(プレイヤーの腰あたり)
+
 		DirectX::XMFLOAT3 pos;
 		pos.x = position.x;
 		pos.y = position.y + height * 0.5f;
 		pos.z = position.z;
-		//発射
+
 		ProjectileStraite* projectile = new ProjectileStraite(&projectileManager);
 		projectile->Launch(dir, pos);
+		// ----------------------------------
 
-		stateTimer = 2.0f;
+		// 「撃った」ことにする（連射防止）
+		isAttackFired = true;
+	}
+
+	// アニメーションがループして時間が0に戻った場合、フラグをリセットして次弾に備える
+	if (currentAnimTime < fireTimingSeconds && isAttackFired)
+	{
+		// 現在時間が発射時間より手前、かつ発射済みフラグが立っている＝ループした
+		isAttackFired = false;
 	}
 
 	// ターゲットがまだ範囲内にいるか再チェック
@@ -349,6 +377,8 @@ void EnemySlime::UpdateAttackState(float elapsedTime)
 //死亡した時に呼ばれる
 void EnemySlime::OnDead()
 {
+	animator.Play("NIC_Death", false);
+
 	//自身を破棄
 	Destroy();
 }

@@ -4,6 +4,7 @@
 #include "Enemy.h"
 #include "ProjectileManager.h"
 #include "Editor.h"
+#include "Animator.h"
 
 class Player;
 
@@ -11,7 +12,7 @@ class Player;
 class EnemySlime : public Enemy
 {
 public:
-	EnemySlime();
+	EnemySlime(const char* modelPath = "Data/Model/chara/teki.mdl");
 	~EnemySlime() override;
 
 	// 更新処理
@@ -25,6 +26,9 @@ public:
 
 	//縄張り設定
 	void SetTerritory(const DirectX::XMFLOAT3& origin, float range);
+
+	//死亡したときに呼ばれる
+	void OnDead() override;
 
 protected:
 	//ターゲット位置をランダム設定
@@ -54,9 +58,7 @@ protected:
 	//攻撃ステート更新処理
 	virtual void UpdateAttackState(float elapsedTime);
 
-protected:
-	// 死亡した時に呼ばれる
-	void OnDead() override;
+
 
 protected:
 	//状態一覧
@@ -91,12 +93,14 @@ protected:
 	//索敵範囲
 	float				searchRange = 5.0f;
 
+	bool isAttackFired = false; // 攻撃判定済みフラグ
+
 	// ターゲット中のプレイヤー
 	Player* targetPlayer = nullptr;
 
 	ProjectileManager	projectileManager;
 
-
+	Animator animator;
 private:
 
 	editor game_editor;
