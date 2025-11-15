@@ -56,6 +56,7 @@ public:
 	int id = 0;//ŒÂ•Ê‚ÌID
 	static int nextID;//Ÿ‚ÌID‚ğÌ”Ô‚·‚é‚½‚ß‚ÌÃ“I•Ï”
 	DirectX::XMFLOAT3 mtd;
+	std::shared_ptr<GameObject> objects;
 
 
 	float weight;

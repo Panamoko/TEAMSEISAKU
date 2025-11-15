@@ -1,4 +1,5 @@
 #include "GridMap.h"
+#include <cmath>
 
 GridMap::GridMap()
 {
@@ -20,82 +21,137 @@ void GridMap::Initialize(int map_width, int map_height, float cell)
 //ゲーム内のオブジェクトから障害物マップを作る
 void GridMap::Build(const std::vector<std::shared_ptr<GameObject>>& objects)
 {
-    // 全セルをクリア
+    using namespace DirectX;
+
+    // 1. 全セルをクリア
     for (auto& cell : grid)
         cell.clear();
 
-    using namespace DirectX;
-
-    //グリッド中央を原点(0,0)に対応させる
     int cx = width / 2;
     int cz = height / 2;
 
-    //全オブジェクトを走査
+    auto WorldToCell = [&](float x, float z) {
+        int gx = cx + static_cast<int>(std::floor(x / cell_size));
+        int gz = cz + static_cast<int>(std::floor(z / cell_size));
+        return std::pair<int, int>{gx, gz};
+        };
+
     for (auto& obj : objects)
     {
-        // 非アクティブ or コライダー無しは無視
         if (!obj->IsActive() || !obj->collider)
             continue;
 
-        // オブジェクトのOBBを取得
-        OBB obb = obj->GetOBB();
+        Collider* col = obj->collider.get();
 
-        XMVECTOR axes[3] = {
-            XMLoadFloat3(&obb.axis[0]),
-            XMLoadFloat3(&obb.axis[1]),
-            XMLoadFloat3(&obb.axis[2])
-        };
-        XMVECTOR center = XMLoadFloat3(&obb.center);
-
-        //OBBの8頂点を走査してAABBを求める
-        XMFLOAT3 minPos = { FLT_MAX, FLT_MAX, FLT_MAX };
-        XMFLOAT3 maxPos = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
-
-        for (int dx = -1; dx <= 1; dx += 2)
-            for (int dy = -1; dy <= 1; dy += 2)
-                for (int dz = -1; dz <= 1; dz += 2)
-                {
-                    XMVECTOR vertex =
-                        center
-                        + dx * obb.half.x * axes[0]
-                        + dy * obb.half.y * axes[1]
-                        + dz * obb.half.z * axes[2];
-
-                    XMFLOAT3 pos;
-                    XMStoreFloat3(&pos, vertex);
-
-                    minPos.x = (std::min)(minPos.x, pos.x);
-                    minPos.y = (std::min)(minPos.y, pos.y);
-                    minPos.z = (std::min)(minPos.z, pos.z);
-                    maxPos.x = (std::max)(maxPos.x, pos.x);
-                    maxPos.y = (std::max)(maxPos.y, pos.y);
-                    maxPos.z = (std::max)(maxPos.z, pos.z);
-                }
-
-        //原点中心のグリッド座標に変換
-        auto WorldToCell = [&](float worldX, float worldZ) -> std::pair<int, int>
-            {
-                int gx = cx + static_cast<int>(std::floor(worldX / cell_size));
-                int gz = cz + static_cast<int>(std::floor(worldZ / cell_size));
-                return { gx, gz };
-            };
-
-        auto [startX, startZ] = WorldToCell(minPos.x, minPos.z);
-        auto [endX, endZ] = WorldToCell(maxPos.x, maxPos.z);
-
-        // 範囲をクランプ
-        startX = std::clamp(startX, 0, width - 1);
-        startZ = std::clamp(startZ, 0, height - 1);
-        endX = std::clamp(endX, 0, width - 1);
-        endZ = std::clamp(endZ, 0, height - 1);
-
-        // 対応セルに登録
-        for (int x = startX; x <= endX; ++x)
+        switch (col->type)
         {
-            for (int z = startZ; z <= endZ; ++z)
+        case ColliderType::OBB:
+        {
+            OBB* obb = static_cast<OBB*>(col);
+
+            XMVECTOR center = XMLoadFloat3(&obb->center);
+            XMVECTOR axes[3] = {
+                XMLoadFloat3(&obb->axis[0]),
+                XMLoadFloat3(&obb->axis[1]),
+                XMLoadFloat3(&obb->axis[2])
+            };
+            XMFLOAT3 half = obb->half;
+
+            XMFLOAT3 minPos = { FLT_MAX, FLT_MAX, FLT_MAX };
+            XMFLOAT3 maxPos = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
+
+            for (int dx = -1; dx <= 1; dx += 2)
+                for (int dy = -1; dy <= 1; dy += 2)
+                    for (int dz = -1; dz <= 1; dz += 2)
+                    {
+                        XMVECTOR vertex = center
+                            + dx * half.x * axes[0]
+                            + dy * half.y * axes[1]
+                            + dz * half.z * axes[2];
+
+                        XMFLOAT3 pos;
+                        XMStoreFloat3(&pos, vertex);
+
+                        minPos.x = (std::min)(minPos.x, pos.x);
+                        minPos.y = (std::min)(minPos.y, pos.y);
+                        minPos.z = (std::min)(minPos.z, pos.z);
+                        maxPos.x = (std::max)(maxPos.x, pos.x);
+                        maxPos.y = (std::max)(maxPos.y, pos.y);
+                        maxPos.z = (std::max)(maxPos.z, pos.z);
+                    }
+
+            auto [startX, startZ] = WorldToCell(minPos.x, minPos.z);
+            auto [endX, endZ] = WorldToCell(maxPos.x, maxPos.z);
+
+            startX = std::clamp(startX, 0, width - 1);
+            startZ = std::clamp(startZ, 0, height - 1);
+            endX = std::clamp(endX, 0, width - 1);
+            endZ = std::clamp(endZ, 0, height - 1);
+
+            for (int x = startX; x <= endX; ++x)
             {
-                grid[z * width + x].push_back(obj->GetID());
+                for (int z = startZ; z <= endZ; ++z)
+                {
+                    float wx = (x - cx + 0.5f) * cell_size;
+                    float wz = (z - cz + 0.5f) * cell_size;
+                    XMFLOAT3 point{ wx, obb->center.y, wz };
+
+                    if (IsPointInsideOBB(obb, point))
+                        grid[z * width + x].push_back(obj->GetID());
+                }
             }
+            break;
+        }
+
+        case ColliderType::Box:
+        {
+            BoxCollider* box = static_cast<BoxCollider*>(col);
+            auto [startX, startZ] = WorldToCell(box->box_min.x, box->box_min.z);
+            auto [endX, endZ] = WorldToCell(box->box_max.x, box->box_max.z);
+            startX = std::clamp(startX, 0, width - 1);
+            startZ = std::clamp(startZ, 0, height - 1);
+            endX = std::clamp(endX, 0, width - 1);
+            endZ = std::clamp(endZ, 0, height - 1);
+            for (int x = startX; x <= endX; ++x)
+                for (int z = startZ; z <= endZ; ++z)
+                    grid[z * width + x].push_back(obj->GetID());
+            break;
+        }
+
+        case ColliderType::Sphere:
+        {
+            SphereCollider* sphere = static_cast<SphereCollider*>(col);
+            int r = static_cast<int>(std::ceil(sphere->radius / cell_size));
+            auto [cxCell, czCell] = WorldToCell(sphere->center.x, sphere->center.z);
+            for (int x = cxCell - r; x <= cxCell + r; ++x)
+                for (int z = czCell - r; z <= czCell + r; ++z)
+                {
+                    float dx = (x - cx) * cell_size - sphere->center.x;
+                    float dz = (z - cz) * cell_size - sphere->center.z;
+                    if (dx * dx + dz * dz <= sphere->radius * sphere->radius)
+                        grid[z * width + x].push_back(obj->GetID());
+                }
+            break;
+        }
+
+        case ColliderType::Cylinder:
+        {
+            CylinderCollider* cyl = static_cast<CylinderCollider*>(col);
+            int r = static_cast<int>(std::ceil(cyl->radius / cell_size));
+            auto [cxCell, czCell] = WorldToCell(cyl->center.x, cyl->center.z);
+            for (int x = cxCell - r; x <= cxCell + r; ++x)
+                for (int z = czCell - r; z <= czCell + r; ++z)
+                {
+                    float dx = (x - cx) * cell_size - cyl->center.x;
+                    float dz = (z - cz) * cell_size - cyl->center.z;
+                    if (dx * dx + dz * dz <= cyl->radius * cyl->radius)
+                        grid[z * width + x].push_back(obj->GetID());
+                }
+            break;
+        }
+
+        default:
+            break;
         }
     }
 }
@@ -170,4 +226,22 @@ void GridMap::SetBlocked(int x, int z, bool blocked)
         return;
 
     grid[z][x] = blocked ? 1 : 0;
+}
+
+//ワールド座標 (worldX, worldZ) をグリッド座標に変換
+std::pair<int, int> GridMap::WorldToCell(float worldX, float worldZ) const
+{
+    // グリッド中央を原点に対応させる
+    int cx = width / 2;
+    int cz = height / 2;
+
+    // ワールド座標をセル単位に変換
+    int gx = cx + static_cast<int>(std::floor(worldX / cell_size));
+    int gz = cz + static_cast<int>(std::floor(worldZ / cell_size));
+
+    // グリッド範囲に収める
+    gx = std::clamp(gx, 0, width - 1);
+    gz = std::clamp(gz, 0, height - 1);
+
+    return { gx, gz };
 }

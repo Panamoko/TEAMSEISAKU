@@ -45,6 +45,7 @@ void Gimmic_BreakWall::OnCollision(GameObject* objects)
         hp--;
     if (hp <= 0.0f)
     {
+        is_active = false;
         isBroken = true;
         isRespawning = false;
         respawnTimer = respawnTime;
@@ -74,6 +75,7 @@ void Gimmic_BreakWall::Update(float elapsedTime)
 
             // ‚±‚±‚Å“–‚½‚è”»’è‚ð—LŒø‰»‚·‚é
             CollisionManager::Instance().AddObject(this);
+            is_active = true;
         }
 
         DirectX::XMFLOAT3 center;

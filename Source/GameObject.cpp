@@ -1,5 +1,6 @@
 #include "GameObject.h"
 #include "CollisionManager.h"
+#include "GameObjectManager.h"
 #include <unordered_set>
 
 int GameObject::nextID = 0;
@@ -74,6 +75,7 @@ GameObject::GameObject() :name("Empty")
 GameObject::~GameObject()
 {
 	CollisionManager::Instance().Remove(this);
+	GameObjectManager::Instance().RemoveObject(id);
 	std::cout << "Destroyed" << std::endl;
 }
 

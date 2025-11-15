@@ -18,6 +18,8 @@
 	//動的ブロック管理
 	void SetBlocked(int x, int z, bool blocked);
 
+	std::pair<int, int> WorldToCell(float worldX, float worldZ) const;
+
 	int GetWidth()const { return width; }
 	int GetHeight()const { return height; }
 

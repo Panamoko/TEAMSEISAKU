@@ -40,3 +40,30 @@ struct OBB :public Collider
 	DirectX::XMFLOAT3 axis[3];//X,Y,Z方向ベクトル
 	//float yaw;                // Y軸回転（ラジアン）
 };
+
+static bool IsPointInsideOBB(const OBB* obb, DirectX::XMFLOAT3& p)
+{
+	using namespace DirectX;
+
+	// 点と OBB 中心の差
+	XMVECTOR d = XMLoadFloat3(&p) - XMLoadFloat3(&obb->center);
+
+	for (int i = 0; i < 3; ++i)
+	{
+		XMVECTOR axisVec = XMLoadFloat3(&obb->axis[i]);
+		float dist = XMVectorGetX(XMVector3Dot(d, axisVec));
+
+		float halfSize = 0.0f;
+		switch (i)
+		{
+		case 0: halfSize = obb->half.x; break;
+		case 1: halfSize = obb->half.y; break;
+		case 2: halfSize = obb->half.z; break;
+		}
+
+		if (fabs(dist) > halfSize)
+			return false;
+	}
+
+	return true;
+}

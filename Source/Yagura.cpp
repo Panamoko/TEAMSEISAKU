@@ -27,6 +27,7 @@ void Yagura::Update(float elapsedTime)
 {
 	if (hp <= 0.0f)
 	{
+		is_active = false;
 		GimmicManager::Instance().Remove(this);
 		CollisionManager::Instance().Remove(this);
 		return;

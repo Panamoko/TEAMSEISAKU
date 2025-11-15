@@ -2,6 +2,7 @@
 #include "GimmicManager.h"
 #include "CollisionManager.h"
 #include "EnemyManager.h"
+#include "GameObjectManager.h"
 
 
 Barracks::Barracks()
@@ -12,6 +13,7 @@ Barracks::Barracks()
 	spawn_timer = 0.0f;
 	current_enemy_count = 0;
 	spawn_positon.z += 3.0f;
+	is_active = true;
 
 	//“–‚½‚è”»’è‚Ìí—Şİ’è
 	collider = std::make_unique<OBB>();
@@ -29,6 +31,7 @@ void Barracks::Update(float elapsedTime)
 {
 	if (hp <= 0.0f)
 	{
+		is_active = false;
 		CollisionManager::Instance().Remove(this);
 		GimmicManager::Instance().Remove(this);
 		return;
@@ -52,6 +55,7 @@ void Barracks::Update(float elapsedTime)
 		enemys->SetPosition(spawn_positon);			//ƒXƒ|[ƒ“ˆÊ’u–{İ’è
 		EnemyManager::Instance().Register(enemys);	//“G‚ğ“o˜^
 		spawned_enemies.push_back(enemys);			//•ºÉ‚É‚à“G‚ğ“o˜^
+		GameObjectManager::Instance().AddObject(objects);
 	}
 
 	//•ºÉ‚ªŠÇ—‚·‚é“G‚Ì€‘Ì‚ğ®—
