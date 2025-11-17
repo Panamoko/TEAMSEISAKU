@@ -41,6 +41,5 @@ private:
 	DirectX::XMFLOAT3 size;
 
 	OBB* box;
-	bool damage;//攻撃を受けたか
 };
 

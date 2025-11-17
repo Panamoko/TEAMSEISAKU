@@ -12,7 +12,7 @@ class Player;
 class EnemySlime : public Enemy
 {
 public:
-	EnemySlime(const char* modelPath = "Data/Model/chara/nico.mdl");
+	EnemySlime(const char* modelPath = "Data/Model/chara/teki.mdl");
 	~EnemySlime() override;
 
 	// 更新処理
@@ -42,7 +42,7 @@ protected:
 	void MoveToTarget(float elapsedTime, float moveSpeedRate, float turnSpeedRate);
 
 	//徘徊ステートへ偏移
-	virtual void SetWanderState();
+	void SetWanderState();
 
 	//徘徊ステート更新処理
 	void UpdateWanderState(float elapsedTime);
@@ -51,7 +51,7 @@ protected:
 	void SetIdleState();
 
 	//待機ステート更新処理
-	virtual void UpdateIdleState(float elapsedTime);
+	void UpdateIdleState(float elapsedTime);
 
 	//プレイヤー索敵
 	Player* SearchPlayer();

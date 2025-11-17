@@ -53,9 +53,17 @@ const std::vector<Player*>& Player::GetAllPlayers()
 //初期化
 void Player::Initialize()
 {
-	model = ModelManager::Instance().Load("Data/Model/Slime/Slime_walk.mdl");
+	// 1. まずマネージャーから元となるモデルを取得（これは共有リソース）
+	Model* sourceModel = ModelManager::Instance().Load("Data/Model/Slime/Slime_walk.mdl");
+
+	// 2. このプレイヤー専用のモデルとして「コピー」を作成する
+	//    (Modelクラスにコピーコンストラクタがある前提。通常はデフォルトで動きます)
+	model = new Model(*sourceModel);
 	// モデルが大きいのでスケーリング
 	scale.x = scale.y = scale.z = 0.005f;
+
+	// 3. アニメーターには、この「自分専用のコピー」をセットする
+	animator.SetModel(model);
 
 	RegisterPlayer(this);
 
@@ -78,8 +86,11 @@ void Player::Initialize()
 //終了化
 void Player::Finalize()
 {
-	UnregisterPlayer(this);
-	//delete model;
+	if (model)
+	{
+		delete model;
+		model = nullptr;
+	}
 }
 
 void Player::Update(float elapsedTime)

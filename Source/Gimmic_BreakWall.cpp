@@ -32,8 +32,6 @@ Gimmic_BreakWall::Gimmic_BreakWall()
     fadeInTimer = 0.0f; 
 
     color.w = 1.0f;
-    damage = false;
-    invincible_timer = 0.1f;
 
     CollisionManager::Instance().AddObject(this);
 }
@@ -44,11 +42,7 @@ void Gimmic_BreakWall::OnCollision(GameObject* objects)
     if (isBroken || isRespawning) return;
 
     if (objects->type == Type::PlayerAttack)
-    {
-        timer = invincible_timer;
         hp--;
-        damage = true;
-    }
     if (hp <= 0.0f)
     {
         is_active = false;
@@ -63,11 +57,6 @@ void Gimmic_BreakWall::OnCollision(GameObject* objects)
 void Gimmic_BreakWall::Update(float elapsedTime)
 {
     if (!collider || !model) return;
-
-    if (timer > 0.0f && damage) timer -= elapsedTime;
-    else if (timer <= 0.0f && damage) damage = false;
-
-    if (damage && timer <= 0.1f)damage = false;
 
     if (isRespawning)
     {
@@ -238,14 +227,8 @@ void Gimmic_BreakWall::Update(float elapsedTime)
 void Gimmic_BreakWall::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
     if (isBroken) return;
-    if (damage)
-    {
-        renderer->Render(rc, transform, model, ShaderId::Lambert, { 1.0f,0.0f,0.0f,1.0f });
-    }
-    else
-    {
-        renderer->Render(rc, transform, model, ShaderId::Lambert);
-    }
+
+    GameObject::Render(rc, renderer);
 }
 
 

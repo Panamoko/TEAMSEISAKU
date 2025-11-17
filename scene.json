@@ -30,6 +30,35 @@
             "type": 1
         },
         {
+            "class_name": "EnemySlime",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 10,
+            "mesh_index": 2,
+            "model_path": "Data/Model/Slime/Slime.mdl",
+            "name": "Slime",
+            "position": [
+                0.15404267609119415,
+                0.0,
+                -5.342044830322266
+            ],
+            "rotation": [
+                0.0,
+                -40.24275207519531,
+                0.0
+            ],
+            "scale": [
+                0.009999999776482582,
+                0.009999999776482582,
+                0.009999999776482582
+            ],
+            "type": 3
+        },
+        {
             "class_name": "Stage",
             "color": [
                 1.0,
@@ -593,7 +622,7 @@
             "model_path": "Data/Model/bilud/Core.mdl",
             "name": "Core",
             "position": [
-                0.0,
+                0.30000001192092896,
                 0.0,
                 0.0
             ],
@@ -733,35 +762,6 @@
                 1.0,
                 1.0
             ],
-            "id": 910,
-            "mesh_index": 2,
-            "model_path": "Data/Model/bilud/saku.mdl",
-            "name": "saku24",
-            "position": [
-                17.0,
-                0.0,
-                0.0
-            ],
-            "rotation": [
-                0.0,
-                90.0,
-                0.0
-            ],
-            "scale": [
-                0.10000000149011612,
-                0.05000000074505806,
-                0.10000000149011612
-            ],
-            "type": 1
-        },
-        {
-            "class_name": "Gimmic_BreakWall",
-            "color": [
-                1.0,
-                1.0,
-                1.0,
-                1.0
-            ],
             "id": 1041,
             "mesh_index": 2,
             "model_path": "Data/Model/bilud/saku.mdl",
@@ -854,42 +854,13 @@
             "model_path": "Data/Model/bilud/saku.mdl",
             "name": "saku28",
             "position": [
-                -11.5,
+                -11.199999809265137,
                 0.0,
                 17.0
             ],
             "rotation": [
                 0.0,
                 0.0,
-                0.0
-            ],
-            "scale": [
-                0.10000000149011612,
-                0.05000000074505806,
-                0.10000000149011612
-            ],
-            "type": 1
-        },
-        {
-            "class_name": "Gimmic_BreakWall",
-            "color": [
-                1.0,
-                1.0,
-                1.0,
-                1.0
-            ],
-            "id": 1418,
-            "mesh_index": 2,
-            "model_path": "Data/Model/bilud/saku.mdl",
-            "name": "saku29",
-            "position": [
-                -17.0,
-                0.0,
-                0.0
-            ],
-            "rotation": [
-                0.0,
-                90.0,
                 0.0
             ],
             "scale": [
@@ -1016,93 +987,6 @@
             "type": 1
         },
         {
-            "class_name": "EnemySlime",
-            "color": [
-                1.0,
-                1.0,
-                1.0,
-                1.0
-            ],
-            "id": 1702,
-            "mesh_index": 6,
-            "model_path": "Data/Model/chara/nico.mdl",
-            "name": "nico(近距離)",
-            "position": [
-                -5.4041290283203125,
-                0.0,
-                -0.17572450637817383
-            ],
-            "rotation": [
-                0.0,
-                -10.190597534179688,
-                0.0
-            ],
-            "scale": [
-                0.009999999776482582,
-                0.009999999776482582,
-                0.009999999776482582
-            ],
-            "type": 4
-        },
-        {
-            "class_name": "EnemySlimeTurret",
-            "color": [
-                1.0,
-                1.0,
-                1.0,
-                1.0
-            ],
-            "id": 1707,
-            "mesh_index": 7,
-            "model_path": "Data/Model/chara/nico2.mdl",
-            "name": "nico(砲台)",
-            "position": [
-                -24.062999725341797,
-                0.0,
-                -17.36400032043457
-            ],
-            "rotation": [
-                0.0,
-                -4.511939525604248,
-                0.0
-            ],
-            "scale": [
-                0.009999999776482582,
-                0.009999999776482582,
-                0.009999999776482582
-            ],
-            "type": 4
-        },
-        {
-            "class_name": "EnemySlimeMelee",
-            "color": [
-                1.0,
-                1.0,
-                1.0,
-                1.0
-            ],
-            "id": 1709,
-            "mesh_index": 8,
-            "model_path": "Data/Model/chara/nico3.mdl",
-            "name": "nico(遠距離)",
-            "position": [
-                -1.455367922782898,
-                0.0,
-                -3.7084410190582275
-            ],
-            "rotation": [
-                0.0,
-                6.395689010620117,
-                0.0
-            ],
-            "scale": [
-                0.009999999776482582,
-                0.009999999776482582,
-                0.009999999776482582
-            ],
-            "type": 4
-        },
-        {
             "class_name": "Barracks",
             "color": [
                 1.0,
@@ -1110,14 +994,14 @@
                 1.0,
                 1.0
             ],
-            "id": 1711,
-            "mesh_index": 2,
+            "id": 1611,
+            "mesh_index": 3,
             "model_path": "Data/Model/bilud/ie.mdl",
-            "name": "ie",
+            "name": "ie2",
             "position": [
-                23.5,
+                -22.5,
                 0.0,
-                0.0
+                20.700000762939453
             ],
             "rotation": [
                 0.0,
@@ -1128,6 +1012,151 @@
                 0.03999999910593033,
                 0.03999999910593033,
                 0.03999999910593033
+            ],
+            "type": 1
+        },
+        {
+            "class_name": "Barracks",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 1622,
+            "mesh_index": 3,
+            "model_path": "Data/Model/bilud/ie.mdl",
+            "name": "ie3",
+            "position": [
+                25.5,
+                0.0,
+                -24.5
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                0.03999999910593033,
+                0.03999999910593033,
+                0.03999999910593033
+            ],
+            "type": 1
+        },
+        {
+            "class_name": "Barracks",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 1633,
+            "mesh_index": 3,
+            "model_path": "Data/Model/bilud/ie.mdl",
+            "name": "ie",
+            "position": [
+                13.0,
+                0.0,
+                13.800000190734863
+            ],
+            "rotation": [
+                0.0,
+                90.0,
+                0.0
+            ],
+            "scale": [
+                0.03999999910593033,
+                0.03999999910593033,
+                0.03999999910593033
+            ],
+            "type": 1
+        },
+        {
+            "class_name": "Barracks",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 1640,
+            "mesh_index": 3,
+            "model_path": "Data/Model/bilud/ie.mdl",
+            "name": "ie4",
+            "position": [
+                -12.5,
+                0.0,
+                -13.199999809265137
+            ],
+            "rotation": [
+                0.0,
+                90.0,
+                0.0
+            ],
+            "scale": [
+                0.03999999910593033,
+                0.03999999910593033,
+                0.03999999910593033
+            ],
+            "type": 1
+        },
+        {
+            "class_name": "Yagura",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 1641,
+            "mesh_index": 2,
+            "model_path": "Data/Model/bilud/takadai.mdl",
+            "name": "takadai3",
+            "position": [
+                13.699999809265137,
+                0.0,
+                -13.5
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                0.10000000149011612,
+                0.10000000149011612,
+                0.10000000149011612
+            ],
+            "type": 1
+        },
+        {
+            "class_name": "Yagura",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 1642,
+            "mesh_index": 2,
+            "model_path": "Data/Model/bilud/takadai.mdl",
+            "name": "takadai4",
+            "position": [
+                -13.300000190734863,
+                0.0,
+                12.399999618530273
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                0.10000000149011612,
+                0.10000000149011612,
+                0.10000000149011612
             ],
             "type": 1
         }

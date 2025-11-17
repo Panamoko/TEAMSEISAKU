@@ -8,6 +8,7 @@
 #include"Animator.h"
 class Enemy;// ← 追記（前方宣言）ほぼ引数用のポインタ取得
 class Picking_Ray;
+class Model; //Modelクラスの前方宣言
 // プレイヤー
 class Player : public Character
 {
@@ -56,6 +57,14 @@ public:
 	// マウス入力によるスポーン処理を行う静的関数
 	// 引数として「プレイヤーリスト」と「レイ情報」を受け取る
 	static void UpdateSpawn(std::vector<std::unique_ptr<Player>>& players, const Picking_Ray& pickingRay);
+
+
+	// ★追加: 王冠モデルのポインタ
+	Model* crownModel = nullptr;
+
+	// ★追加: 王冠をアタッチするボーンのインデックス (Slimeモデルの構造に依存)
+	// 通常は頭のボーンになることが多いが、モデルによって名前やインデックスは異なる
+	int headBoneIndex = -1; // -1は未設定の意味
 
 protected:
 	//着地したときに呼ばれる
