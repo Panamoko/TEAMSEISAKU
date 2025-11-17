@@ -398,7 +398,7 @@ void EnemySlime::OnDead()
 
 void EnemySlime::OnCollision(GameObject* object)
 {
-	position.x += mtd.x; position.y += mtd.y; position.z += mtd.z;;
+	position.x += mtd.x; position.y += mtd.y; position.z += mtd.z;
 }
 
 REGISTER_GAMEOBJECT(EnemySlime);
