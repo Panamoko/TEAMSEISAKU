@@ -38,9 +38,9 @@ void Barracks::Update(float elapsedTime)
 	}
 
 	//スポーン位置設定
-	spawn_positon.x += position.x;
-	spawn_positon.y += position.y;
-	spawn_positon.z += position.z;
+	spawn_positon.x = position.x;
+	spawn_positon.y = position.y;
+	spawn_positon.z = position.z;
 
 	spawn_timer += elapsedTime;
 
