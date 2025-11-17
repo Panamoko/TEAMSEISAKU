@@ -57,6 +57,8 @@ public:
 	static int nextID;//Ÿ‚ÌID‚ğÌ”Ô‚·‚é‚½‚ß‚ÌÃ“I•Ï”
 	DirectX::XMFLOAT3 mtd;
 	std::shared_ptr<GameObject> objects;
+	float timer = 0.0f;//Œo‰ßŠÔ
+	float invincible_timer = 0.0f;
 
 
 	float weight;
