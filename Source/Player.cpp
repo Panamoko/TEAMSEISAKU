@@ -638,11 +638,6 @@ void Player::UpdateAutoMoveToEnemy(float dt)
 
 void Player::OnCollision(GameObject* object)
 {
-	if (object->type == GameObject::Type::PlayerAttack)
-	{
-		return;
-	}
-
 	//DirectX::XMFLOAT3 mtd = CollisionManager::Instance().GetMtd();
 	position.x += mtd.x; position.y += mtd.y; position.z += mtd.z;
 }
