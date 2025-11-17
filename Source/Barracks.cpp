@@ -3,6 +3,7 @@
 #include "CollisionManager.h"
 #include "EnemyManager.h"
 #include "GameObjectManager.h"
+#include <imgui.h>
 
 
 Barracks::Barracks()
@@ -14,6 +15,7 @@ Barracks::Barracks()
 	current_enemy_count = 0;
 	spawn_positon.z += 3.0f;
 	is_active = true;
+	class_name = "Barracks";
 
 	//“–‚½‚è”»’è‚Ìí—Şİ’è
 	collider = std::make_unique<OBB>();
@@ -97,6 +99,14 @@ void Barracks::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* rend
 void Barracks::OnCollision(GameObject* object)
 {
 	if (object->type == Type::PlayerAttack)hp -= 2.5f;
+}
+
+void Barracks::OnImGui()
+{
+	if (ImGui::CollapsingHeader("Barrack"))
+	{
+		ImGui::DragFloat("HP", &hp, 0.1f, 0.0f, 1500.0f, "%.1f");
+	}
 }
 
 REGISTER_GAMEOBJECT(Barracks);

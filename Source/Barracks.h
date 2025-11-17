@@ -11,6 +11,7 @@ public:
 	//デバッグ描画
 	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) override;
 	void OnCollision(GameObject* object)override;//衝突処理
+	void OnImGui()override;
 
 private:
 	OBB* obb;
