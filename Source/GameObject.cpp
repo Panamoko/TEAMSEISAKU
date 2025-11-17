@@ -30,9 +30,6 @@ void GameObject::OnCollision(GameObject* object)
 		position.y += mtd.y;
 		position.z += mtd.z;
 	}
-
-
-
 }
 
 OBB GameObject::GetOBB() const
