@@ -30,6 +30,10 @@ public:
 	//死亡したときに呼ばれる
 	void OnDead() override;
 
+	//衝突処理
+	void OnCollision(GameObject* object) override;
+
+
 protected:
 	//ターゲット位置をランダム設定
 	void SetRandomTargerPosition();
@@ -107,4 +111,5 @@ private:
 	std::vector<std::unique_ptr<SpriteObject>> sprites2d;
 
 	Model* slimeModel = nullptr;
+	CylinderCollider* cylinder;
 };

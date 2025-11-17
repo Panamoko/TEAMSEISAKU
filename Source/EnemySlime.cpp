@@ -27,6 +27,17 @@ EnemySlime::EnemySlime(const char* modelPath)
 	radius = 0.5f;
 	height = 1.0f;
 
+	type = Type::Enemy;
+	collider = std::make_unique<CylinderCollider>();
+	collider->type = ColliderType::Cylinder;
+	collider->owner = this;
+	cylinder = static_cast<CylinderCollider*>(collider.get());
+
+	cylinder->height = height;
+	cylinder->radius = radius;
+
+	CollisionManager::Instance().AddObject(this);
+
 	if (!objects.empty())
 	{
 		auto& obj = *objects[0];
@@ -55,6 +66,8 @@ EnemySlime::~EnemySlime()
 // 更新処理
 void EnemySlime::Update(float elapsedTime)
 {
+	cylinder->center = position;
+
 	//ステート毎の更新処理
 	switch (state)
 	{
@@ -381,6 +394,11 @@ void EnemySlime::OnDead()
 
 	//自身を破棄
 	Destroy();
+}
+
+void EnemySlime::OnCollision(GameObject* object)
+{
+	position.x += mtd.x; position.y += mtd.y; position.z += mtd.z;;
 }
 
 REGISTER_GAMEOBJECT(EnemySlime);
