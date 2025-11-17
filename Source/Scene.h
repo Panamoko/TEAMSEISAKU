@@ -1,4 +1,9 @@
 #pragma once
+#include <vector>
+#include <string>
+#include <memory>
+#include <Editor.h>
+#include "GameObject.h"
 
 // シーン
 class Scene
@@ -30,4 +35,11 @@ public:
 
 private:
 	bool	ready = false;
+
+protected:
+	std::string scene_name;
+
+	//各シーン専用のオブジェクト
+	std::vector<std::shared_ptr<GameObject>> objects;
+	std::vector<std::shared_ptr<GameObject>> sprites;
 };

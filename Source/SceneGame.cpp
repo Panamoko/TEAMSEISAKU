@@ -37,6 +37,8 @@ SceneGame::~SceneGame() = default;  // ★これを追加
 // 初期化
 void SceneGame::Initialize()
 {
+	scene_name = "scene_play";
+
 	//ステージ初期化
 	stage = new Stage();
 	//カメラコントローラー初期化
