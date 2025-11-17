@@ -32,6 +32,10 @@ Gimmic_BreakWall::Gimmic_BreakWall()
     fadeInTimer = 0.0f; 
 
     color.w = 1.0f;
+<<<<<<< HEAD
+=======
+    damage = false;
+>>>>>>> parent of ad9ee60 (ダメージを受けたら柵が赤色になる)
 
     CollisionManager::Instance().AddObject(this);
 }
@@ -42,6 +46,10 @@ void Gimmic_BreakWall::OnCollision(GameObject* objects)
     if (isBroken || isRespawning) return;
 
     if (objects->type == Type::PlayerAttack)
+<<<<<<< HEAD
+=======
+    {
+>>>>>>> parent of ad9ee60 (ダメージを受けたら柵が赤色になる)
         hp--;
     if (hp <= 0.0f)
     {
@@ -227,7 +235,14 @@ void Gimmic_BreakWall::Update(float elapsedTime)
 void Gimmic_BreakWall::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
     if (isBroken) return;
+<<<<<<< HEAD
 
+=======
+    if (damage)
+    {
+        GameObject::Render(rc, renderer, { 1,0,0,1 });
+    }
+>>>>>>> parent of ad9ee60 (ダメージを受けたら柵が赤色になる)
     GameObject::Render(rc, renderer);
 }
 
