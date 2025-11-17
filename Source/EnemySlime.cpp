@@ -392,6 +392,8 @@ void EnemySlime::OnDead()
 {
 	animator.Play("NIC_Death", false);
 
+	CollisionManager::Instance().Remove(this);
+
 	//©g‚ğ”jŠü
 	Destroy();
 }
