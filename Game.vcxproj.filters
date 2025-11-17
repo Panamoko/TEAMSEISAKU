@@ -295,6 +295,9 @@
     <ClInclude Include="Source\Picking_Ray.h">
       <Filter>Source\RayCast</Filter>
     </ClInclude>
+    <ClInclude Include="Source\EnemySlimeTurret.h">
+      <Filter>Source\Character\Enemy</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -483,9 +486,6 @@
     <ClCompile Include="Source\EnemySlimeMelee.cpp">
       <Filter>Source\Character\Enemy</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Animator.cpp">
-      <Filter>Source\Animator</Filter>
-    </ClCompile>
     <ClCompile Include="Source\MathUtils.cpp">
       <Filter>Source\MathUtls</Filter>
     </ClCompile>
@@ -494,6 +494,9 @@
     </ClCompile>
     <ClCompile Include="Source\Collision.cpp">
       <Filter>Source\Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\EnemySlimeTurret.cpp">
+      <Filter>Source\Character\Enemy</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
