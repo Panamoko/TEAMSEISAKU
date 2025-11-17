@@ -5,6 +5,10 @@
 #include "SceneTitle.h"
 #include "SceneLoading.h"
 #include <imgui.h>
+#include <cmath>
+#include "Camera.h"          
+#include "CameraController.h"
+#include "SceneGame.h"
 
 Core* Core::sInstance = nullptr;
 
@@ -49,20 +53,122 @@ void Core::init()
 
 void Core::Update(float elapsedTime)
 {
-	if (hp <= 0.0f)
-	{
-		GimmicManager::Instance().Remove(this);
-		CollisionManager::Instance().Remove(this);
-		SceneManager::Instance().ChangeScene(new SceneLoading(new SceneTitle));
-		return;
-	}
+    // --- ★死亡演出中の処理 ---
+    if (isDying)
+    {
+        // 1. 時間管理 (実時間ベース)
+        float realDt = elapsedTime / std::max<float>(1e-6f, currentSlowScale);
+        dyingTimer += realDt;
+        float t = std::min<float>(1.0f, dyingTimer / dyingDuration);
 
-	animator.Update(elapsedTime);
+        // 2. イージング (EaseOutQuart でより粘りのある動きに)
+        float easeT = 1.0f - powf(1.0f - t, 4.0f);
 
-	if (cylinder)
-	{
-		cylinder->center = position;
-	}
+        // ★追加: スロー倍率を徐々に落とす (10% -> 1% へ)
+        // 最初は動きが見えて、最後は時が止まったように見せる
+        float newScale = std::lerp(0.1f, 0.005f, t);
+        SceneGame::SetSlowMotion(newScale, 0.1f); // 毎フレーム更新
+
+        // 3. カメラ演出: オービット
+        Camera& camera = Camera::Instance();
+        XMVECTOR vCorePos = XMLoadFloat3(&position);
+        XMVECTOR vStartFocus = XMLoadFloat3(&startFocus);
+
+        // 注視点補間
+        XMVECTOR vCurrentFocus = XMVectorLerp(vStartFocus, vCorePos, easeT);
+
+        // 角度・距離計算
+        float currentYaw = startYawDeg + (dyingTimer * orbitSpeed); // 旋回
+        float currentPitch = std::lerp(startPitchDeg, endPitchDeg, easeT);
+        float currentDist = std::lerp(startDistance, endDistance, easeT);
+
+        XMFLOAT3 finalFocus;
+        XMStoreFloat3(&finalFocus, vCurrentFocus);
+
+        // ★追加: シェイク処理 (演出初期に激しく揺らす)
+        if (dyingTimer < 0.5f) // 最初の0.5秒だけ揺らす
+        {
+            shakeMagnitude = (1.0f - (dyingTimer / 0.5f)) * 1.5f; // 1.5mの幅で減衰振動
+
+            // ランダムなオフセットを作成
+            float rx = ((rand() % 100) / 50.0f - 1.0f) * shakeMagnitude;
+            float ry = ((rand() % 100) / 50.0f - 1.0f) * shakeMagnitude;
+            float rz = ((rand() % 100) / 50.0f - 1.0f) * shakeMagnitude;
+
+            // 注視点をずらすことで画面揺れを表現
+            finalFocus.x += rx;
+            finalFocus.y += ry;
+            finalFocus.z += rz;
+        }
+
+        camera.SetQuarterView(finalFocus, currentYaw, currentPitch, currentDist);
+        animator.Update(elapsedTime);
+
+        // 終了判定
+        if (dyingTimer >= dyingDuration)
+        {
+            CameraController::SetEnable(true);
+            GimmicManager::Instance().Remove(this);
+            SceneManager::Instance().ChangeScene(new SceneLoading(new SceneTitle));
+        }
+        return;
+    }
+
+    // --- 通常時の処理 ---
+
+    // HPチェック
+    if (hp <= 0.0f)
+    {
+        // 死亡演出開始
+        if (!isDying)
+        {
+            isDying = true;
+            dyingTimer = 0.0f; // 実時間タイマーリセット
+
+            // ★追加: 全体スローモーションを開始
+            float slowScale = 0.1f; // (10%の速度)
+            SceneGame::SetSlowMotion(slowScale, dyingDuration);
+            currentSlowScale = slowScale; // スロー倍率を保存
+
+            // カメラ操作を無効化
+            CameraController::SetEnable(false);
+
+            // ★修正: 現在のカメラ状態を保存 (オービット用にYaw/Pitch/Distも)
+            Camera& camera = Camera::Instance();
+            startFocus = camera.GetFocus();
+
+            // 現在のEye, FocusからYaw/Pitch/Distanceを逆算
+            XMVECTOR vEye = XMLoadFloat3(&camera.GetEye());
+            XMVECTOR vFocus = XMLoadFloat3(&startFocus);
+            XMVECTOR vDir = XMVectorSubtract(vEye, vFocus); // Focus -> Eye
+
+            // 距離
+            startDistance = XMVectorGetX(XMVector3Length(vDir));
+
+            // Yaw (XZ平面での角度)
+            float x = XMVectorGetX(vDir);
+            float z = XMVectorGetZ(vDir);
+            startYawDeg = XMConvertToDegrees(atan2f(x, z)); // Z軸(前方)からX軸(右)への角度
+
+            // Pitch (Y方向の角度)
+            float y = XMVectorGetY(vDir);
+            float xzLen = sqrtf(x * x + z * z);
+            startPitchDeg = XMConvertToDegrees(atan2f(y, xzLen)); // 水平面からの角度
+
+            // コライダーを削除
+            CollisionManager::Instance().Remove(this);
+            cylinder = nullptr;
+        }
+        return;
+    }
+
+    // 通常のアニメーション更新 (スロー化された時間で)
+    animator.Update(elapsedTime);
+
+    if (cylinder)
+    {
+        cylinder->center = position;
+    }
 }
 
 void Core::Render(const RenderContext& rc, ModelRenderer* renderer)
@@ -88,7 +194,7 @@ void Core::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer
 
 void Core::OnCollision(GameObject* object)
 {
-	if (hp <= 0.0f) return;
+    if (hp <= 0.0f || isDying) return;
 
 	if (object->type == Type::PlayerAttack)
 	{
