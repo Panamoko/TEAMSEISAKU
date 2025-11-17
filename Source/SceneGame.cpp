@@ -23,6 +23,15 @@ using namespace DirectX;
 #include "SceneTitle.h"
 #include "SceneLoading.h"
 
+float SceneGame::s_timeScale = 1.0f;
+float SceneGame::s_slowTimer = 0.0f;
+
+// スロー設定
+void SceneGame::SetSlowMotion(float scale, float duration)
+{
+	s_timeScale = scale;
+	s_slowTimer = duration;
+}
 
 SceneGame::~SceneGame() = default;  // ★これを追加
 // 初期化
@@ -34,18 +43,9 @@ void SceneGame::Initialize()
 	cameraController = new CameraController();
 
 
-	// 2体のプレイヤーを生成
-	players.emplace_back(std::make_unique<Player>());
-	players.emplace_back(std::make_unique<Player>());
-	players[0]->Initialize();
-	players[1]->Initialize();
-
-	// 配置
-	players[0]->SetPosition(DirectX::XMFLOAT3(-2, 0, -55));
-	players[1]->SetPosition(DirectX::XMFLOAT3(2, 0, -55));
 
 	// 最初は 0 番をアクティブに
-	Player::SetActive(players[0].get());
+	Player::SetActive(nullptr);
 
 	// カメラ初期設定
 	Graphics& graphics = Graphics::Instance();
@@ -129,39 +129,54 @@ void SceneGame::Finalize()
 // 更新処理
 void SceneGame::Update(float elapsedTime)
 {
-	//カメラコントローラー更新処理
-	DirectX::XMFLOAT3 target = Player::Instance().GetPosition();
-	target.y += 0.5f;
-	cameraController->SetTarget(target);
-	cameraController->Update(elapsedTime);
+	// スロータイマーの更新
+	if (s_slowTimer > 0.0f)
+	{
+		s_slowTimer -= elapsedTime;
+		if (s_slowTimer <= 0.0f)
+		{
+			s_timeScale = 1.0f; // 時間経過でスロー解除
+		}
+	}
 
-	//BuildingManager::Instance().Update(elapsedTime);
+	// オブジェクト更新に使うスケーリング済み時間
+	float scaledElapsedTime = elapsedTime * s_timeScale;
+
+	pickingRay.Update(); // レイ情報の更新
+
+	//Playerクラスの関数に丸投げするだけ
+	Player::UpdateSpawn(players, pickingRay);
+
+	//カメラコントローラー更新処理
+	if (Player::GetActivePtr() != nullptr)
+	{
+		DirectX::XMFLOAT3 target = Player::Instance().GetPosition();
+		target.y += 0.5f;
+		cameraController->SetTarget(target);
+		cameraController->Update(elapsedTime);
+	}
+
 	Player::UpdateActiveByKeyboard(players);
-	//if (auto th = BuildingManager::Instance().GetTownHall(); th && th->IsDestroyed()) {
-	//	// コアが壊れたらローディングを挟んでタイトルへ
-	//	SceneManager::Instance().ChangeScene(new SceneLoading(new SceneTitle));
-	//	return;
-	//}
 
 	if (game_editor.PlayGame())
 	{
 		//ステージ更新処理
-		stage->Update(elapsedTime);
+		stage->Update(scaledElapsedTime);
 
-		StageManager::Instance().Update(elapsedTime);
+		StageManager::Instance().Update(scaledElapsedTime);
 
 		// 全プレイヤー更新（入力は Player 側で“アクティブのみ”にガード）
-		for (auto& up : players) up->Update(elapsedTime);
+		for (auto& up : players) up->Update(scaledElapsedTime);
 
 		//エネミー更新処理
-		EnemyManager::Instance().Update(elapsedTime);
+		EnemyManager::Instance().Update(scaledElapsedTime);
 
 		//ギミック更新処理
-		GimmicManager::Instance().Update(elapsedTime);
+		GimmicManager::Instance().Update(scaledElapsedTime);
 
 		// 味方スライム更新
-		for (auto& a : alliesStraight) a->Update(elapsedTime);
-		for (auto& a : alliesHoming)  a->Update(elapsedTime);
+		for (auto& a : alliesStraight) a->Update(scaledElapsedTime);
+		for (auto& a : alliesHoming)  a->Update(scaledElapsedTime);
 
 		CollisionManager::Instance().CheckAllCollision();
 

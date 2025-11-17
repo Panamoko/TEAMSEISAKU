@@ -6,6 +6,8 @@
 #include "Enemy.h"         // ← 追記
 #include "Camera.h"
 #include "System/Input.h"
+#include "Picking_Ray.h" // ★Picking_Rayの定義が必要
+#include <imgui.h>       // ★ImGui判定に必要
 #include <imgui.h>
 #include <cfloat>          // FLT_MAX
 #include <cmath>           // sqrtf
@@ -664,39 +666,79 @@ void Player::InputToggleAttackPriority()
 
 bool Player::UpdateActiveByKeyboard(const std::vector<std::unique_ptr<Player>>& players)
 {
-	// まず GamePad の“立ち上がり”を優先 (1→BTN_BACK, 2→BTN_START をエミュ)
-	// ※ GamePad.cpp で '1'→BTN_BACK, '2'→BTN_START を割り当て済みなら
-	//    「押した瞬間」だけ反応します。
+	// キーボードの '1' ～ '5' をチェック
+	// '1' の仮想キーコードは 0x31 なので、ループで回せます
+	for (int i = 0; i < 5; ++i)
+	{
+		// 押されているかチェック ('1' + i)
+		if (GetAsyncKeyState('1' + i) & 0x8000)
+		{
+			// その番号のプレイヤーが存在するか確認
+			// (i=0なら1人目, i=4なら5人目)
+			if (i < players.size())
+			{
+				Player::SetActive(players[i].get());
+				return true; // 切り替え発生
+			}
+		}
+	}
+
+	// ゲームパッドでの切り替え（バックアップとして残す場合）
+	// BACKボタン -> 1人目, STARTボタン -> 2人目
 	auto& gp = Input::Instance().GetGamePad();
-	unsigned   down = gp.GetButtonDown();
-
-	if ((down & GamePad::BTN_BACK) && !players.empty()) 
+	if ((gp.GetButtonDown() & GamePad::BTN_BACK) && !players.empty())
 	{
-		Player::SetActive(players[0].get());   // 1キー → 先頭プレイヤー
-		return true;
-	}
-	if ((down & GamePad::BTN_START) && players.size() >= 2) 
-	{
-		Player::SetActive(players[1].get());   // 2キー → 2人目
-		return true;
-	}
-
-	// フォールバック: 直接キーボードを見て“立ち上がり”検出
-	// (GamePad 側に割り当てていない場合でも動作)
-	static bool prev1 = false, prev2 = false;
-	const bool cur1 = (GetAsyncKeyState('1') & 0x8000) != 0;
-	const bool cur2 = (GetAsyncKeyState('2') & 0x8000) != 0;
-	const bool trig1 = cur1 && !prev1;
-	const bool trig2 = cur2 && !prev2;
-	prev1 = cur1; prev2 = cur2;
-
-	if (trig1 && !players.empty()) {
 		Player::SetActive(players[0].get());
 		return true;
 	}
-	if (trig2 && players.size() >= 2) {
+	if ((gp.GetButtonDown() & GamePad::BTN_START) && players.size() >= 2)
+	{
 		Player::SetActive(players[1].get());
 		return true;
 	}
+
 	return false;
+}
+
+void Player::UpdateSpawn(std::vector<std::unique_ptr<Player>>& players, const Picking_Ray& pickingRay)
+{
+	// 左クリック判定
+	bool isClick = (Input::Instance().GetMouse().GetButtonDown() & Mouse::BTN_LEFT);
+
+	// ImGui操作中でなく、かつクリックされた場合
+	if (!ImGui::GetIO().WantCaptureMouse && isClick)
+	{
+		// 5体未満の場合のみ生成
+		if (players.size() < 5)
+		{
+			DirectX::XMFLOAT3 rayOrg = pickingRay.GetRayOrigin();
+			DirectX::XMFLOAT3 rayDir = pickingRay.GetRayDirection();
+
+			// レイが下向き（地面方向）かチェック
+			if (fabs(rayDir.y) > 1e-4f)
+			{
+				// 地面(Y=0)との交差計算
+				float t = -rayOrg.y / rayDir.y;
+				if (t > 0.0f)
+				{
+					float hitX = rayOrg.x + t * rayDir.x;
+					float hitZ = rayOrg.z + t * rayDir.z;
+
+					// 生成と初期化
+					auto newPlayer = std::make_unique<Player>();
+					newPlayer->Initialize();
+					newPlayer->SetPosition({ hitX, 0.0f, hitZ });
+
+					Player* rawPtr = newPlayer.get();
+					players.push_back(std::move(newPlayer));
+
+					// 1体目なら自動的に操作キャラにする
+					if (players.size() == 1)
+					{
+						Player::SetActive(rawPtr);
+					}
+				}
+			}
+		}
+	}
 }

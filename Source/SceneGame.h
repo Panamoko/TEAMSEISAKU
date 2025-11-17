@@ -11,6 +11,7 @@
 #include "System/ModelRenderer.h"
 #include <cfloat>   // ← 追加（FLT_MAX 用）
 #include "GridMap.h"
+#include "Picking_Ray.h"
 
 class Player;
 class AllySlime;         // 既存＝直線弾
@@ -41,6 +42,12 @@ public:
 	//void DrawGUI();
 	void DrawGUI() override;
 
+	// スローモーション設定
+	static void SetSlowMotion(float scale, float duration);
+
+	// 現在の時間スケールを取得 
+	static float GetTimeScale() { return s_timeScale; }
+
 private:
 
 	editor game_editor;
@@ -53,7 +60,7 @@ private:
 
 	Stage* stage = nullptr;
 	GridMap grid_map;
-	// 追加ヘルパ
+	Picking_Ray pickingRay; // ← 追加: マウスピッキング用クラス
 
 	void AddAllyStraightFor(Player* leader);
 	void AddAllyHomingFor(Player* leader);
@@ -65,4 +72,8 @@ private:
 	int CountAlliesGlobal() const;
 
 	CameraController* cameraController = nullptr;
+
+	// スロー管理用
+	static float s_timeScale;    // 現在の時間倍率 (1.0f が通常)
+	static float s_slowTimer;    // スロー解除までの実時間（秒）
 };

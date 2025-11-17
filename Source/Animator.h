@@ -9,6 +9,8 @@ public:
 
     // クリップ再生
     void Play(int index, bool loop) {
+        if (playing && animIndex == index && looping == loop) return;
+
         playing = true; looping = loop; animIndex = index; seconds = 0.0f;
     }
     void Play(const char* name, bool loop) {
@@ -86,6 +88,9 @@ public:
         // ノード反映（親子合成やボーン行列を内部で更新）
         model->UpdateTransform();
     }
+
+    // 現在の再生時間を取得
+    float GetCurrentSeconds() const { return seconds; }
 
     void SetBlendSeconds(float s) { blendLen = s; }
 

@@ -63,7 +63,7 @@
       <AdditionalIncludeDirectories>.\Source;.\External\imgui-docking;.\External\ImGuizmo;.\External\cereal\include;.\External\DirectXTex;.\json-develop\json-develop\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -197,7 +197,6 @@
     <ClCompile Include="Source\AllySlime.cpp" />
     <ClCompile Include="Source\AllySlimeHoming.cpp" />
     <ClCompile Include="Source\AllyTargeting.cpp" />
-    <ClCompile Include="Source\Animator.cpp" />
     <ClCompile Include="Source\AStar.cpp" />
     <ClCompile Include="Source\Barracks.cpp" />
     <ClCompile Include="Source\Camera.cpp" />
