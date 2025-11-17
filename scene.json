@@ -42,13 +42,13 @@
             "model_path": "Data/Model/Slime/Slime.mdl",
             "name": "Slime",
             "position": [
-                -0.390671968460083,
+                0.7147334218025208,
                 0.0,
-                -5.557648658752441
+                1.4341262578964233
             ],
             "rotation": [
                 0.0,
-                -17.0527286529541,
+                -12.46424674987793,
                 0.0
             ],
             "scale": [
@@ -1045,19 +1045,19 @@
             "type": 1
         },
         {
-            "class_name": "GimmicBase",
+            "class_name": "Barracks",
             "color": [
                 1.0,
                 1.0,
                 1.0,
                 1.0
             ],
-            "id": 1597,
+            "id": 1600,
             "mesh_index": 3,
             "model_path": "Data/Model/bilud/ie.mdl",
             "name": "ie",
             "position": [
-                17.899999618530273,
+                24.600000381469727,
                 0.0,
                 0.0
             ],
