@@ -32,6 +32,7 @@ Gimmic_BreakWall::Gimmic_BreakWall()
     fadeInTimer = 0.0f; 
 
     color.w = 1.0f;
+    damage = false;
 
     CollisionManager::Instance().AddObject(this);
 }
@@ -42,7 +43,10 @@ void Gimmic_BreakWall::OnCollision(GameObject* objects)
     if (isBroken || isRespawning) return;
 
     if (objects->type == Type::PlayerAttack)
+    {
         hp--;
+        damage = true;
+    }
     if (hp <= 0.0f)
     {
         is_active = false;
@@ -227,7 +231,10 @@ void Gimmic_BreakWall::Update(float elapsedTime)
 void Gimmic_BreakWall::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
     if (isBroken) return;
-
+    if (damage)
+    {
+        GameObject::Render(rc, renderer, { 1,0,0,1 });
+    }
     GameObject::Render(rc, renderer);
 }
 
