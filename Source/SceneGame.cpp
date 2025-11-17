@@ -43,18 +43,9 @@ void SceneGame::Initialize()
 	cameraController = new CameraController();
 
 
-	// 2体のプレイヤーを生成
-	players.emplace_back(std::make_unique<Player>());
-	players.emplace_back(std::make_unique<Player>());
-	players[0]->Initialize();
-	players[1]->Initialize();
-
-	// 配置
-	players[0]->SetPosition(DirectX::XMFLOAT3(-2, 0, -55));
-	players[1]->SetPosition(DirectX::XMFLOAT3(2, 0, -55));
 
 	// 最初は 0 番をアクティブに
-	Player::SetActive(players[0].get());
+	Player::SetActive(nullptr);
 
 	// カメラ初期設定
 	Graphics& graphics = Graphics::Instance();
@@ -151,19 +142,21 @@ void SceneGame::Update(float elapsedTime)
 	// オブジェクト更新に使うスケーリング済み時間
 	float scaledElapsedTime = elapsedTime * s_timeScale;
 
-	//カメラコントローラー更新処理
-	DirectX::XMFLOAT3 target = Player::Instance().GetPosition();
-	target.y += 0.5f;
-	cameraController->SetTarget(target);
-	cameraController->Update(elapsedTime);
+	pickingRay.Update(); // レイ情報の更新
 
-	//BuildingManager::Instance().Update(elapsedTime);
+	//Playerクラスの関数に丸投げするだけ
+	Player::UpdateSpawn(players, pickingRay);
+
+	//カメラコントローラー更新処理
+	if (Player::GetActivePtr() != nullptr)
+	{
+		DirectX::XMFLOAT3 target = Player::Instance().GetPosition();
+		target.y += 0.5f;
+		cameraController->SetTarget(target);
+		cameraController->Update(elapsedTime);
+	}
+
 	Player::UpdateActiveByKeyboard(players);
-	//if (auto th = BuildingManager::Instance().GetTownHall(); th && th->IsDestroyed()) {
-	//	// コアが壊れたらローディングを挟んでタイトルへ
-	//	SceneManager::Instance().ChangeScene(new SceneLoading(new SceneTitle));
-	//	return;
-	//}
 
 	if (game_editor.PlayGame())
 	{

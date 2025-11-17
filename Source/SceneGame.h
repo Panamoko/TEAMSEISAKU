@@ -11,6 +11,7 @@
 #include "System/ModelRenderer.h"
 #include <cfloat>   // ← 追加（FLT_MAX 用）
 #include "GridMap.h"
+#include "Picking_Ray.h"
 
 class Player;
 class AllySlime;         // 既存＝直線弾
@@ -59,7 +60,7 @@ private:
 
 	Stage* stage = nullptr;
 	GridMap grid_map;
-	// 追加ヘルパ
+	Picking_Ray pickingRay; // ← 追加: マウスピッキング用クラス
 
 	void AddAllyStraightFor(Player* leader);
 	void AddAllyHomingFor(Player* leader);

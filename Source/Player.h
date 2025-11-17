@@ -7,7 +7,7 @@
 #include <memory>
 #include"Animator.h"
 class Enemy;// ← 追記（前方宣言）ほぼ引数用のポインタ取得
-
+class Picking_Ray;
 // プレイヤー
 class Player : public Character
 {
@@ -52,6 +52,10 @@ public:
 	// 数字キーで操作プレイヤーを切り替える（1→先頭、2→2人目）
 	// 戻り値: 切り替えが発生したら true
 	static bool UpdateActiveByKeyboard(const std::vector<std::unique_ptr<Player>>& players);
+
+	// マウス入力によるスポーン処理を行う静的関数
+	// 引数として「プレイヤーリスト」と「レイ情報」を受け取る
+	static void UpdateSpawn(std::vector<std::unique_ptr<Player>>& players, const Picking_Ray& pickingRay);
 
 protected:
 	//着地したときに呼ばれる

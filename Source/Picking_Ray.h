@@ -11,6 +11,11 @@ public:
 	Picking_Ray();
 	void Update();
 
+	// 計算されたレイの方向ベクトルを取得
+	DirectX::XMFLOAT3 GetRayDirection() const { return forward; }
+	// レイの発射地点（カメラ位置）を取得
+	DirectX::XMFLOAT3 GetRayOrigin() const { return camera_position; }
+
 private:
 
 	DirectX::XMFLOAT3   camera_position;	//カメラのワールド座標
