@@ -8,6 +8,7 @@ public:
 	GimmicBase() {
 		model = ModelManager::Instance().Load("Data/Model/bilud/takadai.mdl");
 		model = ModelManager::Instance().Load("Data/Model/bilud/ie.mdl");
+		model = ModelManager::Instance().Load("Data/Model/bilud/ie2.mdl");
 
 		class_name = "GimmicBase";
 		type = Type::Gimmic;
@@ -17,7 +18,7 @@ public:
 	virtual ~GimmicBase() = default;
 
 	//イベント関数
-	virtual void OnCollision(GameObject* objcts) override {};
+	void OnCollision(GameObject* objcts) override;
 	//ギミック更新処理
 	virtual void Update(float elapsedTime) override {};
 
