@@ -37,6 +37,17 @@ SceneGame::~SceneGame() = default;  // ★これを追加
 // 初期化
 void SceneGame::Initialize()
 {
+	Scene* currentScene = SceneManager::Instance().GetCurrentScene();
+	std::string scene_file_name = "scene.json";
+	scene_name = "scene_play";
+	currentScene->SetSceneName(scene_name);
+
+	if (currentScene)
+	{
+		// アクティブなシーンがあれば、その名前をファイル名として使用
+		scene_file_name = currentScene->GetSceneName() + ".json";
+	}
+
 	//ステージ初期化
 	stage = new Stage();
 	//カメラコントローラー初期化
@@ -88,7 +99,7 @@ void SceneGame::Initialize()
 	 // 例：(3, 0, 5) の位置に別の設定で生成 (半径とHPを変更)
 	 //bm.SpawnFence(DirectX::XMFLOAT3(6.0f, 0, 10.0f), 1.0f, 1.2f, /*maxHP=*/150);
 
-	 LoadScene(objects, sprites2d, "scene.json");
+	Serializer::LoadScene(objects, sprites2d, scene_file_name);
 
 	 grid_map.Initialize(101, 101, 1.1);
 }

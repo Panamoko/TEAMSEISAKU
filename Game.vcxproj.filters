@@ -40,9 +40,6 @@
     <Filter Include="Source\Projectile">
       <UniqueIdentifier>{f27023ff-07cf-415e-b44e-ce67d3924aa2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Scene">
-      <UniqueIdentifier>{f441d075-f8fe-40b9-98d7-42791d2817ac}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source\Stage">
       <UniqueIdentifier>{e22dc8a6-7963-436b-9aab-a18990052b43}</UniqueIdentifier>
     </Filter>
@@ -75,6 +72,12 @@
     </Filter>
     <Filter Include="Source\MathUtls">
       <UniqueIdentifier>{995aded6-02d3-43e9-b07b-74904cd64029}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Scene">
+      <UniqueIdentifier>{f441d075-f8fe-40b9-98d7-42791d2817ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Serializer">
+      <UniqueIdentifier>{6007d299-9484-4e14-b900-e4cbc722670d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -295,6 +298,9 @@
     <ClInclude Include="Source\Picking_Ray.h">
       <Filter>Source\RayCast</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Serializer.h">
+      <Filter>Source\Serializer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -483,9 +489,6 @@
     <ClCompile Include="Source\EnemySlimeMelee.cpp">
       <Filter>Source\Character\Enemy</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Animator.cpp">
-      <Filter>Source\Animator</Filter>
-    </ClCompile>
     <ClCompile Include="Source\MathUtils.cpp">
       <Filter>Source\MathUtls</Filter>
     </ClCompile>
@@ -494,6 +497,9 @@
     </ClCompile>
     <ClCompile Include="Source\Collision.cpp">
       <Filter>Source\Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Serializer.cpp">
+      <Filter>Source\Serializer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

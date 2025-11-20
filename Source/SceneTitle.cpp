@@ -11,6 +11,7 @@ void SceneTitle::Initialize()
 {
 	// スプライト初期化
 	sprite = new Sprite("Data/Sprite/Title.png");
+	scene_name = "scene_title";
 }
 
 // 終了化

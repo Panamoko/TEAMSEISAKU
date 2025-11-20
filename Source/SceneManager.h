@@ -33,6 +33,8 @@ public:
 	// ƒV[ƒ“Ø‚è‘Ö‚¦
 	void ChangeScene(Scene* scene);
 
+	Scene* GetCurrentScene()const { return currentScene; }
+
 private:
 	Scene* currentScene = nullptr;
 	Scene* nextScene = nullptr;
