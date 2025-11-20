@@ -25,6 +25,8 @@ void from_json(const json& j, SpriteObject& sp);
 class Serializer
 {
 public:
+	static void GlobalGameManagersClear();
+
 	//データをファイルに保存
 	static void SaveScene(
 		const std::vector<std::shared_ptr<GameObject>>& objects,

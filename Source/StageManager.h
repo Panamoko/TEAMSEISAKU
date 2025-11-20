@@ -30,6 +30,8 @@ public:
 	//íœ
 	void Remove(Stage* stage);
 
+	void Clear();
+
 
 private:
 	StageManager() = default;
