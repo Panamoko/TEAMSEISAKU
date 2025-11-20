@@ -64,7 +64,7 @@ void editor::render(
 	Scene* currentScene = SceneManager::Instance().GetCurrentScene();
 	std::string scene_file_name = "JSON/scene.json";
 
-	if (currentScene)scene_file_name = currentScene->GetSceneName() + ".json";
+	if (currentScene)scene_file_name = "JSON/" + currentScene->GetSceneName() + ".json";
 
 	ImGui::Begin("Editor");
 
@@ -261,12 +261,13 @@ void editor::CreatNewScene(const std::string& scene_name)
 	if (scene_name.empty())return;
 
 	//新しいシーンのファイル名を決定
+	const std::string SCENE_DIRECTORY = "JSON/";
 	std::string new_file_name = scene_name + ".json";
 
 	//空のシーンデータを作成してファイルに保存
 	std::vector<std::shared_ptr<GameObject>> empty_objects;
 	std::vector<std::unique_ptr<SpriteObject>> empty_sprites;
-	Serializer::SaveScene(empty_objects, empty_sprites, new_file_name);
+	Serializer::SaveScene(empty_objects, empty_sprites, SCENE_DIRECTORY + new_file_name);
 
 	//SceneFactory を使って新しいシーンのインスタンスを生成
 	Scene* new_scene = SceneFactory::CreateScene("SceneGame");
