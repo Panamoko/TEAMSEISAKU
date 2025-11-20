@@ -76,6 +76,9 @@
     <Filter Include="Source\MathUtls">
       <UniqueIdentifier>{995aded6-02d3-43e9-b07b-74904cd64029}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Serializer">
+      <UniqueIdentifier>{bc0e3424-7269-4c17-a0c8-1b164b9a6a22}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui-docking\imconfig.h">
@@ -301,6 +304,9 @@
     <ClInclude Include="Source\SceneFactory.h">
       <Filter>Source\Factory</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Serializer.h">
+      <Filter>Source\Serializer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -503,6 +509,9 @@
     </ClCompile>
     <ClCompile Include="Source\SceneFactory.cpp">
       <Filter>Source\Factory</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Serializer.cpp">
+      <Filter>Source\Serializer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

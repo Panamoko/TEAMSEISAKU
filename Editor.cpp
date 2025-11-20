@@ -81,7 +81,7 @@ void editor::render(
 	static int select_load_index = -1;
 
 	//ボタンを押したときに強制的にファイルリストを更新
-	available_files = { "InitialScene.json", "Level_01.json", "My_New_Scene.json" };
+	available_files = { "JSON/scene.json", "JSON/scene_play.json" };
 
 	available_files_c.clear();
 	for (const auto& name : available_files)
