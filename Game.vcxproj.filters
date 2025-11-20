@@ -298,6 +298,9 @@
     <ClInclude Include="Source\EnemySlimeTurret.h">
       <Filter>Source\Character\Enemy</Filter>
     </ClInclude>
+    <ClInclude Include="Source\SceneFactory.h">
+      <Filter>Source\Factory</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -497,6 +500,9 @@
     </ClCompile>
     <ClCompile Include="Source\EnemySlimeTurret.cpp">
       <Filter>Source\Character\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\SceneFactory.cpp">
+      <Filter>Source\Factory</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

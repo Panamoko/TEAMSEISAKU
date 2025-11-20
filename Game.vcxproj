@@ -157,6 +157,7 @@
     <ClInclude Include="Source\ProjectileStraite.h" />
     <ClInclude Include="Source\RayCast.h" />
     <ClInclude Include="Source\Scene.h" />
+    <ClInclude Include="Source\SceneFactory.h" />
     <ClInclude Include="Source\SceneGame.h" />
     <ClInclude Include="Source\SceneLoading.h" />
     <ClInclude Include="Source\SceneManager.h" />
@@ -230,6 +231,7 @@
     <ClCompile Include="Source\ProjectileManager.cpp" />
     <ClCompile Include="Source\ProjectileStraite.cpp" />
     <ClCompile Include="Source\RayCast.cpp" />
+    <ClCompile Include="Source\SceneFactory.cpp" />
     <ClCompile Include="Source\SceneGame.cpp" />
     <ClCompile Include="Source\SceneLoading.cpp" />
     <ClCompile Include="Source\SceneManager.cpp" />

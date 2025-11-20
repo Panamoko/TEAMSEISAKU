@@ -157,6 +157,12 @@ void editor::AddSprite(
 	select_index2D = static_cast<int>(sprites.size() - 1);
 }
 
+//シーン切り替え
+void editor::ChangeSceneByName(const std::string& className)
+{
+
+}
+
 void editor::Draw3DEditor(
 	std::vector<std::shared_ptr<GameObject>>& objects,
 	const std::vector<std::unique_ptr<Model>>& models,
