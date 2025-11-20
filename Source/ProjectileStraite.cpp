@@ -10,11 +10,11 @@
 //	scale.x = scale.y = scale.z = 0.5f;
 //}
 
-ProjectileStraite::ProjectileStraite(ProjectileManager* manager)
+ProjectileStraite::ProjectileStraite(ProjectileManager* manager, const char* modelPath)
 	:Projectile(manager)	//基底クラスのコンストラクタを呼び出す
 {
 	//model = new Model("Data/Model/SpikeBall/SpikeBall.mdl");
-	model = new Model("Data/Model/Sword/Sword.mdl");
+	model = new Model(modelPath);
 
 	// 表示サイズを調整
 //	scale.x = scale.y = scale.z = 0.5f;

@@ -88,7 +88,8 @@ void EnemySlimeTurret::UpdateAttackState(float elapsedTime)
         DirectX::XMFLOAT3 dir = { vx, vy, vz };
 
         // ’eŠÛ¶¬
-        ProjectileStraite* projectile = new ProjectileStraite(&projectileManager);
+        ProjectileStraite* projectile = new ProjectileStraite(&projectileManager, "Data/Model/Sword/RedSword.mdl");
+        projectile->type = Type::EnemyAttack;
         projectile->Launch(dir, startPos);
 
         isAttackFired = true;

@@ -8,7 +8,7 @@ class ProjectileStraite : public Projectile
 {
 public:
 	//ProjectileStraite();
-	ProjectileStraite(ProjectileManager* manager);
+	ProjectileStraite(ProjectileManager* manager, const char* modelPath = "Data/Model/Sword/Sword.mdl");
 	~ProjectileStraite() override;
 
 	// XVˆ—

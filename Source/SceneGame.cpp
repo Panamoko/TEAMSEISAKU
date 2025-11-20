@@ -50,11 +50,14 @@ void SceneGame::Initialize()
 	// カメラ初期設定
 	Graphics& graphics = Graphics::Instance();
 	Camera& camera = Camera::Instance();
-	camera.SetLookAt(
-		DirectX::XMFLOAT3(0, 15, -15),	//視点 (例: Y=15, Z=-15)
-		DirectX::XMFLOAT3(0, 0, 0),		//注視点 (例: 原点)
-		DirectX::XMFLOAT3(0, 1, 0)		//上方向
+
+	camera.SetQuarterView(
+		DirectX::XMFLOAT3(0, 0, 0), // 注視点 (Focus)
+		0.0f,                       // Yaw (0度 = 手前側から奥を見る)
+		45.0f,                      // Pitch (既存の 15, -15 の角度に合わせるなら45度)
+		75.0f                       // Distance (CameraController::maxDistance と同じ値)
 	);
+
 	camera.SetPerspectiveFov(
 		DirectX::XMConvertToRadians(45),//視野角
 		graphics.GetScreenWidth() / graphics.GetScreenHeight(),//アスペクト比
@@ -66,27 +69,6 @@ void SceneGame::Initialize()
 	EnemyManager& enemyManager = EnemyManager::Instance();
 
 	GimmicManager::Instance().GetAll();
-
-	//for (int i = 0; i < 2; ++i)
-	//{
-	//	EnemySlime* slime = new EnemySlime();
-	//	slime->SetPosition(DirectX::XMFLOAT3(i * 2.0f, 0, -5));
-	//	slime->SetTerritory(slime->GetPosition(), 10.0f);
-		//enemyManager.Register(slime);
-	//}
-
-	 //BuildingManager::Instance().Initialize();
-
-	 //BuildingManager& bm = BuildingManager::Instance();
-
-	 // 例：(3, 0, 3) の位置に柵を1つ生成
-	 //bm.SpawnFence(DirectX::XMFLOAT3(3.0f, 0, 10.0f), 1.0f, 1.2f, /*maxHP=*/150, DirectX::XM_PIDIV2);
-
-	 // 例：(-3, 0, 3) の位置に柵を1つ生成
-	 //bm.SpawnFence(DirectX::XMFLOAT3(-3.0f, 0, 10.0f));
-
-	 // 例：(3, 0, 5) の位置に別の設定で生成 (半径とHPを変更)
-	 //bm.SpawnFence(DirectX::XMFLOAT3(6.0f, 0, 10.0f), 1.0f, 1.2f, /*maxHP=*/150);
 
 	 LoadScene(objects, sprites2d, "scene.json");
 

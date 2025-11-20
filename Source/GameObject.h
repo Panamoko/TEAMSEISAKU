@@ -71,7 +71,7 @@ public:
 		Player,
 		PlayerAttack,
 		Enemy,
-		Enemyattack,
+		EnemyAttack,
 		Stage } type = Type::Object;
 
 public:
