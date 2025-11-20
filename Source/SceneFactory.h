@@ -16,6 +16,9 @@ public:
 	//シーンクラスと生成関数を登録
 	static void RegisterScene(const std::string& className, SceneCreatorFunc func);
 
+    //シーン名を取得
+    static std::vector<std::string> GetRegisteredNames();
+
 private:
 	static std::map<std::string, SceneCreatorFunc> s_creators;
 };

@@ -29,3 +29,18 @@ void SceneFactory::RegisterScene(const std::string& className, SceneCreatorFunc 
     //デバッグ用: 登録されたシーンを表示
     std::cout << "Registered Scene: " << className << std::endl;
 }
+
+//シーン名を取得
+std::vector<std::string> SceneFactory::GetRegisteredNames()
+{
+    std::vector<std::string> names;
+
+    //s_creatorsマップの要素を一つずつ巡回
+    for (const auto& pair : s_creators)
+    {
+        //マップのキー (pair.first) がシーンクラス名（文字列）なので、これをリストに追加
+        names.push_back(pair.first);
+    }
+
+    return names;
+}

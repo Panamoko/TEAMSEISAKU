@@ -14,6 +14,7 @@
 #include "Stage.h"
 #include "StageManager.h"
 #include "SceneManager.h"
+#include "SceneFactory.h"
 
 using namespace DirectX;
 
@@ -77,6 +78,48 @@ void editor::render(
 	if (ImGui::Button("Load Scene"))
 	{
 		Serializer::LoadScene(objects, sprites, scene_file_name);
+	}
+
+	ImGui::Separator();
+
+	ImGui::Text("Scene Transition");
+
+	static std::vector<std::string> scene_names;
+	static std::vector<const char*> scene_names_c;
+	static int select_scene_index = 0;
+
+	//シーン名リストの初期化と更新
+	if (scene_names.empty())
+	{
+		//SceneFactory から登録済みシーン名を取得
+		scene_names = SceneFactory::GetRegisteredNames();
+		scene_names_c.clear();
+		for (const auto& name : scene_names)
+		{
+			scene_names_c.push_back(name.c_str());
+		}
+	}
+
+	if (!scene_names_c.empty())
+	{
+		//コンボボックスで選択
+		ImGui::Combo("Target Scene", &select_scene_index, scene_names_c.data(),
+			static_cast<int>(scene_names_c.size()));
+
+		if (ImGui::Button("Change Scene"))
+		{
+			if (select_scene_index >= 0 && select_scene_index < static_cast<int>(scene_names.size()))
+			{
+				const std::string& target_scene_name = scene_names[select_scene_index];
+
+				//SceneManager の新しいメソッドを呼び出して遷移
+				SceneManager::Instance().ChangeSceneByName(target_scene_name);
+			}
+		}
+	}
+	else
+	{
+		ImGui::TextDisabled("No Scenes Registered in Factory");
 	}
 
 	ImGui::Separator();
