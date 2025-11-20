@@ -79,6 +79,9 @@
     <Filter Include="Source\Serializer">
       <UniqueIdentifier>{bc0e3424-7269-4c17-a0c8-1b164b9a6a22}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Utility">
+      <UniqueIdentifier>{77b13ae7-805c-45f2-b249-b8eb9205affc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui-docking\imconfig.h">
@@ -307,6 +310,9 @@
     <ClInclude Include="Source\Serializer.h">
       <Filter>Source\Serializer</Filter>
     </ClInclude>
+    <ClInclude Include="Source\FileUtility.h">
+      <Filter>Source\Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -512,6 +518,9 @@
     </ClCompile>
     <ClCompile Include="Source\Serializer.cpp">
       <Filter>Source\Serializer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\FileUtility.cpp">
+      <Filter>Source\Utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

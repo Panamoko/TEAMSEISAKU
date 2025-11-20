@@ -15,6 +15,7 @@
 #include "StageManager.h"
 #include "SceneManager.h"
 #include "SceneFactory.h"
+#include "FileUtility.h"
 
 using namespace DirectX;
 
@@ -80,15 +81,20 @@ void editor::render(
 	static std::vector<const char*> available_files_c;
 	static int select_load_index = -1;
 
-	//ボタンを押したときに強制的にファイルリストを更新
-	available_files = { "JSON/scene.json", "JSON/scene_play.json" };
-
-	available_files_c.clear();
-	for (const auto& name : available_files)
+	if (ImGui::Button("Refresh File List"))
 	{
-		available_files_c.push_back(name.c_str());
+		//ボタンを押したときに強制的にファイルリストを更新
+		available_files = FileUtility::GetSceneFileNames("JSON/");
+
+		available_files_c.clear();
+		for (const auto& name : available_files)
+		{
+			//available_files_c には、available_files の要素のポインタを格納
+			available_files_c.push_back(name.c_str());
+		}
+		//選択インデックスを初期化
+		select_load_index = available_files.empty() ? -1 : 0;
 	}
-	select_load_index = available_files.empty() ? -1 : 0;
 
 	ImGui::Text("Select Scene to Load");
 
@@ -114,13 +120,6 @@ void editor::render(
 			//選択されたファイル名でロード
 			Serializer::LoadScene(objects, sprites, selected_file);
 		}
-	}
-
-	ImGui::Separator();
-
-	if (ImGui::Button("Load Scene"))
-	{
-		Serializer::LoadScene(objects, sprites, scene_file_name);
 	}
 
 	ImGui::Separator();
