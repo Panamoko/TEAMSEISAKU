@@ -35,6 +35,9 @@ public:
 
 	Scene* GetCurrentScene()const { return currentScene; }
 
+	//名前指定でのシーン切り替え
+	void ChangeSceneByName(const std::string& scene_name);
+
 private:
 	Scene* currentScene = nullptr;
 	Scene* nextScene = nullptr;

@@ -1,4 +1,5 @@
 #include "SceneManager.h"
+#include "SceneFactory.h"
 
 // XVˆ—
 void SceneManager::Update(float elapsedTime)
@@ -58,4 +59,9 @@ void SceneManager::Clear()
 void SceneManager::ChangeScene(Scene* scene)
 {
 	nextScene = scene;
+}
+
+void SceneManager::ChangeSceneByName(const std::string& scene_name)
+{
+
 }

@@ -2,6 +2,8 @@
 #include <map>
 #include <iostream>
 
+std::map<std::string, SceneCreatorFunc> SceneFactory::s_creators;
+
 Scene* SceneFactory::CreateScene(const std::string& className)
 {
     //マップからクラス名に対応するエントリを検索
