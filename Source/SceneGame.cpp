@@ -70,7 +70,7 @@ void SceneGame::Initialize()
 
 	GimmicManager::Instance().GetAll();
 
-	 LoadScene(objects, sprites2d, "scene.json");
+	Serializer::LoadScene(objects, sprites2d, "scene.json");
 
 	 grid_map.Initialize(101, 101, 1.1);
 }
