@@ -74,7 +74,7 @@ public:
 
 	void Delete3DModel(const std::shared_ptr<GameObject>& obj);
 
-	void ChangeSceneByName(const std::string& className);
+	void CreatNewScene(const std::string& scene_name);
 
 private:
 

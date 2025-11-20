@@ -62,7 +62,7 @@ void editor::render(
 	ModelRenderer* renderer)
 {
 	Scene* currentScene = SceneManager::Instance().GetCurrentScene();
-	std::string scene_file_name = "scene.json";
+	std::string scene_file_name = "JSON/scene.json";
 
 	if (currentScene)scene_file_name = currentScene->GetSceneName() + ".json";
 
@@ -75,9 +75,65 @@ void editor::render(
 
 	ImGui::SameLine();
 
+	//ファイルリストと選択インデックスを静的に保持
+	static std::vector<std::string> available_files;
+	static std::vector<const char*> available_files_c;
+	static int select_load_index = -1;
+
+	//ボタンを押したときに強制的にファイルリストを更新
+	available_files = { "InitialScene.json", "Level_01.json", "My_New_Scene.json" };
+
+	available_files_c.clear();
+	for (const auto& name : available_files)
+	{
+		available_files_c.push_back(name.c_str());
+	}
+	select_load_index = available_files.empty() ? -1 : 0;
+
+	ImGui::Text("Select Scene to Load");
+
+	//選択コンポボックス
+	if (!available_files_c.empty())
+	{
+		ImGui::Combo("##SceneFileCombo", &select_load_index,
+			available_files_c.data(), static_cast<int>(available_files_c.size()));
+	}
+	else
+	{
+		ImGui::TextDisabled("No scene files available");
+	}
+
+	//選択されたファイルをロード
+	ImGui::SameLine();
+	if (ImGui::Button("Load Selected Scene"))
+	{
+		if (select_load_index >= 0 && select_load_index < static_cast<int>(available_files.size()))
+		{
+			const std::string& selected_file = available_files[select_load_index];
+
+			//選択されたファイル名でロード
+			Serializer::LoadScene(objects, sprites, selected_file);
+		}
+	}
+
+	ImGui::Separator();
+
 	if (ImGui::Button("Load Scene"))
 	{
 		Serializer::LoadScene(objects, sprites, scene_file_name);
+	}
+
+	ImGui::Separator();
+
+	//新規シーン作成セクション
+	ImGui::Text("Create New Scene");
+	static char new_scene_name_buffer[128] = "NewScene";
+	ImGui::InputText("New Scene Name", new_scene_name_buffer, sizeof(new_scene_name_buffer));
+
+	if (ImGui::Button("Create & Switch"))
+	{
+		//新規作成ロジックの呼び出し
+		CreatNewScene(new_scene_name_buffer);
 	}
 
 	ImGui::Separator();
@@ -200,9 +256,31 @@ void editor::AddSprite(
 	select_index2D = static_cast<int>(sprites.size() - 1);
 }
 
-//シーン切り替え
-void editor::ChangeSceneByName(const std::string& className)
+void editor::CreatNewScene(const std::string& scene_name)
 {
+	if (scene_name.empty())return;
+
+	//新しいシーンのファイル名を決定
+	std::string new_file_name = scene_name + ".json";
+
+	//空のシーンデータを作成してファイルに保存
+	std::vector<std::shared_ptr<GameObject>> empty_objects;
+	std::vector<std::unique_ptr<SpriteObject>> empty_sprites;
+	Serializer::SaveScene(empty_objects, empty_sprites, new_file_name);
+
+	//SceneFactory を使って新しいシーンのインスタンスを生成
+	Scene* new_scene = SceneFactory::CreateScene("SceneGame");
+
+	if (!new_scene)
+	{
+		std::cerr << "Error: Failed to create new scene instance for " << scene_name << std::endl;
+		return;
+	}
+
+	//エディターの状態をリセット
+	this->select_index = -1;
+	this->select_index2D = -1;
+	this->editor_mode = GameMode::Play;
 
 }
 

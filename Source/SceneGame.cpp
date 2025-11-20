@@ -71,15 +71,14 @@ void SceneGame::Initialize()
 
 	GimmicManager::Instance().GetAll();
 
-	std::string scene_name = "scene_play";
 	Scene* currentScene = SceneManager::Instance().GetCurrentScene();
 	currentScene->SetSceneName(scene_name);
-	std::string scene_file_name = scene_name + ".json";
+	std::string scene_file_name = "JSON /" + scene_name + ".json";
 
 	if (currentScene)
 	{
 		// アクティブなシーンがあれば、その名前をファイル名として使用
-		scene_file_name = currentScene->GetSceneName() + ".json";
+		scene_file_name = "JSON/" + currentScene->GetSceneName() + ".json";
 	}
 
 	Serializer::LoadScene(objects, sprites2d, scene_file_name);

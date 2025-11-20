@@ -46,7 +46,6 @@ std::vector<std::string> SceneFactory::GetRegisteredNames()
 
 std::map<std::string, SceneCreatorFunc>& SceneFactory::GetCreatorMap()
 {
-    // TODO: return ステートメントをここに挿入します
     static std::map<std::string, SceneCreatorFunc> s_creators_local;
     return s_creators_local;
 }

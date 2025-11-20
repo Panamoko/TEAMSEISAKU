@@ -18,7 +18,7 @@ class AllySlime;         // 既存＝直線弾
 class SceneGame : public Scene
 {
 public:
-	SceneGame() = default;
+	SceneGame(const std::string& name = "scene_play") { scene_name = name; };
 	//~SceneGame() {};
 	~SceneGame() override;	//Sceneクラスを継承し、overrideキーワードを付ける
 
