@@ -2,6 +2,7 @@
 
 #include "System/Sprite.h"
 #include "Scene.h"
+#include "Editor.h"
 
 // タイトルシーン
 class SceneTitle : public Scene
@@ -27,4 +28,7 @@ public:
 
 private:
 	Sprite* sprite = nullptr;
+	editor game_editor;
+	std::vector<std::shared_ptr<GameObject>> objects;
+	std::vector<std::unique_ptr<SpriteObject>> sprites;
 };

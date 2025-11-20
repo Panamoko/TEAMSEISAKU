@@ -214,7 +214,7 @@ void SceneGame::Render()
 	rc.projection = camera.GetProjection();
 
 #if 1
-	//game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), modelRenderer);
+	game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), modelRenderer);
 #endif
 	// 3Dƒ‚ƒfƒ‹•`‰æ
 	{

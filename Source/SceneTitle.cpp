@@ -51,6 +51,9 @@ void SceneTitle::Render()
 	Graphics& graphics = Graphics::Instance();
 	ID3D11DeviceContext* dc = graphics.GetDeviceContext();
 	RenderState* renderState = graphics.GetRenderState();
+	ModelRenderer* modelRenderer = graphics.GetModelRenderer();
+
+	game_editor.render(objects, sprites, ModelManager::Instance().GetModels(), modelRenderer);
 
 	// •`‰æ€”õ
 	RenderContext rc;

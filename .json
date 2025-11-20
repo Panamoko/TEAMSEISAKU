@@ -30,35 +30,6 @@
             "type": 1
         },
         {
-            "class_name": "EnemySlime",
-            "color": [
-                1.0,
-                1.0,
-                1.0,
-                1.0
-            ],
-            "id": 10,
-            "mesh_index": 2,
-            "model_path": "Data/Model/Slime/Slime.mdl",
-            "name": "Slime",
-            "position": [
-                0.1528279036283493,
-                0.0,
-                -5.34384298324585
-            ],
-            "rotation": [
-                0.0,
-                -40.242774963378906,
-                0.0
-            ],
-            "scale": [
-                0.009999999776482582,
-                0.009999999776482582,
-                0.009999999776482582
-            ],
-            "type": 3
-        },
-        {
             "class_name": "Stage",
             "color": [
                 1.0,
