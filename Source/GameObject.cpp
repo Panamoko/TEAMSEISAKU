@@ -74,6 +74,7 @@ GameObject::GameObject() :name("Empty")
 
 GameObject::~GameObject()
 {
+	if (!this)return;
 	CollisionManager::Instance().Remove(this);
 	GameObjectManager::Instance().RemoveObject(id);
 	std::cout << "Destroyed" << std::endl;

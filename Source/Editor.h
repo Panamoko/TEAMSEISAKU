@@ -104,6 +104,7 @@ private:
 	int sprite_index = 0;
 	std::string select_class;
 	bool play = true;
+	std::string current_editor_file_path; // 編集中のファイルパス全体を保持
 
 	Model* model = nullptr;
 

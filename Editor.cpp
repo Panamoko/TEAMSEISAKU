@@ -67,6 +67,8 @@ void editor::render(
 
 	if (currentScene)scene_file_name = "JSON/" + currentScene->GetSceneName() + ".json";
 
+	current_editor_file_path = scene_file_name;
+
 	ImGui::Begin("Editor");
 
 	if (ImGui::Button("Save Scene"))
@@ -81,9 +83,8 @@ void editor::render(
 	static std::vector<const char*> available_files_c;
 	static int select_load_index = -1;
 
-	if (ImGui::Button("Refresh File List"))
+	if (available_files.empty())
 	{
-		//ボタンを押したときに強制的にファイルリストを更新
 		available_files = FileUtility::GetSceneFileNames("JSON/");
 
 		available_files_c.clear();
@@ -116,9 +117,12 @@ void editor::render(
 		if (select_load_index >= 0 && select_load_index < static_cast<int>(available_files.size()))
 		{
 			const std::string& selected_file = available_files[select_load_index];
+			const std::string SCENE_DIRECTORY = "JSON/";
+
+			current_editor_file_path = SCENE_DIRECTORY + selected_file;
 
 			//選択されたファイル名でロード
-			Serializer::LoadScene(objects, sprites, selected_file);
+			Serializer::LoadScene(objects, sprites, current_editor_file_path);
 		}
 	}
 
@@ -613,13 +617,13 @@ void editor::ToggleMode(
 		{
 			editor_mode = GameMode::Play;
 			play = true;
-			Serializer::SaveScene(objects, sprites, current_scene->GetSceneName() + ".json");
+			Serializer::SaveScene(objects, sprites, current_editor_file_path);
 		}
 		else
 		{
 			editor_mode = GameMode::Edit;
 			play = false;
-			Serializer::LoadScene(objects, sprites, current_scene->GetSceneName() + ".json");
+			Serializer::LoadScene(objects, sprites, current_editor_file_path);
 		}
 	}
 	else
