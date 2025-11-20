@@ -74,6 +74,8 @@ public:
 
 	void Delete3DModel(const std::shared_ptr<GameObject>& obj);
 
+	void ChangeSceneByName(const std::string& className);
+
 private:
 
 	enum class EditorModel { Model3D, Model2D };
