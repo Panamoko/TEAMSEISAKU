@@ -22,6 +22,7 @@ using namespace DirectX;
 #include "SceneManager.h"
 #include "SceneTitle.h"
 #include "SceneLoading.h"
+#include "SceneFactory.h"
 
 float SceneGame::s_timeScale = 1.0f;
 float SceneGame::s_slowTimer = 0.0f;
@@ -70,7 +71,18 @@ void SceneGame::Initialize()
 
 	GimmicManager::Instance().GetAll();
 
-	Serializer::LoadScene(objects, sprites2d, "scene.json");
+	std::string scene_name = "scene_play";
+	Scene* currentScene = SceneManager::Instance().GetCurrentScene();
+	currentScene->SetSceneName(scene_name);
+	std::string scene_file_name = scene_name + ".json";
+
+	if (currentScene)
+	{
+		// アクティブなシーンがあれば、その名前をファイル名として使用
+		scene_file_name = currentScene->GetSceneName() + ".json";
+	}
+
+	Serializer::LoadScene(objects, sprites2d, scene_file_name);
 
 	 grid_map.Initialize(101, 101, 1.1);
 }
@@ -202,7 +214,7 @@ void SceneGame::Render()
 	rc.projection = camera.GetProjection();
 
 #if 1
-	game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), modelRenderer);
+	//game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), modelRenderer);
 #endif
 	// 3Dモデル描画
 	{
@@ -310,3 +322,5 @@ int SceneGame::CountAlliesGlobal() const
 {
     return static_cast<int>(alliesStraight.size() + alliesHoming.size());
 }
+
+REGISTER_SCENE(SceneGame);

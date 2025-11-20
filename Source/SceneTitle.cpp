@@ -5,6 +5,7 @@
 #include "SceneGame.h"
 #include "SceneManager.h"
 #include "SceneLoading.h"
+#include "SceneFactory.h"
 
 // èâä˙âª
 void SceneTitle::Initialize()
@@ -73,3 +74,6 @@ void SceneTitle::Render()
 void SceneTitle::DrawGUI()
 {
 }
+
+REGISTER_SCENE(SceneTitle);
+

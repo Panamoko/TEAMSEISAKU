@@ -2,14 +2,13 @@
 #include <map>
 #include <iostream>
 
-std::map<std::string, SceneCreatorFunc> SceneFactory::s_creators;
-
 Scene* SceneFactory::CreateScene(const std::string& className)
 {
-    //マップからクラス名に対応するエントリを検索
-    auto it = s_creators.find(className);
+    auto creators = GetCreatorMap();//マップ取得
 
-    if (it == s_creators.end())
+    auto it = creators.find(className);
+
+    if (it == creators.end())
     {
         //登録されていないクラス名の場合
         std::cerr << "Error: Scene class '" << className << "' not registered." << std::endl;
@@ -24,7 +23,7 @@ Scene* SceneFactory::CreateScene(const std::string& className)
 void SceneFactory::RegisterScene(const std::string& className, SceneCreatorFunc func)
 {
     //マップにクラス名と生成関数ポインタを関連付けて登録
-    s_creators[className] = func;
+    GetCreatorMap()[className] = func;
 
     //デバッグ用: 登録されたシーンを表示
     std::cout << "Registered Scene: " << className << std::endl;
@@ -36,11 +35,18 @@ std::vector<std::string> SceneFactory::GetRegisteredNames()
     std::vector<std::string> names;
 
     //s_creatorsマップの要素を一つずつ巡回
-    for (const auto& pair : s_creators)
+    for (const auto& pair : GetCreatorMap())
     {
         //マップのキー (pair.first) がシーンクラス名（文字列）なので、これをリストに追加
         names.push_back(pair.first);
     }
 
     return names;
+}
+
+std::map<std::string, SceneCreatorFunc>& SceneFactory::GetCreatorMap()
+{
+    // TODO: return ステートメントをここに挿入します
+    static std::map<std::string, SceneCreatorFunc> s_creators_local;
+    return s_creators_local;
 }

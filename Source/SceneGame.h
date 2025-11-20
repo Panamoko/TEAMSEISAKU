@@ -50,7 +50,6 @@ public:
 
 private:
 
-	editor game_editor;
 	std::vector<std::unique_ptr<Model>> models;
 	// š’¼ü^’Ç”ö‚Ì•ÊŠÇ—
 	std::vector<std::unique_ptr<AllySlime>>       alliesStraight;

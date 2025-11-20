@@ -20,7 +20,8 @@ public:
     static std::vector<std::string> GetRegisteredNames();
 
 private:
-	static std::map<std::string, SceneCreatorFunc> s_creators;
+    //マップを取得するための内部ヘルパー関数を宣言
+    static std::map<std::string, SceneCreatorFunc>& GetCreatorMap();
 };
 
 // ヘルパーマクロ
