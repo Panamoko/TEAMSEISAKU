@@ -33,6 +33,10 @@ public:
 	// €”õŠ®—¹İ’è
 	void SetReady() { ready = true;	}
 
+	std::string GetSceneName() { return scene_name; }
+
+	std::string SetSceneName(std::string name) { return scene_name = name; }
+
 private:
 	bool	ready = false;
 

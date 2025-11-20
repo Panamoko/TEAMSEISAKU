@@ -12,6 +12,8 @@
 #include "ModelManager.h"
 #include "GameObject.h"
 #include "Factory.h"
+#include "Scene.h"
+#include "Serializer.h"
 
 using json = nlohmann::json;
 
@@ -32,27 +34,6 @@ struct SpriteObject
 
 	SpriteObject();
 };
-
-//Ray ScreenPointToRay(ImVec2 mousePos, const Camera& camera, float screenWidth, float screenHeight);
-
-//JSONへ変換
-void to_json(json& j, const GameObject& obj);
-void to_json(json& j, const SpriteObject& sp);
-//JSONから復元
-void from_json(const json& j, GameObject& obj);
-void from_json(const json& j, SpriteObject& sp);
-
-//現在の情報を保存
-void SaveScene(
-	const std::vector<std::unique_ptr<GameObject>>& objects,
-	const std::vector<std::unique_ptr<SpriteObject>>& sprites,
-	const std::string& filename);
-
-//保存したデータを復元
-void LoadScene(
-	std::vector<std::shared_ptr<GameObject>>& objects,
-	std::vector<std::unique_ptr<SpriteObject>>& sprites,
-	const std::string& filename);
 
 //3D空間での最終変換を反映
 void ApplyTransform(GameObject& obj);

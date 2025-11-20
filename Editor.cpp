@@ -13,154 +13,11 @@
 #include "GimmicManager.h"
 #include "Stage.h"
 #include "StageManager.h"
+#include "SceneManager.h"
 
 using namespace DirectX;
 
 static float DegToRed(float d) { return d * XM_PI / 180.0f; }
-
-//JSONへ変換
-void to_json(json& j, const GameObject& obj)
-{
-	j = json{
-		{"id",obj.id},
-		{"name",obj.name},
-		{"class_name",obj.class_name},
-		{"position",{obj.position.x,obj.position.y,obj.position.z}},
-		{"rotation",{obj.angle.x,obj.angle.y,obj.angle.z}},
-		{"scale",{obj.scale.x,obj.scale.y,obj.scale.z}},
-		{"color",{obj.color.x,obj.color.y,obj.color.z,obj.color.w}},
-		{"type",static_cast<int>(obj.type)},
-		{"mesh_index",obj.mesh_index},
-		{"model_path",obj.model_path}
-	};
-}
-
-void to_json(json& j, const SpriteObject& sp)
-{
-	j = nlohmann::json{
-		 {"name", sp.name},
-		 {"texture", sp.texture},
-		 {"position", {sp.position.x, sp.position.y}},
-		 {"size", {sp.size.x, sp.size.y}},
-		 {"rotation", sp.rotation},
-		 {"color", {sp.color.x, sp.color.y, sp.color.z, sp.color.w}},
-		 {"sprite_index", sp.sprite_index},
-		 {"uv_min", {sp.uv_min.x, sp.uv_min.y}},
-		 {"uv_max", {sp.uv_max.x, sp.uv_max.y}}
-	};
-}
-
-//JSONから復元
-void from_json(const json& j, GameObject& obj)
-{
-	obj.id = j.at("id").get<int>();
-	obj.name = j.at("name").get<std::string>();
-	obj.class_name = j.at("class_name").get<std::string>();
-	auto pos = j.at("position");
-	obj.position = { pos[0],pos[1],pos[2] };
-	auto rot = j.at("rotation");
-	obj.angle = { rot[0],rot[1],rot[2] };
-	auto sca = j.at("scale");
-	obj.scale = { sca[0],sca[1],sca[2] };
-	auto col = j.value("color", std::vector<float>{1.0f, 1.0f, 1.0f, 1.0f});
-	obj.color = { col[0],col[1],col[2],col[3] };
-	obj.type = static_cast<GameObject::Type>(j.at("type").get<int>());
-	obj.mesh_index = j.at("mesh_index").get<int>();
-	obj.model_path = j.value("model_path", "");
-	if (!obj.model_path.empty())
-	{
-		obj.model = ModelManager::Instance().Load(obj.model_path);
-	}
-	ApplyTransform(obj);
-}
-
-void from_json(const json& j, SpriteObject& sp)
-{
-	sp.name = j.at("name").get<std::string>();
-	sp.texture = j.at("texture").get<std::string>();
-	auto pos = j.at("position");
-	sp.position = { pos[0], pos[1] };
-	auto size = j.at("size");
-	sp.size = { size[0], size[1] };
-	sp.rotation = j.at("rotation").get<float>();
-	auto col = j.at("color");
-	sp.color = { col[0], col[1], col[2], col[3] };
-	if (j.contains("sprite_index"))
-		sp.sprite_index = j.at("sprite_index").get<int>();
-	else
-		sp.sprite_index = 0;
-
-	if (j.contains("uv_min"))
-	{
-		auto uv = j.at("uv_min");
-		sp.uv_min = { uv[0].get<float>(), uv[1].get<float>() };
-	}
-	else
-		sp.uv_min = { 0.0f, 0.0f };
-
-	if (j.contains("uv_max"))
-	{
-		auto uv = j.at("uv_max");
-		sp.uv_max = { uv[0].get<float>(), uv[1].get<float>() };
-	}
-	else
-		sp.uv_max = { 1.0f, 1.0f };
-}
-
-//現在の情報を保存
-void SaveScene(
-	const std::vector<std::shared_ptr<GameObject>>& objects,
-	const std::vector<std::unique_ptr<SpriteObject>>& sprites,
-	const std::string& filename)
-{
-	json j;
-	for (auto& obj : objects)
-	{
-		j["objects"].push_back(*obj);
-	}
-	for (auto& sp : sprites)
-	{
-		j["sprites"].push_back(*sp);
-	}
-	std::ofstream file(filename);
-	file << j.dump(4);
-}
-
-
-//保存した情報を復元
-void LoadScene(
-	std::vector<std::shared_ptr<GameObject>>& objects,
-	std::vector<std::unique_ptr<SpriteObject>>& sprites,
-	const std::string& filename)
-{
-	std::ifstream file(filename);
-	if (!file.is_open())return;
-
-	json j;
-	file >> j;
-
-	objects.clear();
-	if (j.contains("objects"))
-		for (auto& item : j["objects"])
-		{
-			std::string className = item.value("class_name", "GameObject");
-			std::shared_ptr<GameObject> obj = Factory::Create(className);
-			if (!obj) obj = std::make_unique<GameObject>();
-			from_json(item, *obj);
-			objects.push_back(std::move(obj));
-		}
-
-	sprites.clear();
-	if (j.contains("sprites"))
-		for (auto& item : j["sprites"])
-		{
-			auto sp = std::make_unique<SpriteObject>();
-			*sp = item.get<SpriteObject>();
-			sprites.push_back(std::move(sp));
-		}
-
-	FixDuplicateIDs(objects);
-}
 
 void ApplyTransform(GameObject& obj)
 {
@@ -203,18 +60,23 @@ void editor::render(
 	const std::vector<std::unique_ptr<Model>>& models,
 	ModelRenderer* renderer)
 {
+	Scene* currentScene = SceneManager::Instance().GetCurrentScene();
+	std::string scene_file_name = "scene.json";
+
+	if (currentScene)scene_file_name = currentScene->GetSceneName() + ".json";
+
 	ImGui::Begin("Editor");
 
 	if (ImGui::Button("Save Scene"))
 	{
-		SaveScene(objects, sprites, "scene.json");
+		Serializer::SaveScene(objects, sprites, scene_file_name);
 	}
 
 	ImGui::SameLine();
 
 	if (ImGui::Button("Load Scene"))
 	{
-		LoadScene(objects, sprites, "scene.json");
+		Serializer::LoadScene(objects, sprites, scene_file_name);
 	}
 
 	ImGui::Separator();
@@ -615,17 +477,28 @@ void editor::ToggleMode(
 	std::vector<std::unique_ptr<SpriteObject>>& sprites
 )
 {
-	if (editor_mode == GameMode::Edit)
+	Scene* current_scene = SceneManager::Instance().GetCurrentScene();
+
+	if (current_scene)
 	{
-		editor_mode = GameMode::Play;
-		play = true;
-		SaveScene(objects, sprites, "scene.json");
+
+		if (editor_mode == GameMode::Edit)
+		{
+			editor_mode = GameMode::Play;
+			play = true;
+			Serializer::SaveScene(objects, sprites, current_scene->GetSceneName() + ".json");
+		}
+		else
+		{
+			editor_mode = GameMode::Edit;
+			play = false;
+			Serializer::LoadScene(objects, sprites, current_scene->GetSceneName() + ".json");
+		}
 	}
 	else
 	{
-		editor_mode = GameMode::Edit;
-		play = false;
-		LoadScene(objects, sprites, "scene.json");
+		//エラー処理を行う
+		std::cerr << "Error: No active scene in SceneManager." << std::endl;
 	}
 }
 
