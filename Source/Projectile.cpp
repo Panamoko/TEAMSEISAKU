@@ -18,14 +18,8 @@ void Projectile::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* re
 
 void Projectile::OnCollision(GameObject* object)
 {
-	// 衝突した相手が「ギミック」タイプかどうかを判別
-	// (Gimmic_BreakWall は GimmicBase を継承しており、
-	//  GimmicBase のコンストラクタで type = Type::Gimmic が設定されている)
-	if (object->type == Type::Gimmic)
-	{
-		// 相手がギミックなら、自分自身を破棄する
-		Destroy();
-	}
+	// 相手がギミックなら、自分自身を破棄する
+	Destroy();
 }
 
 // 行列更新処理

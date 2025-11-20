@@ -41,3 +41,8 @@ void StageManager::Remove(Stage* stage)
 	}
 
 }
+
+void StageManager::Clear()
+{
+	stages.clear();
+}

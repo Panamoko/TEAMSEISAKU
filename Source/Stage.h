@@ -18,6 +18,8 @@ public:
     //•`‰æˆ—
     void Render(const RenderContext& rc, ModelRenderer* renderer);
 
+    void Clear();
+
 private:
     //std::vector<std::unique_ptr<Model>> models;
     //Model* model = nullptr;

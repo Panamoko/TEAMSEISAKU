@@ -54,7 +54,7 @@ const std::vector<Player*>& Player::GetAllPlayers()
 void Player::Initialize()
 {
 	// 1. まずマネージャーから元となるモデルを取得（これは共有リソース）
-	Model* sourceModel = ModelManager::Instance().Load("Data/Model/Slime/Slime_walk.mdl");
+	Model* sourceModel = ModelManager::Instance().Load("Data/Model/Slime/Player_Slime.mdl");
 
 	// 2. このプレイヤー専用のモデルとして「コピー」を作成する
 	//    (Modelクラスにコピーコンストラクタがある前提。通常はデフォルトで動きます)
@@ -64,7 +64,31 @@ void Player::Initialize()
 
 	// 3. アニメーターには、この「自分専用のコピー」をセットする
 	animator.SetModel(model);
+	//頭のボーン(joint4)と王冠(pTorus1)の番号を探して記憶する
+	const auto& nodes = model->GetNodes();
+	for (int i = 0; i < nodes.size(); ++i)
+	{
+		// ノード名をstd::stringとして取得
+		std::string nodeName = nodes[i].name;
 
+		// 【デバッグ用】出力ウィンドウに全ノード名を表示（VSの「出力」タブで確認できます）
+		// これで実際の名前が "RootNode/joint4" なのか "Joint4" なのか確認できます
+		char debugStr[256];
+		sprintf_s(debugStr, "Node[%d]: %s\n", i, nodeName.c_str());
+		OutputDebugStringA(debugStr);
+
+		// 「joint4」という文字が含まれていれば頭とみなす (部分一致検索)
+		if (nodeName.find("joint4") != std::string::npos)
+		{
+			headBoneIndex = i;
+		}
+		// 「pTorus1」という文字が含まれていれば王冠とみなす
+		// ※もし名前が違っていたら、出力ウィンドウに出た名前に書き換えてください
+		else if (nodeName.find("pTorus1") != std::string::npos)
+		{
+			crownNodeIndex = i;
+		}
+	}
 	RegisterPlayer(this);
 
 	type = Type::Player;
@@ -136,6 +160,26 @@ void Player::Update(float elapsedTime)
 
 	// モデル行列更新
 	model->UpdateTransform();
+
+	//王冠の行列を、頭のボーンの行列で上書きして強制的に追従させる
+	if (headBoneIndex != -1 && crownNodeIndex != -1)
+	{
+		// constを外してアクセス
+		Model::Node* nodesPtr = const_cast<Model::Node*>(model->GetNodes().data());
+
+		// 頭(joint4)と王冠(pTorus1)のポインタ
+		auto& headNode = nodesPtr[headBoneIndex];
+		auto& crownNode = nodesPtr[crownNodeIndex];
+
+		// ■ 強力な修正：ローカル座標系自体を頭に合わせる
+		// ※王冠がルート直下にある場合、ローカル＝ワールドなので、これで動く可能性があります
+		crownNode.translate = headNode.translate; // 位置コピー
+		crownNode.rotate = headNode.rotate;    // 回転コピー
+		crownNode.scale = headNode.scale;     // 拡縮コピー
+
+		// さらに行列もコピーしてダメ押し
+		crownNode.globalTransform = headNode.globalTransform;
+	}
 }
 
 void Player::Render(const RenderContext& rc, ModelRenderer* renderer)
