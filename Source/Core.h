@@ -17,7 +17,7 @@ public:
 	//デバッグ描画
 	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) override;
 	void OnCollision(GameObject* object)override;
-	void OnImGui()override;
+	bool OnImGui()override;
 	float GetHP() { return hp; };
 
 	static Core* Instance();

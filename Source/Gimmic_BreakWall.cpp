@@ -256,7 +256,7 @@ void Gimmic_BreakWall::RenderDebugPrimitive(
     renderer->RenderBox(rc, pos, angle, size, color);
 }
 
-void Gimmic_BreakWall::OnImGui()
+bool Gimmic_BreakWall::OnImGui()
 {
     if (ImGui::CollapsingHeader("BreakWall Settings"))
     {
@@ -271,7 +271,10 @@ void Gimmic_BreakWall::OnImGui()
 
         ImGui::DragFloat("HP", &hp, 0.1f, 0.0f, 1500.0f, "%.1f");
         ImGui::DragFloat3("size", &size.x, 0.1f, 0.0f, 1500.0f, "%.1f");
+
+        return true;
     }
+    return false;
 }
 
 

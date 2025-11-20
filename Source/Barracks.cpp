@@ -101,12 +101,14 @@ void Barracks::OnCollision(GameObject* object)
 	if (object->type == Type::PlayerAttack)hp -= 2.5f;
 }
 
-void Barracks::OnImGui()
+bool Barracks::OnImGui()
 {
 	if (ImGui::CollapsingHeader("Barrack"))
 	{
 		ImGui::DragFloat("HP", &hp, 0.1f, 0.0f, 1500.0f, "%.1f");
+		return true;
 	}
+	return false;
 }
 
 REGISTER_GAMEOBJECT(Barracks);

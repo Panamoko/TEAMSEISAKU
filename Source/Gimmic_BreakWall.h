@@ -21,7 +21,7 @@ public:
 	// デバッグ描画
 	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) override;
 
-	void OnImGui();
+	bool OnImGui();
 
 	bool IsBroken() const { return isBroken; } // 攻撃対象判定用
 

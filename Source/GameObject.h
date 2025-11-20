@@ -29,8 +29,9 @@ public:
 
 	virtual void UpdateTransform();
 	virtual void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) {};
-	virtual void OnImGui() {};
+	virtual bool OnImGui() { return false; };
 	virtual void OnCollision(GameObject* object);
+	//virtual void CopyUniqueMembers(const GameObject* source);
 
 	bool IsActive() const { return is_active; }
 	void SetActive(bool active) { is_active = active; }

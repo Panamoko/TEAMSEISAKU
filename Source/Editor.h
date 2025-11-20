@@ -76,6 +76,12 @@ public:
 
 	void CreatNewScene(const std::string& scene_name);
 
+	//選択中のオブジェクトと同じクラスのオブジェクトをすべて抽出するヘルパー関数
+	std::vector<std::shared_ptr<GameObject>> FindSameClassObjects(
+		const std::vector<std::shared_ptr<GameObject>>& all_objects,
+		const std::shared_ptr<GameObject>& selected_object
+	);
+
 private:
 
 	enum class EditorModel { Model3D, Model2D };

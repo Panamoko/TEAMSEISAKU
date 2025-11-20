@@ -202,12 +202,14 @@ void Core::OnCollision(GameObject* object)
 	}
 }
 
-void Core::OnImGui()
+bool Core::OnImGui()
 {
 	if (ImGui::CollapsingHeader("Core"))
 	{
 		ImGui::DragFloat("HP", &hp, 0.1f, 0.0f, 1500.0f, "%.1f");
+        return true;
 	}
+    return false;
 }
 
 REGISTER_GAMEOBJECT(Core);

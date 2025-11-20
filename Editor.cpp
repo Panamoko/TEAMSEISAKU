@@ -288,6 +288,30 @@ void editor::CreatNewScene(const std::string& scene_name)
 
 }
 
+//選択中のオブジェクトと同じクラスのオブジェクトをすべて抽出するヘルパー関数
+std::vector<std::shared_ptr<GameObject>> editor::FindSameClassObjects(
+	const std::vector<std::shared_ptr<GameObject>>& all_objects,
+	const std::shared_ptr<GameObject>& selected_object)
+{
+	std::vector<std::shared_ptr<GameObject>> same_class_objects;
+
+	//選択中のオブジェクトが無い場合
+	if (!selected_object)return same_class_objects;
+
+	const std::string& target_class_name = selected_object->class_name;
+
+	for (const auto& obj : all_objects)
+	{
+		//クラス名が一致するオブジェクトをリストに追加
+		if (!obj && obj->class_name == target_class_name)
+		{
+			same_class_objects.push_back(obj);
+		}
+	}
+
+	return same_class_objects;
+}
+
 void editor::Draw3DEditor(
 	std::vector<std::shared_ptr<GameObject>>& objects,
 	const std::vector<std::unique_ptr<Model>>& models,
@@ -437,7 +461,22 @@ void editor::Draw3DEditor(
 
 		ImGui::Separator();//区切り線
 
-		sel->OnImGui();
+		if (sel->OnImGui())
+		{
+			std::vector<std::shared_ptr<GameObject>> targets = FindSameClassObjects(objects, objects[select_index]);
+			
+			for (const auto& target_ptr : targets)
+			{
+
+				GameObject* target = target_ptr.get();
+
+				if (target != sel)
+				{
+					//target->CopyUniqueMembers(sel);
+				}
+			}
+		
+		}
 
 		ImGui::Separator();//区切り線
 
