@@ -1,5 +1,6 @@
 #include "SceneManager.h"
 #include "SceneFactory.h"
+#include "SceneLoading.h"
 
 // 更新処理
 void SceneManager::Update(float elapsedTime)
@@ -61,7 +62,20 @@ void SceneManager::ChangeScene(Scene* scene)
 	nextScene = scene;
 }
 
+//名前指定でのシーン切り替え
 void SceneManager::ChangeSceneByName(const std::string& scene_name)
 {
+	//Factory を使って新しいシーンのインスタンスを生成
+	Scene* newScene = SceneFactory::CreateScene(scene_name);
 
+	if (newScene)
+	{
+		//既存の ChangeScene メソッドに生成したインスタンスを渡す
+		ChangeScene(new SceneLoading(newScene));
+	}
+	else
+	{
+		//エラーログ
+		std::cerr << "Error: ChangeSceneByName failed for scene: " << scene_name << std::endl;
+	}
 }
