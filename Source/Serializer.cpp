@@ -3,6 +3,10 @@
 #include <iostream>
 
 #include "Factory.h"
+#include "EnemyManager.h"
+#include "GimmicManager.h"
+#include "StageManager.h"
+#include "Player.h"
 
 //JSONへ変換
 void to_json(json& j, const GameObject& obj)
@@ -93,6 +97,14 @@ void from_json(const json& j, SpriteObject& sp)
 		sp.uv_max = { 1.0f, 1.0f };
 }
 
+
+void Serializer::GlobalGameManagersClear()
+{
+	EnemyManager::Instance().Clear();
+	GimmicManager::Instance().Clear();
+	StageManager::Instance().Clear();
+}
+
 //データをファイルに保存
 void Serializer::SaveScene(
 	const std::vector<std::shared_ptr<GameObject>>& objects,
@@ -132,6 +144,8 @@ bool Serializer::LoadScene(
 	std::vector<std::unique_ptr<SpriteObject>>& sprites,
 	const std::string& filename)
 {
+	GlobalGameManagersClear();
+
 	std::ifstream file(filename);
 	if (!file.is_open()) return false;
 
