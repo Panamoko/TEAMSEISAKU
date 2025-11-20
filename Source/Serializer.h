@@ -45,3 +45,12 @@ private:
 	Serializer() = delete;
 };
 
+#define NLOHMANN_DEFINE_TYPE_WITH_BASE(Type, BaseType, ...)                     \
+	inline void to_json(json& j, const Type& t) {                              \
+		to_json(j, static_cast<const BaseType&>(t)); /* 基底クラスの保存 */    \
+		j.update(json{__VA_ARGS__}); /* 固有メンバーの保存 */                  \
+	}                                                                           \
+	inline void from_json(const json& j, Type& t) {                            \
+		from_json(j, static_cast<BaseType&>(t)); /* 基底クラスの復元 */        \
+		nlohmann::from_json(j, t, __VA_ARGS__); /* 固有メンバーの復元 */       \
+	}

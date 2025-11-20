@@ -11,18 +11,16 @@
 //JSON‚Ö•ÏŠ·
 void to_json(json& j, const GameObject& obj)
 {
-	j = json{
-		{"id",obj.id},
-		{"name",obj.name},
-		{"class_name",obj.class_name},
-		{"position",{obj.position.x,obj.position.y,obj.position.z}},
-		{"rotation",{obj.angle.x,obj.angle.y,obj.angle.z}},
-		{"scale",{obj.scale.x,obj.scale.y,obj.scale.z}},
-		{"color",{obj.color.x,obj.color.y,obj.color.z,obj.color.w}},
-		{"type",static_cast<int>(obj.type)},
-		{"mesh_index",obj.mesh_index},
-		{"model_path",obj.model_path}
-	};
+	j["id"] = obj.id;
+	j["name"] = obj.name;
+	j["class_name"] = obj.class_name;
+	j["position"] = { obj.position.x,obj.position.y,obj.position.z };
+	j["rotation"] = { obj.angle.x,obj.angle.y,obj.angle.z };
+	j["scale"] = { obj.scale.x,obj.scale.y,obj.scale.z };
+	j["color"] = { obj.color.x,obj.color.y,obj.color.z,obj.color.w };
+	j["type"] = static_cast<int>(obj.type);
+	j["mesh_index"] = obj.mesh_index;
+	j["model_path"] = obj.model_path;
 }
 
 void to_json(json& j, const SpriteObject& sp)
@@ -43,9 +41,10 @@ void to_json(json& j, const SpriteObject& sp)
 //JSON‚©‚ç•œŒ³
 void from_json(const json& j, GameObject& obj)
 {
-	obj.id = j.at("id").get<int>();
-	obj.name = j.at("name").get<std::string>();
-	obj.class_name = j.at("class_name").get<std::string>();
+	obj.id = j.value("id", 0);
+	obj.name = j.value("name", "Unknown");
+	obj.class_name = j.value("class_name", "GameObject");
+
 	auto pos = j.at("position");
 	obj.position = { pos[0],pos[1],pos[2] };
 	auto rot = j.at("rotation");
@@ -54,9 +53,11 @@ void from_json(const json& j, GameObject& obj)
 	obj.scale = { sca[0],sca[1],sca[2] };
 	auto col = j.value("color", std::vector<float>{1.0f, 1.0f, 1.0f, 1.0f});
 	obj.color = { col[0],col[1],col[2],col[3] };
-	obj.type = static_cast<GameObject::Type>(j.at("type").get<int>());
-	obj.mesh_index = j.at("mesh_index").get<int>();
+
+	obj.type = static_cast<GameObject::Type>(j.value("type", 0));
+	obj.mesh_index = j.value("mesh_index", -1);
 	obj.model_path = j.value("model_path", "");
+
 	if (!obj.model_path.empty())
 	{
 		obj.model = ModelManager::Instance().Load(obj.model_path);
