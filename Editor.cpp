@@ -303,7 +303,7 @@ std::vector<std::shared_ptr<GameObject>> editor::FindSameClassObjects(
 	for (const auto& obj : all_objects)
 	{
 		//クラス名が一致するオブジェクトをリストに追加
-		if (!obj && obj->class_name == target_class_name)
+		if (obj && obj->class_name == target_class_name)
 		{
 			same_class_objects.push_back(obj);
 		}
@@ -461,7 +461,9 @@ void editor::Draw3DEditor(
 
 		ImGui::Separator();//区切り線
 
-		if (sel->OnImGui())
+		sel->OnImGui();
+
+		if (ImGui::Button("Apply Unique Values to All Same Class Object"))
 		{
 			std::vector<std::shared_ptr<GameObject>> targets = FindSameClassObjects(objects, objects[select_index]);
 			
@@ -472,7 +474,7 @@ void editor::Draw3DEditor(
 
 				if (target != sel)
 				{
-					//target->CopyUniqueMembers(sel);
+					target->CopyUniqueMembers(sel);
 				}
 			}
 		

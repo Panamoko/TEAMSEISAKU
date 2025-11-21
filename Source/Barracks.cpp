@@ -103,12 +103,31 @@ void Barracks::OnCollision(GameObject* object)
 
 bool Barracks::OnImGui()
 {
+	bool changed = false;
+
 	if (ImGui::CollapsingHeader("Barrack"))
 	{
-		ImGui::DragFloat("HP", &hp, 0.1f, 0.0f, 1500.0f, "%.1f");
-		return true;
+		changed |= ImGui::DragFloat("HP", &hp, 0.1f, 0.0f, 1500.0f, "%.1f");
+		changed |= ImGui::DragFloat("Spawn Interval", &spawn_interval, 0.1f, 0.1f, 60.0f, "%.1f sec");
+		changed |= ImGui::DragFloat("Spawn Timer", &spawn_timer, 0.1f, 0.0f, spawn_interval * 2.0f, "%.1f sec");
+		changed |= ImGui::DragInt("Max Enemy Count", &max_enemy_count, 1, 0, 100);
+		changed |= ImGui::DragInt("Current Enemy Count", &current_enemy_count, 1, 0, 100);
 	}
-	return false;
+	return changed;
+}
+
+void Barracks::CopyUniqueMembers(const GameObject* source)
+{
+	const Barracks* gimmic = dynamic_cast<const Barracks*>(source);
+
+	if (gimmic)
+	{
+		this->hp = gimmic->hp;
+		this->max_enemy_count = gimmic->max_enemy_count;
+		this->spawn_interval = gimmic->spawn_interval;
+		this->spawn_timer = gimmic->spawn_timer;
+	}
+
 }
 
 REGISTER_GAMEOBJECT(Barracks);
