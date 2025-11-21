@@ -34,6 +34,7 @@ Gimmic_BreakWall::Gimmic_BreakWall()
     color.w = 1.0f;
 
     CollisionManager::Instance().AddObject(this);
+
 }
 
 //Õ“ËŒ‹‰Ê
@@ -271,6 +272,12 @@ bool Gimmic_BreakWall::OnImGui()
 
         ImGui::DragFloat("HP", &hp, 0.1f, 0.0f, 1500.0f, "%.1f");
         ImGui::DragFloat3("size", &size.x, 0.1f, 0.0f, 1500.0f, "%.1f");
+
+        ImGui::DragFloat3("center", &box->center.x, 0.1f, 0.0f, 100.0f, "%.1f");
+        ImGui::DragFloat3("hal", &box->half.x, 0.1f, 0.0f, 100.0f, "%.1f");
+        ImGui::DragFloat3("axis 1", &box->axis[1].x, 0.1f, 0.0f, 100.0f, "%.1f");
+        ImGui::DragFloat3("axis 2", &box->axis[2].x, 0.1f, 0.0f, 100.0f, "%.1f");
+        ImGui::DragFloat3("axis 3", &box->axis[3].x, 0.1f, 0.0f, 100.0f, "%.1f");
 
         return true;
     }

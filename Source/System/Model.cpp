@@ -155,6 +155,7 @@ bool Model::GetModelOBB(
 
 	// 回転部分（スケールなし）の3軸
 	XMMATRIX rotMat =
+		DirectX::XMMatrixScaling(scale.x, scale.y, scale.z) *
 		XMMatrixRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
 
 	// X,Y,Z 軸（正規化）
@@ -170,10 +171,14 @@ bool Model::GetModelOBB(
 	// 4. ハーフサイズ（拡大済み）
 	// -------------------------------
 	outHalfSize = {
-		localHalf.x * scale.x,
-		localHalf.y * scale.y,
-		localHalf.z * scale.z
+		localHalf.x * XMVectorGetX(XMVector3Length(axisX)),
+		localHalf.y * XMVectorGetX(XMVector3Length(axisY)),
+		localHalf.z * XMVectorGetX(XMVector3Length(axisZ))
 	};
+
+	XMStoreFloat3(&outAxis[0], XMVector3Normalize(axisX));
+	XMStoreFloat3(&outAxis[1], XMVector3Normalize(axisY));
+	XMStoreFloat3(&outAxis[2], XMVector3Normalize(axisZ));
 
 	return true;
 }

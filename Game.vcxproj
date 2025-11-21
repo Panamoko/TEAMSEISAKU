@@ -261,6 +261,7 @@
     <ClCompile Include="Source\Yagura.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="cpp.hint" />
     <None Include="Shader\Basic.hlsli" />
     <None Include="Shader\Lambert.hlsli" />
     <None Include="Shader\Scene.hlsli" />
