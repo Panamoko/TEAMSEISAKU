@@ -31,7 +31,7 @@ public:
 	virtual void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) {};
 	virtual bool OnImGui() { return false; };
 	virtual void OnCollision(GameObject* object);
-	//virtual void CopyUniqueMembers(const GameObject* source);
+	virtual void CopyUniqueMembers(const GameObject* source) {};
 
 	bool IsActive() const { return is_active; }
 	void SetActive(bool active) { is_active = active; }
