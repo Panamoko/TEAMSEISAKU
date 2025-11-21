@@ -53,12 +53,12 @@ const std::vector<Player*>& Player::GetAllPlayers()
 //初期化
 void Player::Initialize()
 {
-	// 1. まずマネージャーから元となるモデルを取得（これは共有リソース）
-	Model* sourceModel = ModelManager::Instance().Load("Data/Model/Slime/Player_Slime.mdl");
+	//// 1. まずマネージャーから元となるモデルを取得（これは共有リソース）
+	//Model* sourceModel = ModelManager::Instance().Load("Data/Model/Slime/Player_Slime.mdl");
 
-	// 2. このプレイヤー専用のモデルとして「コピー」を作成する
-	//    (Modelクラスにコピーコンストラクタがある前提。通常はデフォルトで動きます)
-	model = new Model(*sourceModel);
+	// 1. ファイルから直接モデルを生成し、このプレイヤー専用の独立したインスタンスを作る
+	//    (コピーだと親子関係のポインタが元モデルを指してしまい、アニメーションが正しく計算されないため)
+	model = new Model("Data/Model/Slime/Player_Slime.mdl");
 	// モデルが大きいのでスケーリング
 	scale.x = scale.y = scale.z = 0.005f;
 
@@ -161,7 +161,7 @@ void Player::Update(float elapsedTime)
 	// モデル行列更新
 	model->UpdateTransform();
 
-	//王冠の行列を、頭のボーンの行列で上書きして強制的に追従させる
+	// 王冠の行列を、頭のボーンの行列で上書きして強制的に追従させる
 	if (headBoneIndex != -1 && crownNodeIndex != -1)
 	{
 		// constを外してアクセス
@@ -171,13 +171,10 @@ void Player::Update(float elapsedTime)
 		auto& headNode = nodesPtr[headBoneIndex];
 		auto& crownNode = nodesPtr[crownNodeIndex];
 
-		// ■ 強力な修正：ローカル座標系自体を頭に合わせる
-		// ※王冠がルート直下にある場合、ローカル＝ワールドなので、これで動く可能性があります
-		crownNode.translate = headNode.translate; // 位置コピー
-		crownNode.rotate = headNode.rotate;    // 回転コピー
-		crownNode.scale = headNode.scale;     // 拡縮コピー
+		// ローカル座標のコピーは削除（親階層が違うため、位置がおかしくなる原因になります）
 
-		// さらに行列もコピーしてダメ押し
+		// グローバル行列（ワールド空間での位置・回転）のみをコピーすれば、
+		// レンダリング時に頭と同じ位置に表示されます。
 		crownNode.globalTransform = headNode.globalTransform;
 	}
 }
@@ -697,7 +694,6 @@ void Player::OnCollision(GameObject* object)
 	position.x += mtd.x; position.y += mtd.y; position.z += mtd.z;
 }
 
-// ★関数を丸ごと追加
 // 攻撃優先度切り替え入力
 void Player::InputToggleAttackPriority()
 {
