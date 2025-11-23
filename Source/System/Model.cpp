@@ -119,7 +119,7 @@ bool Model::GetModelOBB(
 	using namespace DirectX;
 
 	// -------------------------------
-	// 1. ローカル AABB を取る
+	// 1. ローカル AABB を取る (省略)
 	// -------------------------------
 	XMFLOAT3 localMin, localMax;
 	if (!getModelAABB(model, localMin, localMax))
@@ -141,28 +141,29 @@ bool Model::GetModelOBB(
 	// -------------------------------
 	// 2. ワールド行列を構築
 	// -------------------------------
-	XMMATRIX mat =
-		XMMatrixScaling(scale.x, scale.y, scale.z) *
-		XMMatrixRotationRollPitchYaw(rotation.x, rotation.y, rotation.z) *
-		XMMatrixTranslation(position.x, position.y, position.z);
+	XMMATRIX mat_scale = XMMatrixScaling(scale.x, scale.y, scale.z);
+	XMMATRIX mat_rot = XMMatrixRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
+	XMMATRIX mat_trans = XMMatrixTranslation(position.x, position.y, position.z);
+
+	XMMATRIX mat_world = mat_scale * mat_rot * mat_trans;
+
 
 	// -------------------------------
 	// 3. 中心と軸をワールドへ
 	// -------------------------------
+	// (3-1) 中心座標をワールド空間へ変換
 	XMVECTOR c = XMLoadFloat3(&localCenter);
-	c = XMVector3Transform(c, mat);
+	// Center はスケール、回転、移動すべて適用する
+	c = XMVector3Transform(c, mat_world);
 	XMStoreFloat3(&outCenter, c);
 
-	// 回転部分（スケールなし）の3軸
-	XMMATRIX rotMat =
-		DirectX::XMMatrixScaling(scale.x, scale.y, scale.z) *
-		XMMatrixRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
+	// (3-2) OBBの軸をワールド空間へ変換 (スケールは含まない)
+	// 回転行列mat_rotのみを使用して軸を変換
+	XMVECTOR axisX = XMVector3TransformNormal(XMVectorSet(1, 0, 0, 0), mat_rot);
+	XMVECTOR axisY = XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), mat_rot);
+	XMVECTOR axisZ = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), mat_rot);
 
-	// X,Y,Z 軸（正規化）
-	XMVECTOR axisX = XMVector3TransformNormal(XMVectorSet(1, 0, 0, 0), rotMat);
-	XMVECTOR axisY = XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), rotMat);
-	XMVECTOR axisZ = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), rotMat);
-
+	// 回転行列を使用しているため、軸は既に正規化されているが、念のため再度正規化して保存
 	XMStoreFloat3(&outAxis[0], XMVector3Normalize(axisX));
 	XMStoreFloat3(&outAxis[1], XMVector3Normalize(axisY));
 	XMStoreFloat3(&outAxis[2], XMVector3Normalize(axisZ));
@@ -170,15 +171,12 @@ bool Model::GetModelOBB(
 	// -------------------------------
 	// 4. ハーフサイズ（拡大済み）
 	// -------------------------------
+	// ハーフサイズはローカルサイズにワールドのスケールを乗じるだけで良い
 	outHalfSize = {
-		localHalf.x * XMVectorGetX(XMVector3Length(axisX)),
-		localHalf.y * XMVectorGetX(XMVector3Length(axisY)),
-		localHalf.z * XMVectorGetX(XMVector3Length(axisZ))
+		localHalf.x * scale.x,
+		localHalf.y * scale.y,
+		localHalf.z * scale.z
 	};
-
-	XMStoreFloat3(&outAxis[0], XMVector3Normalize(axisX));
-	XMStoreFloat3(&outAxis[1], XMVector3Normalize(axisY));
-	XMStoreFloat3(&outAxis[2], XMVector3Normalize(axisZ));
 
 	return true;
 }

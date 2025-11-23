@@ -134,7 +134,9 @@ public:
 	);
 
 private:
-
+	static DirectX::XMVECTOR Normalize(const DirectX::XMFLOAT3& v);
+	static bool Overlap(float min1, float max1, float min2, float max2, float& overlap, float& centerDiff);
+	static void ProjectOBB(const OBB* obb, DirectX::XMVECTOR axis, float& min, float& max);
 
 
 };

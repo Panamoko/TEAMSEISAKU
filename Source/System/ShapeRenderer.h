@@ -43,6 +43,15 @@ public:
 		float height,
 		const DirectX::XMFLOAT4& color) const;
 
+	//OBB•`‰æ
+	void RenderOBB(
+		const RenderContext& rc,
+		const DirectX::XMFLOAT3& center,
+		const DirectX::XMFLOAT3& half,
+		const DirectX::XMFLOAT3 axis[3],
+		const DirectX::XMFLOAT4& color
+	)const;
+
 private:
 	struct Mesh
 	{

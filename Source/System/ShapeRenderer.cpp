@@ -139,6 +139,37 @@ void ShapeRenderer::RenderCapsule(
 	}
 }
 
+//OBB描画
+void ShapeRenderer::RenderOBB(
+	const RenderContext& rc,
+	const DirectX::XMFLOAT3& center,
+	const DirectX::XMFLOAT3& half,
+	const DirectX::XMFLOAT3 axis[3],
+	const DirectX::XMFLOAT4& color) const
+{
+	//OBBの軸から回転行列を作成
+	DirectX::XMMATRIX mat_rot = DirectX::XMMatrixSet(
+		axis[0].x, axis[0].y, axis[0].z, 0.0f, // X軸 (R)
+		axis[1].x, axis[1].y, axis[1].z, 0.0f, // Y軸 (U)
+		axis[2].x, axis[2].y, axis[2].z, 0.0f, // Z軸 (A)
+		0.0f, 0.0f, 0.0f, 1.0f  // 4行目	
+	);
+
+	//スケール行列と平行移動行列を作成
+	DirectX::XMMATRIX mat_scale = DirectX::XMMatrixScaling(half.x, half.y, half.z);
+	DirectX::XMMATRIX mat_trans = DirectX::XMMatrixTranslation(center.x, center.y, center.z);
+
+	//ワールド行列の構築
+	DirectX::XMMATRIX world_matrix = mat_scale * mat_rot * mat_trans;
+
+	//Render関数に渡すためにXMFLOAT4X4に変換
+	DirectX::XMFLOAT4X4 transform;
+	DirectX::XMStoreFloat4x4(&transform, world_matrix);
+
+	//描画を実行
+	Render(rc, boxMesh, transform, color);
+}
+
 // メッシュ生成
 void ShapeRenderer::CreateMesh(ID3D11Device* device, const std::vector<DirectX::XMFLOAT3>& vertices, Mesh& mesh)
 {

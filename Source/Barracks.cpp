@@ -112,6 +112,13 @@ bool Barracks::OnImGui()
 		changed |= ImGui::DragFloat("Spawn Timer", &spawn_timer, 0.1f, 0.0f, spawn_interval * 2.0f, "%.1f sec");
 		changed |= ImGui::DragInt("Max Enemy Count", &max_enemy_count, 1, 0, 100);
 		changed |= ImGui::DragInt("Current Enemy Count", &current_enemy_count, 1, 0, 100);
+
+		ImGui::DragFloat3("center", &obb->center.x, 0.1f, 0.0f, 100.0f, "%.1f");
+		ImGui::DragFloat3("hal", &obb->half.x, 0.1f, 0.0f, 100.0f, "%.1f");
+		ImGui::DragFloat3("axis 1", &obb->axis[0].x, 0.1f, 0.0f, 100.0f, "%.1f");
+		ImGui::DragFloat3("axis 2", &obb->axis[1].x, 0.1f, 0.0f, 100.0f, "%.1f");
+		ImGui::DragFloat3("axis 3", &obb->axis[2].x, 0.1f, 0.0f, 100.0f, "%.1f");
+
 	}
 	return changed;
 }

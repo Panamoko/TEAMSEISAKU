@@ -78,47 +78,9 @@ void Gimmic_BreakWall::Update(float elapsedTime)
             CollisionManager::Instance().AddObject(this);
             is_active = true;
         }
-
-        DirectX::XMFLOAT3 center;
-        DirectX::XMFLOAT3 half;
-        DirectX::XMFLOAT3 axis[3];
-
-        DirectX::XMFLOAT3 rotation = {
-            DirectX::XMConvertToRadians(angle.x),
-            DirectX::XMConvertToRadians(angle.y),
-            DirectX::XMConvertToRadians(angle.z)
-        };
-
-        // ƒ‚ƒfƒ‹‚Ì OBB ‚ğæ“¾
-        if (model->GetModelOBB(
-            model,
-            position,
-            rotation,
-            scale,
-            center,
-            half,
-            axis))
-        {
-            box->center = center;
-            box->half = half;
-
-            box->axis[0] = axis[0];
-            box->axis[1] = axis[1];
-            box->axis[2] = axis[2];
-
-            if (model) {
-                printf("OBB center = (%f,%f,%f)\n", center.x, center.y, center.z);
-                printf("OBB half   = (%f,%f,%f)\n", half.x, half.y, half.z);
-                printf("axis0 = (%f,%f,%f)\n", axis[0].x, axis[0].y, axis[0].z);
-                printf("axis1 = (%f,%f,%f)\n", axis[1].x, axis[1].y, axis[1].z);
-                printf("axis2 = (%f,%f,%f)\n", axis[2].x, axis[2].y, axis[2].z);
-            }
-        }
-
-        return;
     }
 
-    if (isBroken)
+    else if (isBroken)
     {
         respawnTimer -= elapsedTime;
 
@@ -185,7 +147,6 @@ void Gimmic_BreakWall::Update(float elapsedTime)
                 respawnTimer = 0.0f;
             }
         }
-        return;
     }
 
     DirectX::XMFLOAT3 center;
@@ -240,21 +201,18 @@ void Gimmic_BreakWall::RenderDebugPrimitive(
 
     if (!renderer || !collider) return;
 
-    DirectX::XMFLOAT3 pos;
+    DirectX::XMFLOAT3 obb_center = box->center;
+    DirectX::XMFLOAT3 obb_half = box->half;
+    DirectX::XMFLOAT3 obb_axis[3] = { box->axis[0], box->axis[1], box->axis[2] };
+    DirectX::XMFLOAT4 debug_color = { 0.2f, 0.8f, 0.2f, 1.0f };
 
-    // OBB ¨ AABB
-    Collision::OBBtoAABB(
-        box->center,
-        box->half,
-        box->axis,
-        pos,
-        size);
-
-    DirectX::XMFLOAT3 angle = { 0,0,0 }; // AABB ‚Í‰ñ“]‚µ‚È‚¢
-    DirectX::XMFLOAT4 color = { 0.2f, 0.8f, 0.2f, 1.0f };
-
-    // AABB ˜g‚ğ•`‰æ
-    renderer->RenderBox(rc, pos, angle, size, color);
+    renderer->RenderOBB(
+        rc,
+        obb_center,
+        obb_half,
+        obb_axis, // 3‚Â‚Ì²”z—ñ‚ğ“n‚·
+        debug_color
+    );
 }
 
 bool Gimmic_BreakWall::OnImGui()
@@ -275,9 +233,9 @@ bool Gimmic_BreakWall::OnImGui()
 
         ImGui::DragFloat3("center", &box->center.x, 0.1f, 0.0f, 100.0f, "%.1f");
         ImGui::DragFloat3("hal", &box->half.x, 0.1f, 0.0f, 100.0f, "%.1f");
-        ImGui::DragFloat3("axis 1", &box->axis[1].x, 0.1f, 0.0f, 100.0f, "%.1f");
-        ImGui::DragFloat3("axis 2", &box->axis[2].x, 0.1f, 0.0f, 100.0f, "%.1f");
-        ImGui::DragFloat3("axis 3", &box->axis[3].x, 0.1f, 0.0f, 100.0f, "%.1f");
+        ImGui::DragFloat3("axis 1", &box->axis[0].x, 0.1f, 0.0f, 100.0f, "%.1f");
+        ImGui::DragFloat3("axis 2", &box->axis[1].x, 0.1f, 0.0f, 100.0f, "%.1f");
+        ImGui::DragFloat3("axis 3", &box->axis[2].x, 0.1f, 0.0f, 100.0f, "%.1f");
 
         return true;
     }
