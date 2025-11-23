@@ -132,4 +132,9 @@ public:
 		DirectX::XMFLOAT3& outNormal,
 		float& outPenetraion
 	);
+
+private:
+
+
+
 };
