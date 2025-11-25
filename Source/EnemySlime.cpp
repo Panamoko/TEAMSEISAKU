@@ -60,7 +60,7 @@ EnemySlime::EnemySlime(const char* modelPath)
 // デストラクタ
 EnemySlime::~EnemySlime()
 {
-	//delete model;
+
 }
 
 // 更新処理
@@ -111,7 +111,7 @@ void EnemySlime::Update(float elapsedTime)
 	UpdateTransform();
 
 	// モデル行列更新
-	ModelManager::Instance().UpdateAllTransforms();
+	if (model) model->UpdateTransform();
 }
 
 // 描画処理
