@@ -64,6 +64,10 @@ private:
 			}
 			return &pool[next_free_index++];
 		}
+		size_t GetNextFreeIndex()const
+		{
+			return next_free_index;
+		}
 	private:
 		std::vector<Node> pool;
 		size_t next_free_index = 0;
@@ -100,12 +104,11 @@ private:
 	//隣接セルを取得
 	std::vector<std::pair<int, int>> GetNeighbors(int cellX, int cellZ, const GridMap& grid_map)const;
 
-	//メモリ管理用
-	std::vector<std::unique_ptr<Node>> allNodes;//動的に作るノードを保持
-
 	//ノード管理用マップ
 	std::unordered_map<std::pair<int, int>, Node*, pair_hash> node_map;
 
 	std::vector<std::pair<int, int>> last_path; // 前回の経路
+
+	int max_search_nodes = 5000;
 };
 
