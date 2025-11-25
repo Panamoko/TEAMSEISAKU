@@ -156,6 +156,12 @@ void CollisionManager::CheckAllCollision()
 			{
 				CylinderCollider* cylinderA = static_cast<CylinderCollider*>(objectA->collider.get());
 				OBB* obb_B = static_cast<OBB*>(objectB->collider.get());
+				//if (objectA->type == GameObject::Type::Player || objectB->type == GameObject::Type::Player)
+				//{
+				//	isCollisionDetected = Collision::IntersectCylinder_Vs_OBB(
+				//		cylinderA, obb_B, normal, penetrarion);
+				//}
+
 				isCollisionDetected = Collision::IntersectCylinder_Vs_OBB(
 					cylinderA, obb_B, normal, penetrarion);
 				if (isCollisionDetected)
