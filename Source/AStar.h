@@ -105,9 +105,10 @@ private:
 	//隣接セルを取得
 	size_t GetNeighbors(int cellX, int cellZ, const GridMap& grid_map, std::pair<int, int>* out_neighbors) const;
 
+	//座標を配列のインデックスに変換
 	size_t CoordinateToIndex(int cell_x, int cell_z)const;
 
-	int map_width = 0;
+	int map_width_ = 0;
 
 	//ノード管理用マップ
 	std::unordered_map<std::pair<int, int>, Node*, pair_hash> node_map;

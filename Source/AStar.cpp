@@ -32,9 +32,14 @@ std::vector<std::pair<int, int>> AStar::FindPath(
 {
     //再初期化
     node_pool.Reset();
-    node_map.clear();
 
-    node_pool.Reserve(gridMap.GetWidth() * gridMap.GetHeight());
+    //新しいノード管理の初期化
+    map_width_ = gridMap.GetWidth();
+    size_t map_size = static_cast<size_t>(gridMap.GetWidth() * gridMap.GetHeight());
+
+    node_grid_pointers.assign(map_size, nullptr);
+
+    node_pool.Reserve(map_size);
 
     //スタートノードを作成
     auto start_node = node_pool.GetNode();       //ノードを作成
@@ -42,8 +47,11 @@ std::vector<std::pair<int, int>> AStar::FindPath(
     start_node->node_z = start_cellZ;            //ノードのZ座標をセット
     start_node->goal_cost = 0.0f;                //スタートからのコストは0
     start_node->h_cost = Heuristic(start_cellX, start_cellZ, goal_cellX, goal_cellZ);//推定コストを計算
-    node_map[{start_cellX, start_cellZ}] = start_node;
+    
+    size_t start_index = start_cellZ * map_width_ + start_cellX;
 
+    node_grid_pointers[start_index] = start_node;
+    
     std::priority_queue<Node*, std::vector<Node*>, CompareNode> open_list;
     open_list.push(start_node);
     max_search_nodes = 5000;
@@ -93,22 +101,22 @@ std::vector<std::pair<int, int>> AStar::FindPath(
             auto neighbor_x = neighbors_array[i].first;
             auto neighbor_z = neighbors_array[i].second;
 
-            auto it = node_map.find({ neighbor_x,neighbor_z });
-            if (it != node_map.end())
+            size_t neighbor_index = neighbor_z * map_width_ + neighbor_x;
+            neighbor_node = node_grid_pointers[neighbor_index];
+
+            if(neighbor_node != nullptr)
             {
-                neighbor_node = it->second;
-
                 if (neighbor_node->node_state == Node::CLOSED)
-                    continue;
-
-                constexpr float EPS = 1e-5f;
-                if (new_cost + EPS < neighbor_node->goal_cost)
                 {
-                    neighbor_node->goal_cost = new_cost;
-                    neighbor_node->parent = current_node;
+                    constexpr float EPS = 1e-5f;
+                    if (new_cost + EPS < neighbor_node->goal_cost)
+                    {
+                        neighbor_node->goal_cost = new_cost;
+                        neighbor_node->parent = current_node;
 
-                    //オープンリストに再追加
-                    open_list.push(neighbor_node);
+                        //オープンリストに再追加
+                        open_list.push(neighbor_node);
+                    }
                 }
 
             }
@@ -124,7 +132,7 @@ std::vector<std::pair<int, int>> AStar::FindPath(
                 neighborNode->parent = current_node;
                 neighborNode->node_state = Node::OPEN;
 
-                node_map[{neighbor_x, neighbor_z}] = neighborNode;
+                node_grid_pointers[neighbor_index] = neighborNode;
                 open_list.push(neighborNode);
             }
         }
@@ -319,5 +327,5 @@ size_t AStar::GetNeighbors(
 
 size_t AStar::CoordinateToIndex(int cell_x, int cell_z) const
 {
-    return size_t();
+    return static_cast<size_t>(cell_z * map_width + cell_x);
 }
