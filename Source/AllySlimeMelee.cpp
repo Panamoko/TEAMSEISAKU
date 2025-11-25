@@ -142,13 +142,21 @@ void AllySlimeMelee::UpdateState(float elapsedTime)
             // 壊れた壁の判定
             if (g->class_name == "Gimmic_BreakWall")
             {
-                if (dynamic_cast<Gimmic_BreakWall*>(g.get())->IsBroken()) hasTarget = false;
+                if (dynamic_cast<Gimmic_BreakWall*>(g.get())->IsBroken())
+                {
+                    hasTarget = false;
+                    targetGimmic.reset(); // ★修正: 壊れていたらターゲット情報を破棄する
+                }
                 else hasTarget = true;
             }
             // コアのHP判定
             else if (g->class_name == "Core")
             {
-                if (dynamic_cast<Core*>(g.get())->GetHP() <= 0) hasTarget = false;
+                if (dynamic_cast<Core*>(g.get())->GetHP() <= 0)
+                {
+                    hasTarget = false;
+                    targetGimmic.reset(); // ★修正: 破壊されていたらターゲット情報を破棄する
+                }
                 else hasTarget = true;
             }
         }
@@ -159,11 +167,12 @@ void AllySlimeMelee::UpdateState(float elapsedTime)
     switch (state)
     {
     case State::Follow:
+        // ... (変更なし)
         if (hasTarget) {
             state = State::Chase;
         }
         else {
-            SearchTarget(); // ターゲットがいなければ探す
+            SearchTarget();
             // アンカーへ移動
             float dx = anchor.x - position.x;
             float dz = anchor.z - position.z;
@@ -177,47 +186,44 @@ void AllySlimeMelee::UpdateState(float elapsedTime)
         break;
 
     case State::Chase:
+        // ... (変更なし)
         if (!hasTarget) {
             state = State::Return;
         }
         else {
-            // ターゲットへ移動
             float dx = targetPos.x - position.x;
             float dz = targetPos.z - position.z;
             float d = sqrtf(dx * dx + dz * dz);
 
-            // 攻撃射程に入ったら攻撃
             float range = attackRange + targetRadius + radius;
             if (d <= range) {
                 state = State::Attack;
-                attackTimer = 0.0f; // 攻撃開始
+                attackTimer = 0.0f;
             }
             else {
-                Move(elapsedTime, dx / d, dz / d, moveSpeed * 1.2f); // 追いかけるときは少し速く
+                Move(elapsedTime, dx / d, dz / d, moveSpeed * 1.2f);
                 Turn(elapsedTime, dx / d, dz / d, turnSpeed);
             }
         }
         break;
 
     case State::Attack:
+        // ... (変更なし)
         if (!hasTarget) {
             state = State::Return;
         }
         else {
-            // 攻撃方向を向く
             float dx = targetPos.x - position.x;
             float dz = targetPos.z - position.z;
             Turn(elapsedTime, dx, dz, turnSpeed);
 
-            // タイマーで攻撃判定
             attackTimer += elapsedTime;
-            if (attackTimer > 0.2f && attackTimer < 0.3f) // 一瞬だけ判定
+            if (attackTimer > 0.2f && attackTimer < 0.3f)
             {
                 CheckAttackCollision();
             }
             if (attackTimer > damageCooldown)
             {
-                // クールダウン完了、まだ敵が近ければ再攻撃、遠ければChase、いなければReturn
                 state = State::Chase;
             }
         }
@@ -230,8 +236,10 @@ void AllySlimeMelee::UpdateState(float elapsedTime)
         float dz = anchor.z - position.z;
         float d = sqrtf(dx * dx + dz * dz);
 
-        // 帰り道でも敵がいれば反応する（オプション）
+        // 帰り道でも敵がいれば反応する
         SearchTarget();
+        // ここで targetGimmic.reset() しておかないと、壊れた壁を保持したままになり
+        // expired() が false を返してしまい、Chaseに戻ってしまう問題が解決します
         if (!targetEnemy.expired() || !targetGimmic.expired()) {
             state = State::Chase;
             break;
