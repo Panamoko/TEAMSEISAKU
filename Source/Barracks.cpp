@@ -74,8 +74,13 @@ void Barracks::Update(float elapsedTime)
 	);
 
 	// 各軸の向きを更新（Y軸回転のみと仮定）
-	float c = cosf(angle.y);
-	float s = sinf(angle.y);
+	DirectX::XMFLOAT3 rotation = {
+	DirectX::XMConvertToRadians(angle.x),
+	DirectX::XMConvertToRadians(angle.y),
+	DirectX::XMConvertToRadians(angle.z)
+	};
+	float c = cosf(rotation.y);
+	float s = sinf(rotation.y);
 	obb->axis[0] = DirectX::XMFLOAT3(c, 0.0f, -s); // X軸（右）
 	obb->axis[1] = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f); // Y軸（上）
 	obb->axis[2] = DirectX::XMFLOAT3(s, 0.0f, c);  // Z軸（前）
@@ -93,7 +98,19 @@ void Barracks::Update(float elapsedTime)
 //デバッグ表示
 void Barracks::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer)
 {
-	renderer->RenderBox(rc, obb->center, angle, obb->half, { 1,0,0,1 });
+	DirectX::XMFLOAT3 obb_center = obb->center;
+	DirectX::XMFLOAT3 obb_half = obb->half;
+	DirectX::XMFLOAT3 obb_axis[3] = { obb->axis[0], obb->axis[1], obb->axis[2] };
+	DirectX::XMFLOAT4 debug_color = { 0.2f, 0.8f, 0.2f, 1.0f };
+
+	renderer->RenderOBB(
+		rc,
+		obb_center,
+		obb_half,
+		obb_axis, // 3つの軸配列を渡す
+		debug_color
+	);
+
 }
 
 //衝突処理
