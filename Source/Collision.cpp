@@ -767,7 +767,7 @@ bool Collision::IntersectOBB_Vs_Cylinder(
 	float obb_top_y = obb->center.y + obb->half.y;
 	float obb_bottom_y = obb->center.y - obb->half.y;
 
-	if (cylinder_top_y < obb_bottom_y || obb_top_y < cylinder_top_y)
+	if (cylinder_top_y < obb_bottom_y || obb_top_y < cylinder_bottom_y)
 	{
 		out_normal = { 0.0f,0.0f,0.0f };
 		out_penetration = 0.0f;
@@ -776,17 +776,23 @@ bool Collision::IntersectOBB_Vs_Cylinder(
 
 	//XZ平面での法線・貫入量
 	float distance = std::sqrtf(distance_sq);
-	float xz_penetraration = cylinder_radius - distance;
+	float xz_penetration = cylinder_radius - distance;
 
 	out_normal = { dx / distance,0.0f,dz / distance };
-	out_penetration = xz_penetraration;
+	out_penetration = xz_penetration;
 
 	//上下方向にも軽く補正
-	float y_overlap = (std::min)(cylinder_top_y, obb_top_y);
-	if (y_overlap > 0.0f && y_overlap < xz_penetraration)
+	float y_overlap = (std::min)(cylinder_top_y, obb_top_y) - (std::max)(cylinder_bottom_y, obb_bottom_y);
+	if (y_overlap < xz_penetration)
 	{
 		out_normal = { 0.0f,(cylinder_center_vec.y > obb->center.y) ? 1.0f : -1.0f,0.0f };
 		out_penetration = y_overlap;
+	}
+	else
+	{
+		//XZ平面方向の貫通深度が最も浅い（衝突が弱い）
+		out_normal = { dx / distance, 0.0f, dz / distance };
+		out_penetration = xz_penetration;
 	}
 
 	return true;
