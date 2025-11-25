@@ -45,7 +45,6 @@ std::vector<std::pair<int, int>> AStar::FindPath(
     node_map[{start_cellX, start_cellZ}] = start_node;
 
     std::priority_queue<Node*, std::vector<Node*>, CompareNode> open_list;
-    std::unordered_set<std::pair<int, int>, pair_hash> closed_set;
     open_list.push(start_node);
     max_search_nodes = 5000;
 
@@ -63,7 +62,7 @@ std::vector<std::pair<int, int>> AStar::FindPath(
         open_list.pop();
 
         //既にクローズド済みならスキップ
-        if (closed_set.find({ current_node->node_x,current_node->node_z }) != closed_set.end())
+        if (current_node->node_state == Node::CLOSED)
             continue;
 
         //ゴールに到達したか判定
@@ -78,33 +77,38 @@ std::vector<std::pair<int, int>> AStar::FindPath(
         }
 
         //現ノードをクローズリストに追加
-        closed_set.insert({ current_node->node_x, current_node->node_z });
+        current_node->node_state = Node::CLOSED; // ノードの状態をCLOSEDに更新
 
-        // 隣接セルを取得
-        auto neighbors = GetNeighbors(current_node->node_x, current_node->node_z, gridMap);
+        // 隣接セルを取得するためのスタック上の配列
+        std::pair<int, int> neighbors_array[4]; // 4方向なのでサイズは4
+        size_t neighbor_count = GetNeighbors(current_node->node_x, current_node->node_z, gridMap, neighbors_array);
 
-        for (auto&[neighbor_x,neighbor_z]:GetNeighbors(current_node->node_x, current_node->node_z,gridMap))
+
+        for (size_t i = 0; i < neighbor_count; ++i)
         {
-            if (closed_set.count({ neighbor_x,neighbor_z }))
-                continue;
-
             //ノードが既に作成済みかチェック
-            Node* neighbor_node_rtr = nullptr;
+            Node* neighbor_node = nullptr;
             float new_cost = current_node->goal_cost + move_cost;
+
+            auto neighbor_x = neighbors_array[i].first;
+            auto neighbor_z = neighbors_array[i].second;
 
             auto it = node_map.find({ neighbor_x,neighbor_z });
             if (it != node_map.end())
             {
-                neighbor_node_rtr = it->second;
+                neighbor_node = it->second;
+
+                if (neighbor_node->node_state == Node::CLOSED)
+                    continue;
 
                 constexpr float EPS = 1e-5f;
-                if (new_cost + EPS < neighbor_node_rtr->goal_cost)
+                if (new_cost + EPS < neighbor_node->goal_cost)
                 {
-                    neighbor_node_rtr->goal_cost = new_cost;
-                    neighbor_node_rtr->parent = current_node;
+                    neighbor_node->goal_cost = new_cost;
+                    neighbor_node->parent = current_node;
 
                     //オープンリストに再追加
-                    open_list.push(neighbor_node_rtr);
+                    open_list.push(neighbor_node);
                 }
 
             }
@@ -118,6 +122,7 @@ std::vector<std::pair<int, int>> AStar::FindPath(
                 neighborNode->goal_cost = current_node->goal_cost + move_cost;
                 neighborNode->h_cost = Heuristic(neighbor_x, neighbor_z, goal_cellX, goal_cellZ);
                 neighborNode->parent = current_node;
+                neighborNode->node_state = Node::OPEN;
 
                 node_map[{neighbor_x, neighbor_z}] = neighborNode;
                 open_list.push(neighborNode);
@@ -151,14 +156,20 @@ std::vector<std::pair<int, int>> AStar::ReplanPath(
     const GridMap& gridMap,
     int agent_cellX,int agent_cellZ)
 {
+    std::pair<int, int> neighbors_array[4];
+    size_t neighbor_count;
+    bool found = false;
+
     //ゴールチェック 
     if (gridMap.IsBlocked(goalX, goalZ))
     {
         //ゴールが塞がれていたら、近傍セルに代替ゴールを探す
-        auto neighbors = GetNeighbors(goalX, goalZ, gridMap);
+        neighbor_count = GetNeighbors(goalX, goalZ, gridMap, neighbors_array);
         bool found = false;
-        for (auto& [nx, nz] : neighbors)
+        for (size_t i = 0; i < neighbor_count; ++i)
         {
+            auto [nx, nz] = neighbors_array[i];
+
             if (!gridMap.IsBlocked(nx, nz))
             {
                 goalX = nx;
@@ -180,10 +191,11 @@ std::vector<std::pair<int, int>> AStar::ReplanPath(
     if (gridMap.IsBlocked(agent_cellX, agent_cellZ))
     {
         //周囲に空いているセルを探す
-        auto neighbors = GetNeighbors(agent_cellX, agent_cellZ, gridMap);
-        bool found = false;
-        for (auto& [nx, nz] : neighbors)
+        neighbor_count = GetNeighbors(agent_cellX, agent_cellZ, gridMap, neighbors_array);        bool found = false;
+        for (size_t i = 0; i < neighbor_count; ++i)
         {
+            auto [nx, nz] = neighbors_array[i];
+
             if (!gridMap.IsBlocked(nx, nz))
             {
                 agent_cellX = nx;
@@ -209,7 +221,12 @@ std::vector<std::pair<int, int>> AStar::ReplanPath(
     {
         //実際の現在位置に最も近いインデックスを探す
         float min_dist = (std::numeric_limits<float>::max)();
-        for (int i = 0; i < static_cast<int>(last_path.size()); i++)
+
+        //last_pathの最初の数ノードのみをチェック
+        constexpr int SEARCH_RANGE = 20;
+        int check_limit = (std::min)(static_cast<int>(last_path.size()), SEARCH_RANGE);
+
+        for (int i = 0; i < check_limit; i++)
         {
             float dx = static_cast<float>(last_path[i].first - agent_cellX);
             float dz = static_cast<float>(last_path[i].second - agent_cellZ);
@@ -274,16 +291,15 @@ float AStar::Heuristic(
     //return std::sqrt(deltaX * deltaX + deltaZ * deltaZ);
 }
 
-std::vector<std::pair<int, int>> AStar::GetNeighbors(
-    int cellX,
-    int cellZ,
-    const GridMap& grid_map) const
+size_t AStar::GetNeighbors(
+    int cellX, int cellZ,
+    const GridMap& grid_map,
+    std::pair<int, int>* out_neighbors) const
 {
-    std::vector<std::pair<int, int>> neighbors;
-
     //4方向（左・右・上・下）
     const int offsetX[4] = { -1,1,0,0 };
     const int offsetZ[4] = { 0,0,-1,1 };
+    size_t count = 0; // 見つかったセルの数をカウント
 
     for (int i = 0; i < 4; i++)
     {
@@ -293,9 +309,15 @@ std::vector<std::pair<int, int>> AStar::GetNeighbors(
         //通行可能なら隣接セルとして追加
         if (!grid_map.IsBlocked(neighborX, neighborZ))
         {
-            neighbors.push_back({ neighborX ,neighborZ });
+            out_neighbors[count] = { neighborX, neighborZ }; // 配列に直接書き込み
+            count++;
         }
     }
 
-    return neighbors;
+    return count; // 見つかったセルの数を返す
+}
+
+size_t AStar::CoordinateToIndex(int cell_x, int cell_z) const
+{
+    return size_t();
 }

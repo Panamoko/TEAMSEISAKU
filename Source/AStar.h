@@ -35,19 +35,20 @@ private:
 	//A*探索の最小単位、セルごとの情報を持つ
 	struct Node
 	{
-		int node_x, node_z;//ノード座標
+		enum State { UNVISITED, OPEN, CLOSED }; // 探索状態を追加
+
+		int node_x, node_z = 0.0f;//ノード座標
 		float goal_cost = 0.0f;//スタートからこのノードまでの累計コスト
 		float h_cost = 0.0f;//このノードからゴールまでの推定コスト
 		float fCost() const { return goal_cost + h_cost; }//総コスト
 
 		Node* parent = nullptr;//経路復元用の親ノード
+		State node_state = UNVISITED;
 
 		void Reset()
 		{
-			goal_cost = 0.0f;
-			h_cost = 0.0f;
 			parent = nullptr;
-			node_x = node_z = 0;
+			node_state = UNVISITED;
 		}
 	};
 
@@ -102,10 +103,16 @@ private:
 	float Heuristic(int current_cellX, int current_cellZ, int goal_cellX, int goal_cellZ)const;
 
 	//隣接セルを取得
-	std::vector<std::pair<int, int>> GetNeighbors(int cellX, int cellZ, const GridMap& grid_map)const;
+	size_t GetNeighbors(int cellX, int cellZ, const GridMap& grid_map, std::pair<int, int>* out_neighbors) const;
+
+	size_t CoordinateToIndex(int cell_x, int cell_z)const;
+
+	int map_width = 0;
 
 	//ノード管理用マップ
 	std::unordered_map<std::pair<int, int>, Node*, pair_hash> node_map;
+
+	std::vector<Node*> node_grid_pointers;
 
 	std::vector<std::pair<int, int>> last_path; // 前回の経路
 
