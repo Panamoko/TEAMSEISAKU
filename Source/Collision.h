@@ -133,6 +133,13 @@ public:
 		float& outPenetraion
 	);
 
+	static bool IntersectOBB_Vs_Cylinder(
+		OBB* obb,
+		CylinderCollider* cylinder,
+		DirectX::XMFLOAT3& out_normal,
+		float& out_penetration
+	);
+
 private:
 	static DirectX::XMVECTOR Normalize(const DirectX::XMFLOAT3& v);
 	static bool Overlap(float min1, float max1, float min2, float max2, float& overlap, float& centerDiff);
