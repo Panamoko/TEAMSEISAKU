@@ -156,14 +156,24 @@ void CollisionManager::CheckAllCollision()
 			{
 				CylinderCollider* cylinderA = static_cast<CylinderCollider*>(objectA->collider.get());
 				OBB* obb_B = static_cast<OBB*>(objectB->collider.get());
-				//if (objectA->type == GameObject::Type::Player || objectB->type == GameObject::Type::Player)
-				//{
-				//	isCollisionDetected = Collision::IntersectCylinder_Vs_OBB(
-				//		cylinderA, obb_B, normal, penetrarion);
-				//}
 
 				isCollisionDetected = Collision::IntersectCylinder_Vs_OBB(
 					cylinderA, obb_B, normal, penetrarion);
+				if (isCollisionDetected)
+					Collision::ApplyPushOutWithWeight(objectA, objectB, normal, penetrarion);
+			}
+
+			//OBB VS ‰~’Œ
+			else if (objectA->collider->type == ColliderType::OBB &&
+				objectB->collider->type == ColliderType::Cylinder)
+			{
+				OBB* obb = static_cast<OBB*>(objectA->collider.get());
+				CylinderCollider* cylinder = static_cast<CylinderCollider*>(objectB->collider.get());
+
+				isCollisionDetected = Collision::IntersectOBB_Vs_Cylinder(
+					obb, cylinder, normal, penetrarion
+				);
+
 				if (isCollisionDetected)
 					Collision::ApplyPushOutWithWeight(objectA, objectB, normal, penetrarion);
 			}
