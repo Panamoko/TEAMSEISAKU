@@ -6,7 +6,7 @@ Projectile::Projectile(ProjectileManager* manager):manager(manager)//¶¬Žž‚Éƒ}ƒ
 {
 	manager->Register(this);
 
-	CollisionManager::Instance().AddObject(this);
+	//CollisionManager::Instance().AddObject(this);
 }
 
 // ƒfƒoƒbƒOƒvƒŠƒ~ƒeƒBƒu•`‰æ
@@ -98,5 +98,5 @@ void Projectile::Destroy()
 {
 	manager->Remove(this);
 
-	CollisionManager::Instance().Remove(this);
+	//CollisionManager::Instance().Remove(this);
 }

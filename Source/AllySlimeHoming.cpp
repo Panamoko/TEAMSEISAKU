@@ -9,8 +9,7 @@
 #include "Collision.h"
 #include "GimmicManager.h"       // ギミック管理
 #include "Gimmic_BreakWall.h"    // 壁クラス
-#include "Core.h"                // コアクラス
-#include "Collider.h"            
+#include "Core.h"                // コアクラス          
 #include <cfloat>
 #include <cmath>
 

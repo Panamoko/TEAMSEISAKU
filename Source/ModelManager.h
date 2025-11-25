@@ -32,6 +32,8 @@ public:
             m->UpdateTransform();
     }
 
+    std::shared_ptr<ModelResource> GetResource(const std::string& path);
+
 private:
     ModelManager() = default;
     std::vector<std::unique_ptr<Model>> models_;
@@ -41,5 +43,4 @@ private:
     std::unordered_map<std::string, std::shared_ptr<ModelResource>> resource_map_;
 
     //リソース取得（なければロード）
-    std::shared_ptr<ModelResource> GetResource(const std::string& path);
 };

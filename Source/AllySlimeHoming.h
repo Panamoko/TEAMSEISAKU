@@ -49,7 +49,7 @@ private:
 	int   rowWidth = 3;            // 1列あたり
 	float followDistance = 1.2f;   // 前後間隔
 	float lateralSpacing = 0.9f;   // 左右間隔
-	float moveSpeed = 3.0f;        // 追従移動速度（お好みで）
+	float moveSpeed = 5.0f;        // 追従移動速度（お好みで）
 	float turnSpeed = 6.0f;        // 追従回頭速度（お好みで）
 
 	// ===== 自動攻撃 =====

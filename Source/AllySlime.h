@@ -44,7 +44,7 @@ private:
     int   rowWidth = 3;                       // 横方向の人数（例: 4 なら 0..3 が 1 行目）
     float followDistance = 1.2f;              // 縦方向の間隔
     float lateralSpacing = 0.9f;              // 横方向の間隔
-    float moveSpeed = 4.0f;                   // 追従時の最大移動速度
+    float moveSpeed = 5.0f;                   // 追従時の最大移動速度
     float turnSpeed = DirectX::XMConvertToRadians(540); // 旋回速度（度/秒を弧度法に変換）
 
     // ====== オートアタック設定（味方行動の制御） ======
