@@ -112,4 +112,6 @@ private:
 
 	Model* slimeModel = nullptr;
 	CylinderCollider* cylinder;
+
+	std::unique_ptr<Model> uniqueModel;
 };

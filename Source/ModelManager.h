@@ -32,6 +32,8 @@ public:
             m->UpdateTransform();
     }
 
+    std::unique_ptr<Model> CreateUniqueInstance(const std::string& path);
+
 private:
     ModelManager() = default;
     std::vector<std::unique_ptr<Model>> models_;

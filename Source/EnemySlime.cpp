@@ -12,13 +12,10 @@ EnemySlime::EnemySlime(const char* modelPath)
 	class_name = "EnemySlime";
 
 	// ModelManager からスライムモデル取得
-	model = ModelManager::Instance().Load(modelPath);
-	//models.push_back(std::make_unique<Model>("Data/Model/Slime/Slime.mdl"));
+	uniqueModel = ModelManager::Instance().CreateUniqueInstance(modelPath);
 
-	if (model) {
-		animator.SetModel(model);
-		animator.Play("NIC_Idle", true); // 最初はIdle
-	}
+	// 親クラス(GameObject)のポインタにもセットしておく（描画や当たり判定で使用するため）
+	model = uniqueModel.get();
 
 	// モデルが大きいのでスケーリング
 	scale.x = scale.y = scale.z = 0.01f;
@@ -52,6 +49,11 @@ EnemySlime::EnemySlime(const char* modelPath)
 		}
 	}
 
+	if (model) {
+		animator.SetModel(model);
+		animator.Play("NIC_Idle", true); // 最初はIdle
+		model->UpdateTransform();
+	}
 
 	//徘徊ステートへ偏移
 	SetWanderState();
