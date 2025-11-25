@@ -55,6 +55,7 @@ void Barracks::Update(float elapsedTime)
 
 		enemys = std::make_shared<EnemySlime>();	//“G‚ðƒXƒ|[ƒ“
 		enemys->SetPosition(spawn_positon);			//ƒXƒ|[ƒ“ˆÊ’u–{Ý’è
+		enemys->SetTerritory(spawn_positon, 10.0f);
 		EnemyManager::Instance().Register(enemys);	//“G‚ð“o˜^
 		spawned_enemies.push_back(enemys);			//•ºŽÉ‚É‚à“G‚ð“o˜^
 		GameObjectManager::Instance().AddObject(objects);

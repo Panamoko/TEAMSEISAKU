@@ -167,6 +167,11 @@ void EnemySlime::SetTerritory(const DirectX::XMFLOAT3& origin, float range)
 {
 	territoryOrigin = origin;
 	territoryRange = range;
+
+	if (state == State::Wander)
+	{
+		SetRandomTargerPosition();
+	}
 }
 
 //ターゲット位置をランダム設定
