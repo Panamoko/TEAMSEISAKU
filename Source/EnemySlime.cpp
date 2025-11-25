@@ -262,7 +262,7 @@ void EnemySlime::UpdateIdleState(float elapsedTime)
 		//見つかったら攻撃ステートへ偏移
 		SetAttackState(target); // ターゲットを渡す
 	}
-};
+}
 
 //プレイヤー索敵
 Player* EnemySlime::SearchPlayer()
