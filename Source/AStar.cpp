@@ -37,67 +37,74 @@ std::vector<std::pair<int, int>> AStar::FindPath(
     node_pool.Reserve(gridMap.GetWidth() * gridMap.GetHeight());
 
     //スタートノードを作成
-    auto startNode = node_pool.GetNode();       //ノードを作成
-    startNode->node_x = start_cellX;            //ノードのX座標をセット
-    startNode->node_z = start_cellZ;            //ノードのZ座標をセット
-    startNode->goal_cost = 0.0f;                //スタートからのコストは0
-    startNode->h_cost = Heuristic(start_cellX, start_cellZ, goal_cellX, goal_cellZ);//推定コストを計算
-    node_map[{start_cellX, start_cellZ}] = startNode;
+    auto start_node = node_pool.GetNode();       //ノードを作成
+    start_node->node_x = start_cellX;            //ノードのX座標をセット
+    start_node->node_z = start_cellZ;            //ノードのZ座標をセット
+    start_node->goal_cost = 0.0f;                //スタートからのコストは0
+    start_node->h_cost = Heuristic(start_cellX, start_cellZ, goal_cellX, goal_cellZ);//推定コストを計算
+    node_map[{start_cellX, start_cellZ}] = start_node;
 
     std::priority_queue<Node*, std::vector<Node*>, CompareNode> open_list;
     std::unordered_set<std::pair<int, int>, pair_hash> closed_set;
-    open_list.push(startNode);
+    open_list.push(start_node);
+    max_search_nodes = 5000;
 
     //探索ループ開始
     while (!open_list.empty())
     {
+        if (node_pool.GetNextFreeIndex() > max_search_nodes)
+        {
+            //探索ノードが制限を超えたら終了
+            return{};
+        }
+
         //fCost が最小のノードを取得
-        Node* currentNode = open_list.top();
+        Node* current_node = open_list.top();
         open_list.pop();
 
         //既にクローズド済みならスキップ
-        if (closed_set.find({ currentNode->node_x,currentNode->node_z }) != closed_set.end())
+        if (closed_set.find({ current_node->node_x,current_node->node_z }) != closed_set.end())
             continue;
 
         //ゴールに到達したか判定
-        if (currentNode->node_x == goal_cellX && currentNode->node_z == goal_cellZ)
+        if (current_node->node_x == goal_cellX && current_node->node_z == goal_cellZ)
         {
             //経路復元
             std::vector<std::pair<int, int>> path;
-            for (Node* trace = currentNode; trace; trace = trace->parent)
+            for (Node* trace = current_node; trace; trace = trace->parent)
                 path.emplace_back(trace->node_x, trace->node_z);
             std::reverse(path.begin(), path.end());//正しい順番で返す
             return path;//経路を返す
         }
 
         //現ノードをクローズリストに追加
-        closed_set.insert({ currentNode->node_x,currentNode->node_z });
+        closed_set.insert({ current_node->node_x, current_node->node_z });
 
         // 隣接セルを取得
-        auto neighbors = GetNeighbors(currentNode->node_x, currentNode->node_z, gridMap);
+        auto neighbors = GetNeighbors(current_node->node_x, current_node->node_z, gridMap);
 
-        for (auto&[neighborX,neighborZ]:GetNeighbors(currentNode->node_x,currentNode->node_z,gridMap))
+        for (auto&[neighbor_x,neighbor_z]:GetNeighbors(current_node->node_x, current_node->node_z,gridMap))
         {
-            if (closed_set.count({ neighborX,neighborZ }))
+            if (closed_set.count({ neighbor_x,neighbor_z }))
                 continue;
 
             //ノードが既に作成済みかチェック
-            Node* neighborNodeRtr = nullptr;
-            float new_cost = currentNode->goal_cost + move_cost;
+            Node* neighbor_node_rtr = nullptr;
+            float new_cost = current_node->goal_cost + move_cost;
 
-            auto it = node_map.find({ neighborX,neighborZ });
+            auto it = node_map.find({ neighbor_x,neighbor_z });
             if (it != node_map.end())
             {
-                neighborNodeRtr = it->second;
+                neighbor_node_rtr = it->second;
 
                 constexpr float EPS = 1e-5f;
-                if (new_cost + EPS < neighborNodeRtr->goal_cost)
+                if (new_cost + EPS < neighbor_node_rtr->goal_cost)
                 {
-                    neighborNodeRtr->goal_cost = new_cost;
-                    neighborNodeRtr->parent = currentNode;
+                    neighbor_node_rtr->goal_cost = new_cost;
+                    neighbor_node_rtr->parent = current_node;
 
                     //オープンリストに再追加
-                    open_list.push(neighborNodeRtr);
+                    open_list.push(neighbor_node_rtr);
                 }
 
             }
@@ -106,13 +113,13 @@ std::vector<std::pair<int, int>> AStar::FindPath(
                 //新しいノードを作成
                 auto neighborNode = node_pool.GetNode();
                 neighborNode->Reset();
-                neighborNode->node_x = neighborX;
-                neighborNode->node_z = neighborZ;
-                neighborNode->goal_cost = currentNode->goal_cost + move_cost;
-                neighborNode->h_cost = Heuristic(neighborX, neighborZ, goal_cellX, goal_cellZ);
-                neighborNode->parent = currentNode;
+                neighborNode->node_x = neighbor_x;
+                neighborNode->node_z = neighbor_z;
+                neighborNode->goal_cost = current_node->goal_cost + move_cost;
+                neighborNode->h_cost = Heuristic(neighbor_x, neighbor_z, goal_cellX, goal_cellZ);
+                neighborNode->parent = current_node;
 
-                node_map[{neighborX, neighborZ}] = neighborNode;
+                node_map[{neighbor_x, neighbor_z}] = neighborNode;
                 open_list.push(neighborNode);
             }
         }
@@ -195,8 +202,8 @@ std::vector<std::pair<int, int>> AStar::ReplanPath(
     }
 
     //経路上の障害物検出
-    bool pathBlocked = false;
-    int replanStartIndex = 0;
+    bool path_blocked = false;
+    int replan_start_index = 0;
 
     if (!last_path.empty())
     {
@@ -210,81 +217,41 @@ std::vector<std::pair<int, int>> AStar::ReplanPath(
             if (dist < min_dist)
             {
                 min_dist = dist;
-                replanStartIndex = i;
+                replan_start_index = i;
             }
         }
 
         //経路上に障害物があるかチェック
-        for (int i = replanStartIndex; i < static_cast<int>(last_path.size()); i++)
+        for (int i = replan_start_index; i < static_cast<int>(last_path.size()); i++)
         {
             auto [x, z] = last_path[i];
             if (gridMap.IsBlocked(x, z))
             {
-                pathBlocked = true;
+                path_blocked = true;
                 break;
             }
         }
     }
 
     //経路が問題なければそのまま返す
-    if (!pathBlocked && !last_path.empty())
+    if (!path_blocked && !last_path.empty())
         return last_path;
 
-    //ノード再利用による部分再探索 
-    for (auto it = node_map.begin(); it != node_map.end();)
-    {
-        auto [x, z] = it->first;
-        //近傍範囲のみをクリア
-        if (gridMap.IsBlocked(x, z) ||
-            abs(x - agent_cellX) > 5 ||
-            abs(z - agent_cellZ) > 5)
-        {
-            it = node_map.erase(it);
-        }
-        else
-        {
-            it++;
-        }
-    }
 
-    node_pool.Reset();//メモリプールリセット
 
-    //部分再探索開始セルを決定
-    auto replan_start = (last_path.empty())
-        ? std::make_pair(startX, startZ)
-        : last_path[replanStartIndex];
 
     //部分再探索実行
-    auto new_segment = FindPath(
-        replan_start.first, replan_start.second,
+    auto new_path = FindPath(
+        agent_cellX, agent_cellZ, // 始点をエージェントの現在地に設定
         goalX, goalZ, gridMap
     );
 
-    if (new_segment.empty())
+    if (new_path.empty())
     {
         //再探索失敗 → 前回の経路をそのまま返す
         return last_path;
     }
 
-    //経路結合
-    std::vector<std::pair<int, int>> new_path;
-    if (!last_path.empty())
-    {
-        new_path.insert(
-            new_path.end(),
-            last_path.begin(),
-            last_path.begin() + replanStartIndex + 1
-        );
-    }
-
-    if (!last_path.empty() && replanStartIndex < static_cast<int>(last_path.size()) - 1)
-    {
-        new_path.insert(
-            new_path.end(),
-            last_path.begin(),
-            last_path.begin() + replanStartIndex + 1
-        );
-    }
     last_path = new_path;
     return last_path;
 }
@@ -295,10 +262,16 @@ float AStar::Heuristic(
     int goal_cellX,
     int goal_cellZ) const
 {
-    float deltaX = static_cast<float>(current_cellX - goal_cellX);
-    float deltaZ = static_cast<float>(current_cellZ - goal_cellZ);
+    float delta_x = static_cast<float>(std::abs(current_cellX - goal_cellX));
+    float delta_z = static_cast<float>(std::abs(current_cellZ - goal_cellZ));
 
-    return std::sqrt(deltaX * deltaX + deltaZ * deltaZ);
+    // 4方向探索に最適なマンハッタン距離
+    return delta_x + delta_z;
+
+    //float deltaX = static_cast<float>(current_cellX - goal_cellX);
+    //float deltaZ = static_cast<float>(current_cellZ - goal_cellZ);
+
+    //return std::sqrt(deltaX * deltaX + deltaZ * deltaZ);
 }
 
 std::vector<std::pair<int, int>> AStar::GetNeighbors(

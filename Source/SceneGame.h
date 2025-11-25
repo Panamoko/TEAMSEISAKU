@@ -12,6 +12,7 @@
 #include <cfloat>   // ← 追加（FLT_MAX 用）
 #include "GridMap.h"
 #include "Picking_Ray.h"
+#include "AllySlimeMelee.h"
 
 class Player;
 class AllySlime;         // 既存＝直線弾
@@ -49,10 +50,15 @@ public:
 	static float GetTimeScale() { return s_timeScale; }
 
 private:
+	// 既存の配列に加えて追加
+	std::vector<std::unique_ptr<AllySlimeMelee>> alliesMelee;
+
+	//近接スライム生成用
+	void AddAllyMeleeFor(Player* leader);
 
 	editor game_editor;
 	std::vector<std::unique_ptr<Model>> models;
-	// ★直線／追尾の別管理
+	// 直線／追尾の別管理
 	std::vector<std::unique_ptr<AllySlime>>       alliesStraight;
 	std::vector<std::unique_ptr<AllySlimeHoming>> alliesHoming;
 	std::vector<std::shared_ptr<GameObject>> objects;

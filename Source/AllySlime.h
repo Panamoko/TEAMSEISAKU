@@ -41,7 +41,7 @@ private:
 private:
     // ====== 隊列（フォーメーション）パラメータ ======
     int   index = 0;                          // 自身の隊列インデックス
-    int   rowWidth = 4;                       // 横方向の人数（例: 4 なら 0..3 が 1 行目）
+    int   rowWidth = 3;                       // 横方向の人数（例: 4 なら 0..3 が 1 行目）
     float followDistance = 1.2f;              // 縦方向の間隔
     float lateralSpacing = 0.9f;              // 横方向の間隔
     float moveSpeed = 4.0f;                   // 追従時の最大移動速度
