@@ -1,9 +1,12 @@
 #include "ProjectileHoming.h"
+#include "ModelManager.h"
 
 ProjectileHoming::ProjectileHoming(ProjectileManager* manager)
     :Projectile(manager)
 {
-    model = new Model("Data/Model/Sword/Sword.mdl");
+	const char* path = "Data/Model/Sword/Sword.mdl";
+	auto resource = ModelManager::Instance().GetResource(path);
+	model = new Model(resource, path);
 
     // モデルが小さいのでスケーリング
     scale.x = scale.y = scale.z = 3.0f;

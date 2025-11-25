@@ -3,13 +3,11 @@
 //
 
 #include "AllySlime.h"
-#include "Character.h"           // キャラクター共通の処理を参照
 #include "Player.h"              // プレイヤー位置や方向を取得して隊列アンカーに反映
 #include "EnemyManager.h"        // 敵の取得に使用
 #include "ProjectileStraite.h"   // 味方が撃つ直線弾を生成するために使用
 #include "ModelManager.h"        // モデル読み込み
 #include "Collision.h"           // 各種衝突判定ユーティリティ
-#include "AllyTargeting.h"
 #include "GimmicManager.h"        // BreakWallとCoreを取得するため
 #include "Gimmic_BreakWall.h"    // BreakWall判定用
 #include "Core.h"                // コア判定用
