@@ -46,7 +46,7 @@ private:
 private:
 	// ===== 編隊・追従パラメータ（AllySlime と同値） =====
 	int   index = 0;               // 編隊内スロット番号
-	int   rowWidth = 4;            // 1列あたり
+	int   rowWidth = 3;            // 1列あたり
 	float followDistance = 1.2f;   // 前後間隔
 	float lateralSpacing = 0.9f;   // 左右間隔
 	float moveSpeed = 3.0f;        // 追従移動速度（お好みで）

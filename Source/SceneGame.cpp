@@ -17,7 +17,7 @@
 #include <cmath>
 #include <DirectXMath.h>
 #include <algorithm>
-static constexpr int kMaxAlliesPerPlayer = 5;
+static constexpr int kMaxAlliesPerPlayer = 6;
 using namespace DirectX;
 #include "SceneManager.h"
 #include "SceneTitle.h"
@@ -176,6 +176,7 @@ void SceneGame::Update(float elapsedTime)
 		// 味方スライム更新
 		for (auto& a : alliesStraight) a->Update(scaledElapsedTime);
 		for (auto& a : alliesHoming)  a->Update(scaledElapsedTime);
+		for (auto& a : alliesMelee)   a->Update(scaledElapsedTime);
 
 		CollisionManager::Instance().CheckAllCollision();
 
@@ -193,6 +194,9 @@ void SceneGame::Update(float elapsedTime)
 		}
 		if (down & GamePad::BTN_Y) {      // Vキー（エミュ）＝追尾弾
 			AddAllyHomingFor(active);
+		}
+		if (down & GamePad::BTN_B) {
+			AddAllyMeleeFor(active);
 		}
 	}
 	// === 直線・追尾をそれぞれ更新 ===
@@ -236,7 +240,7 @@ void SceneGame::Render()
 
 		for (auto& a : alliesStraight) a->Render(rc, modelRenderer);
 		for (auto& a : alliesHoming)  a->Render(rc, modelRenderer);
-
+		for (auto& a : alliesMelee)   a->Render(rc, modelRenderer);
 		// エネミー描画
 		EnemyManager::Instance().Render(rc, modelRenderer);
 
@@ -295,6 +299,7 @@ int SceneGame::CountAlliesFor(Player* leader) const
 	int n = 0;
 	for (auto& a : alliesStraight) if (a->GetLeader() == leader) ++n;
 	for (auto& a : alliesHoming)  if (a->GetLeader() == leader) ++n;
+	for (auto& a : alliesMelee)   if (a->GetLeader() == leader) ++n;
 	return n;
 }
 
@@ -323,9 +328,21 @@ void SceneGame::AddAllyHomingFor(Player* leader)
 	alliesHoming.emplace_back(std::move(p));
 }
 
+void SceneGame::AddAllyMeleeFor(Player* leader)
+{
+	if (CountAlliesFor(leader) >= kMaxAlliesPerPlayer)
+	{
+		return;
+	}
+	int slot = CountAlliesFor(leader);
+	auto p = std::make_unique<AllySlimeMelee>(slot);
+	p->SetLeader(leader);
+	alliesMelee.emplace_back(std::move(p));
+}
+
 int SceneGame::CountAlliesGlobal() const
 {
-	return static_cast<int>(alliesStraight.size() + alliesHoming.size());
+	return static_cast<int>(alliesStraight.size() + alliesHoming.size() + alliesMelee.size());
 }
 
 REGISTER_SCENE(SceneGame);

@@ -313,6 +313,9 @@
     <ClInclude Include="Source\FileUtility.h">
       <Filter>Source\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="Source\AllySlimeMelee.h">
+      <Filter>Source\Character\Player</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -521,6 +524,9 @@
     </ClCompile>
     <ClCompile Include="Source\FileUtility.cpp">
       <Filter>Source\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AllySlimeMelee.cpp">
+      <Filter>Source\Character\Player</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
