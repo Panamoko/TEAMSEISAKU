@@ -801,6 +801,11 @@ bool Player::UpdateActiveByKeyboard(const std::vector<std::unique_ptr<Player>>& 
 	return false;
 }
 
+// ... (前略)
+#include "Core.h" // Coreクラスを使うために必要（既にインクルードされているはずですが確認）
+
+// ... (中略)
+
 void Player::UpdateSpawn(std::vector<std::unique_ptr<Player>>& players, const Picking_Ray& pickingRay)
 {
 	// 左クリック判定
@@ -824,6 +829,29 @@ void Player::UpdateSpawn(std::vector<std::unique_ptr<Player>>& players, const Pi
 				{
 					float hitX = rayOrg.x + t * rayDir.x;
 					float hitZ = rayOrg.z + t * rayDir.z;
+
+					// ===========================================================
+					// ★追加: コア（拠点中心）との距離チェック
+					// ===========================================================
+					Core* core = Core::Instance();
+					if (core)
+					{
+						// クリック地点とコアの距離の二乗を計算
+						float dx = hitX - core->position.x;
+						float dz = hitZ - core->position.z;
+						float distSq = dx * dx + dz * dz;
+
+						// 壁の内側とみなす「禁止エリアの半径」
+						// ※画面上の壁の配置に合わせて数値を調整してください（例: 20.0f ～ 30.0f くらい）
+						float forbiddenRadius = 30.0f;
+
+						// 指定半径より内側なら、何もせずリターン（生成しない）
+						if (distSq < forbiddenRadius * forbiddenRadius)
+						{
+							return;
+						}
+					}
+					// ===========================================================
 
 					// 生成と初期化
 					auto newPlayer = std::make_unique<Player>();
