@@ -406,7 +406,10 @@ void EnemySlime::OnDead()
 
 void EnemySlime::OnCollision(GameObject* object)
 {
-	position.x += mtd.x; position.y += mtd.y; position.z += mtd.z;
+	if (fabsf(mtd.x) > 1e-6f || fabsf(mtd.y) > 1e-6f || fabsf(mtd.z) > 1e-6f)
+	{
+		position.x += mtd.x; position.y += mtd.y; position.z += mtd.z;
+	}
 }
 
 REGISTER_GAMEOBJECT(EnemySlime);

@@ -738,7 +738,10 @@ void Player::UpdateAutoMoveToEnemy(float dt)
 void Player::OnCollision(GameObject* object)
 {
 	//DirectX::XMFLOAT3 mtd = CollisionManager::Instance().GetMtd();
-	position.x += mtd.x; position.y += mtd.y; position.z += mtd.z;
+	if (fabsf(mtd.x) > 1e-6f || fabsf(mtd.y) > 1e-6f || fabsf(mtd.z) > 1e-6f)
+	{
+		position.x += mtd.x; position.y += mtd.y; position.z += mtd.z;
+	}
 }
 
 // UŒ‚—Dæ“xØ‚è‘Ö‚¦“ü—Í
