@@ -571,213 +571,78 @@ bool Collision::IntersectCylinder_Vs_OBB(
 	DirectX::XMFLOAT3& outNormal,
 	float& outPenetration)
 {
-	//最小貫通深度と対応する法線ベクトルを記録する変数
-	float min_penetration = FLT_MAX;
-	DirectX::XMVECTOR best_normal = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+	using namespace DirectX;
 
-	//円柱の中心座標
-	DirectX::XMVECTOR c_world = DirectX::XMLoadFloat3(&cylinder->center);
+	// 円柱中心をOBBローカル空間に変換
+	XMVECTOR c_world = XMLoadFloat3(&cylinder->center);
+	XMVECTOR obb_center = XMLoadFloat3(&obb->center);
+	XMVECTOR local = XMVectorSubtract(c_world, obb_center);
 
-	//円柱のハーフハイト
-	float half_heightA = cylinder->height * 0.5f;
+	// OBB軸方向成分
+	float localX = XMVectorGetX(XMVector3Dot(local, XMLoadFloat3(&obb->axis[0])));
+	float localY = XMVectorGetX(XMVector3Dot(local, XMLoadFloat3(&obb->axis[1])));
+	float localZ = XMVectorGetX(XMVector3Dot(local, XMLoadFloat3(&obb->axis[2])));
 
-	//OBBの中心座標と軸ベクトル
-	DirectX::XMVECTOR obb_center = DirectX::XMLoadFloat3(&obb->center);
-	DirectX::XMVECTOR obb_axis[3] = {
-		DirectX::XMLoadFloat3(&obb->axis[0]),
-		DirectX::XMLoadFloat3(&obb->axis[1]),
-		DirectX::XMLoadFloat3(&obb->axis[2])
-	};
+	// AABB空間での最近点を求める
+	float clampedX = (std::clamp)(localX, -obb->half.x, obb->half.x);
+	float clampedY = (std::clamp)(localY, -obb->half.y, obb->half.y);
+	float clampedZ = (std::clamp)(localZ, -obb->half.z, obb->half.z);
+	XMFLOAT3 closest_local{ clampedX, clampedY, clampedZ };
 
-	//OBBの3つの軸(axis0,axis1,axis2)による分離チェック
-	for (int i = 0; i < 3; i++)
+	// 最近点をワールド座標に戻す
+	XMVECTOR closest_world =
+		obb_center +
+		XMLoadFloat3(&obb->axis[0]) * clampedX +
+		XMLoadFloat3(&obb->axis[1]) * clampedY +
+		XMLoadFloat3(&obb->axis[2]) * clampedZ;
+
+	// XZ平面での距離チェック
+	XMFLOAT3 cA = cylinder->center;
+	XMFLOAT3 closest;
+	XMStoreFloat3(&closest, closest_world);
+
+	float dx = closest.x - cA.x;
+	float dz = closest.z - cA.z;
+	float distSq = (dx * dx) + (dz * dz);
+	float radius = cylinder->radius;
+
+	// 半径より遠ければ衝突していない
+	if (distSq > radius * radius)
 	{
-		DirectX::XMVECTOR axis = obb_axis[i];
-
-		//OBBの投影
-		float minB, maxB;
-		ProjectOBB(obb, axis, minB, maxB);
-
-		//円柱の投影
-		float cylinder_projection = DirectX::XMVectorGetX(DirectX::XMVector3Dot(c_world, axis));
-
-		//円柱の投影幅を計算
-		DirectX::XMVECTOR axis_xz = DirectX::XMVectorSetY(axis, 0.0f);
-		float radius_projection = cylinder->radius * DirectX::XMVectorGetX(DirectX::XMVector3Length(axis_xz));
-
-		//高さによる広がり
-		float height_projection = half_heightA * DirectX::XMVectorGetX(DirectX::XMVectorAbs(DirectX::XMVector3Dot(DirectX::XMVectorSet(0, 1, 0, 0), axis)));
-
-		float radiusA = radius_projection + height_projection;
-		float minA = cylinder_projection - radiusA;
-		float maxA = cylinder_projection + radiusA;
-
-		float overlap, center_diff;
-		if (!Overlap(minA, maxA, minB, maxB, overlap, center_diff))
-		{
-			//分離軸が見つかった
-			outNormal = { 0.0f,0.0f,0.0f };
-			outPenetration = 0.0f;
-			return false;
-		}
-
-		//最長貫通深度を更新
-		if (overlap < min_penetration)
-		{
-			min_penetration = overlap;
-			//法線ベクトルの方向を、OBBの中心から円柱の中心に向かう方向(center_diff)で決定
-			if (center_diff < 0.0f)
-			{
-				best_normal = DirectX::XMVectorNegate(axis);
-			}
-			else
-			{
-				best_normal = axis;
-			}
-		}
-	}
-
-	//円柱の高さ軸(Y軸)による分離チェック
-	DirectX::XMVECTOR axis_cylinder = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-
-	//円柱の投影(ワールドY軸方向)
-	float minA_cylinder = cylinder->center.y - half_heightA;
-	float maxA_cylinder = cylinder->center.y + half_heightA;
-
-	//OBBの投影(ワールドY軸方向)
-	float minB_cross, maxB_cross;
-	ProjectOBB(obb, axis_cylinder, minB_cross, maxB_cross);
-
-	float overlap_cylinder, center_diff_cylinder;
-	if (!Overlap(minA_cylinder, maxA_cylinder, minB_cross, maxB_cross, overlap_cylinder, center_diff_cylinder))
-	{
-		//分離軸が見つかった
-		outNormal = { 0.0f,0.0f,0.0f };
+		outNormal = { 0,0,0 };
 		outPenetration = 0.0f;
 		return false;
 	}
 
-	//最小貫通深度を更新
-	if (overlap_cylinder < min_penetration)
+	// 高さ方向の重なり確認
+	float half_heightA = cylinder->height * 0.5f;
+	float topA = cA.y + half_heightA;
+	float bottomA = cA.y - half_heightA;
+
+	float topB = obb->center.y + obb->half.y;
+	float bottomB = obb->center.y - obb->half.y;
+
+	if (topA < bottomB || topB < bottomA)
 	{
-		min_penetration = overlap_cylinder;
-		best_normal = (center_diff_cylinder > 0) ? axis_cylinder : DirectX::XMVectorNegate(axis_cylinder);
+		outNormal = { 0,0,0 };
+		outPenetration = 0.0f;
+		return false;
 	}
 
-	//OBBの3辺と円柱の軸の外積軸による分離チェック
+	// XZ平面での法線・貫入量
+	float dist = std::sqrtf(distSq);
+	float penetration = radius - dist;
 
-	DirectX::XMVECTOR axis_cylinder_world = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	outNormal = { dx / dist, 0.0f, dz / dist };
+	outPenetration = penetration;
 
-	for (int i = 0; i < 3; i++)
+	// 上下方向にも軽く補正したい場合
+	float yOverlap = (std::min)(topA, topB) - (std::max)(bottomA, bottomB);
+	if (yOverlap > 0.0f && yOverlap < penetration)
 	{
-		DirectX::XMVECTOR obb_edge_axis = obb_axis[i];
-		DirectX::XMVECTOR cross_axis = DirectX::XMVector3Cross(obb_edge_axis, axis_cylinder_world);
-
-		// 軸がゼロベクトルに近い場合はスキップ (OBBのY軸とワールドY軸が平行な場合など)
-		if (DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(cross_axis)) < 1e-6f) continue;
-
-		// 軸を正規化
-		cross_axis = DirectX::XMVector3Normalize(cross_axis);
-
-		// OBBの投影
-		float minB_cross, maxB_cross;
-		ProjectOBB(obb, cross_axis, minB_cross, maxB_cross);
-
-		// 円柱の投影 (高さと半径を考慮)
-		float cylinder_projection = DirectX::XMVectorGetX(DirectX::XMVector3Dot(c_world, cross_axis));
-
-		DirectX::XMVECTOR axis_xz = DirectX::XMVectorSetY(cross_axis, 0.0f);
-		float radius_projection = cylinder->radius * DirectX::XMVectorGetX(DirectX::XMVector3Length(axis_xz));
-
-		float height_projection = half_heightA * DirectX::XMVectorGetX(DirectX::XMVectorAbs(DirectX::XMVector3Dot(axis_cylinder_world, cross_axis)));
-
-		float radiusA = radius_projection + height_projection;
-		float minA = cylinder_projection - radiusA;
-		float maxA = cylinder_projection + radiusA;
-
-		float overlap_cylinder, center_diff_cylinder;
-		if (!Overlap(minA, maxA, minB_cross, maxB_cross, overlap_cylinder, center_diff_cylinder))
-		{
-			//分離軸が見つかった
-			return false;
-		}
-
-		//最小貫通深度を更新
-		if (overlap_cylinder < min_penetration)
-		{
-			min_penetration = overlap_cylinder;
-			best_normal = (center_diff_cylinder > 0) ? cross_axis : DirectX::XMVectorNegate(cross_axis);
-		}
+		outNormal = { 0.0f, (cA.y > obb->center.y) ? 1.0f : -1.0f, 0.0f };
+		outPenetration = yOverlap;
 	}
-
-	//OBBに最も近い円柱の中心点への軸による分離チェック
-
-	// OBBの中心から円柱の中心へのベクトル
-	DirectX::XMVECTOR obb_to_cylinder = DirectX::XMVectorSubtract(c_world, obb_center);
-
-	// OBBのローカル空間での円柱の中心の座標を求める
-	float localX = DirectX::XMVectorGetX(DirectX::XMVector3Dot(obb_to_cylinder, obb_axis[0]));
-	float localY = DirectX::XMVectorGetX(DirectX::XMVector3Dot(obb_to_cylinder, obb_axis[1]));
-	float localZ = DirectX::XMVectorGetX(DirectX::XMVector3Dot(obb_to_cylinder, obb_axis[2]));
-
-	// OBBの半分のサイズ (ハーフエクステント)
-	float obb_half_extent[3] = { obb->half.x, obb->half.y, obb->half.z };
-
-	// OBBに最も近い円柱の中心点をローカル座標で見つける (クランプ)
-	float clampedX = (std::max)(-obb_half_extent[0], (std::min)(localX, obb_half_extent[0]));
-	float clampedY = (std::max)(-obb_half_extent[1], (std::min)(localY, obb_half_extent[1]));
-	float clampedZ = (std::max)(-obb_half_extent[2], (std::min)(localZ, obb_half_extent[2]));
-
-	// OBBのローカル空間での、クランプされた点から円柱の中心へのベクトル
-	DirectX::XMVECTOR diff_local = DirectX::XMVectorSet(localX - clampedX, localY - clampedY, localZ - clampedZ, 0.0f);
-
-	// diff_local をワールド座標に戻す（最短距離軸の候補）
-	DirectX::XMVECTOR axis_candidate = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-	axis_candidate = DirectX::XMVectorAdd(axis_candidate, DirectX::XMVectorScale(obb_axis[0], DirectX::XMVectorGetX(diff_local)));
-	axis_candidate = DirectX::XMVectorAdd(axis_candidate, DirectX::XMVectorScale(obb_axis[1], DirectX::XMVectorGetY(diff_local)));
-	axis_candidate = DirectX::XMVectorAdd(axis_candidate, DirectX::XMVectorScale(obb_axis[2], DirectX::XMVectorGetZ(diff_local)));
-
-	// 軸を正規化
-	DirectX::XMVECTOR shortest_distance_axis = DirectX::XMVector3Normalize(axis_candidate);
-
-	// 軸がゼロベクトルに近い場合はスキップ
-	if (DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(shortest_distance_axis)) > 1e-6f)
-	{
-		// OBBの投影
-		float minB_shortest, maxB_shortest;
-		ProjectOBB(obb, shortest_distance_axis, minB_shortest, maxB_shortest);
-
-		// 円柱の投影 (高さと半径を考慮)
-		float cylinder_projection = DirectX::XMVectorGetX(DirectX::XMVector3Dot(c_world, shortest_distance_axis));
-
-		DirectX::XMVECTOR axis_xz = DirectX::XMVectorSetY(shortest_distance_axis, 0.0f);
-		float radius_projection = cylinder->radius * DirectX::XMVectorGetX(DirectX::XMVector3Length(axis_xz));
-
-		DirectX::XMVECTOR axis_cylinder_world = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-		float height_projection = half_heightA * DirectX::XMVectorGetX(DirectX::XMVectorAbs(DirectX::XMVector3Dot(axis_cylinder_world, shortest_distance_axis)));
-
-		float radiusA = radius_projection + height_projection;
-		float minA = cylinder_projection - radiusA;
-		float maxA = cylinder_projection + radiusA;
-
-		float overlap_cylinder, center_diff_cylinder;
-		if (!Overlap(minA, maxA, minB_shortest, maxB_shortest, overlap_cylinder, center_diff_cylinder))
-		{
-			//分離軸が見つかった
-			return false;
-		}
-
-		//最小貫通深度を更新
-		if (overlap_cylinder < min_penetration)
-		{
-			min_penetration = overlap_cylinder;
-			best_normal = (center_diff_cylinder > 0) ? shortest_distance_axis : DirectX::XMVectorNegate(shortest_distance_axis);
-		}
-	}
-
-	//すべての軸で分離が見つからなかった場合、衝突している
-	DirectX::XMStoreFloat3(&outNormal, best_normal);
-	outPenetration = min_penetration;
 
 	return true;
 }
