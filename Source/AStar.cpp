@@ -35,10 +35,13 @@ std::vector<std::pair<int, int>> AStar::FindPath(
 
     //新しいノード管理の初期化
     map_width_ = gridMap.GetWidth();
-    size_t map_size = static_cast<size_t>(gridMap.GetWidth() * gridMap.GetHeight());
+    size_t map_size = static_cast<size_t>(gridMap.GetWidth() * gridMap.GetHeight());//マップの全セル数（幅×高さ）を計算し、map_sizeに保存
 
+    /*全セルに対応するノードポインタの配列（node_grid_pointers）を、
+    マップサイズで初期化し、全てnullptr（ノード未作成）に設定*/
     node_grid_pointers.assign(map_size, nullptr);
 
+    //ノードプールがマップの全セルを保持できるように、メモリを事前に確保
     node_pool.Reserve(map_size);
 
     //スタートノードを作成
@@ -48,13 +51,17 @@ std::vector<std::pair<int, int>> AStar::FindPath(
     start_node->goal_cost = 0.0f;                //スタートからのコストは0
     start_node->h_cost = Heuristic(start_cellX, start_cellZ, goal_cellX, goal_cellZ);//推定コストを計算
     
+    //スタートノードの座標を一次元配列のインデックスに変換
     size_t start_index = start_cellZ * map_width_ + start_cellX;
 
+    //ノードポインタ配列の対応する位置に、作成したスタートノードのポインタを保存
     node_grid_pointers[start_index] = start_node;
     
+    //探索待ちのノードを管理する優先度付きキュー（Open List）を初期化
     std::priority_queue<Node*, std::vector<Node*>, CompareNode> open_list;
-    open_list.push(start_node);
-    max_search_nodes = 5000;
+
+    open_list.push(start_node);//作成したスタートノードをOpen Listに入れる
+    max_search_nodes = 5000;//ノード探索数の上限を設定
 
     //探索ループ開始
     while (!open_list.empty())
@@ -76,41 +83,52 @@ std::vector<std::pair<int, int>> AStar::FindPath(
         //ゴールに到達したか判定
         if (current_node->node_x == goal_cellX && current_node->node_z == goal_cellZ)
         {
-            //経路復元
+            //ゴールノードからparentポインタをたどり、スタートノードまで逆向きに経路（座標のリスト）を復元
             std::vector<std::pair<int, int>> path;
             for (Node* trace = current_node; trace; trace = trace->parent)
                 path.emplace_back(trace->node_x, trace->node_z);
-            std::reverse(path.begin(), path.end());//正しい順番で返す
+            std::reverse(path.begin(), path.end());//復元した経路を正しい順序（スタートからゴールへ）に反転
             return path;//経路を返す
         }
 
-        //現ノードをクローズリストに追加
-        current_node->node_state = Node::CLOSED; // ノードの状態をCLOSEDに更新
+        //現在のノードの探索が完了したため、その状態をCLOSEDに設定
+        current_node->node_state = Node::CLOSED;
 
         // 隣接セルを取得するためのスタック上の配列
         std::pair<int, int> neighbors_array[4]; // 4方向なのでサイズは4
+
+        /*現在のノードから通行可能な隣接セルの座標を取得し、
+        その数を格納*/
         size_t neighbor_count = GetNeighbors(current_node->node_x, current_node->node_z, gridMap, neighbors_array);
 
-
+        //取得した隣接セルを一つずつ処理するループを開始
         for (size_t i = 0; i < neighbor_count; ++i)
         {
             //ノードが既に作成済みかチェック
             Node* neighbor_node = nullptr;
-            float new_cost = current_node->goal_cost + move_cost;
+            float new_cost = current_node->goal_cost + move_cost;//隣接セルまでの新しいGコスト（new_cost）を計算
 
+            //隣接セルのX座標とZ座標を取得
             auto neighbor_x = neighbors_array[i].first;
             auto neighbor_z = neighbors_array[i].second;
 
+            //隣接セルの座標からインデックスを計算し、対応するノードポインタを配列から取得
             size_t neighbor_index = neighbor_z * map_width_ + neighbor_x;
             neighbor_node = node_grid_pointers[neighbor_index];
 
+            //隣接セルに対応するノードが既に存在する場合
             if(neighbor_node != nullptr)
             {
+                //隣接ノードがCLOSED（既に処理済み）であるかチェック
                 if (neighbor_node->node_state == Node::CLOSED)
                 {
-                    constexpr float EPS = 1e-5f;
+                    /*現在の経路で到達する新しいGコストが、
+                    既存のノードが持つ古いGコストより小さいかチェック*/
+
+                    constexpr float EPS = 1e-5f;//浮動小数点誤差対策
                     if (new_cost + EPS < neighbor_node->goal_cost)
                     {
+                        //ノードのGコストを更新し、親ノードを現在のノードに設定
                         neighbor_node->goal_cost = new_cost;
                         neighbor_node->parent = current_node;
 
@@ -327,5 +345,5 @@ size_t AStar::GetNeighbors(
 
 size_t AStar::CoordinateToIndex(int cell_x, int cell_z) const
 {
-    return static_cast<size_t>(cell_z * map_width + cell_x);
+    return static_cast<size_t>(cell_z * map_width_ + cell_x);
 }

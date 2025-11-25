@@ -43,7 +43,7 @@ private:
 		float fCost() const { return goal_cost + h_cost; }//総コスト
 
 		Node* parent = nullptr;//経路復元用の親ノード
-		State node_state = UNVISITED;
+		State node_state = UNVISITED;//探索状態
 
 		void Reset()
 		{
@@ -74,6 +74,8 @@ private:
 		size_t next_free_index = 0;
 	};
 
+	/*メモリ効率のために、Nodeオブジェクトをあらかじめ確保し、
+	再利用するためのプール管理クラスのインスタンス*/
 	NodePool node_pool;
 
 	//ノード比較用（優先度付きキューでfCostが小さい順）
@@ -108,15 +110,15 @@ private:
 	//座標を配列のインデックスに変換
 	size_t CoordinateToIndex(int cell_x, int cell_z)const;
 
-	int map_width_ = 0;
+	int map_width_ = 0;//マップの幅
 
 	//ノード管理用マップ
-	std::unordered_map<std::pair<int, int>, Node*, pair_hash> node_map;
+	std::unordered_map<std::pair<int, int>, Node*, pair_hash> node_map;//ノード管理マップ
 
 	std::vector<Node*> node_grid_pointers;
 
 	std::vector<std::pair<int, int>> last_path; // 前回の経路
 
-	int max_search_nodes = 5000;
+	int max_search_nodes = 5000;//最大探索ノード数
 };
 
