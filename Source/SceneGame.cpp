@@ -83,7 +83,7 @@ void SceneGame::Initialize()
 
 	Serializer::LoadScene(objects, sprites2d, scene_file_name);
 
-	 grid_map.Initialize(101, 101, 1.1);
+	grid_map.Initialize(101, 101, 1.1);
 }
 
 // 終了化
@@ -105,11 +105,11 @@ void SceneGame::Finalize()
 		cameraController = nullptr;
 	}
 
-	for (auto& up : players) 
+	for (auto& up : players)
 	{
-      up->Finalize();
-    }
-    players.clear();
+		up->Finalize();
+	}
+	players.clear();
 
 	//ステージ終了化
 	if (stage != nullptr)
@@ -157,6 +157,12 @@ void SceneGame::Update(float elapsedTime)
 		stage->Update(scaledElapsedTime);
 
 		StageManager::Instance().Update(scaledElapsedTime);
+
+		// ★追加: 全プレイヤーにマップ情報を渡す
+		for (auto& up : players)
+		{
+			up->SetGridMap(&grid_map);
+		}
 
 		// 全プレイヤー更新（入力は Player 側で“アクティブのみ”にガード）
 		for (auto& up : players) up->Update(scaledElapsedTime);
@@ -209,7 +215,7 @@ void SceneGame::Render()
 
 	// カメラパラメータ設定
 	Camera& camera = Camera::Instance();
-	rc.view       = camera.GetView();
+	rc.view = camera.GetView();
 	rc.projection = camera.GetProjection();
 
 #if 1
@@ -237,21 +243,21 @@ void SceneGame::Render()
 		//BuildingManager::Instance().Render(rc, modelRenderer);
 
 		//ギミック描画
-		GimmicManager::Instance().Render(rc, modelRenderer);		
+		GimmicManager::Instance().Render(rc, modelRenderer);
 
 	}
 
 	// 3Dデバッグ描画
 	{
-        // 全プレイヤーのデバッグ描画（選択リングは Player 側でアクティブ時のみ表示）
-        for (auto& up : players) up->RenderDebugPrimitive(rc, shapeRenderer);
+		// 全プレイヤーのデバッグ描画（選択リングは Player 側でアクティブ時のみ表示）
+		for (auto& up : players) up->RenderDebugPrimitive(rc, shapeRenderer);
 
 		//エネミーデバッグプリミティブ描画
 		EnemyManager::Instance().RenderDebugPrimitive(rc, shapeRenderer);
-		for (auto& a : allies) 
+		for (auto& a : allies)
 		{
-	        a->RenderDebugPrimitive(rc, shapeRenderer);
-	    }
+			a->RenderDebugPrimitive(rc, shapeRenderer);
+		}
 
 		for (auto& obj : objects)
 		{
@@ -319,7 +325,8 @@ void SceneGame::AddAllyHomingFor(Player* leader)
 
 int SceneGame::CountAlliesGlobal() const
 {
-    return static_cast<int>(alliesStraight.size() + alliesHoming.size());
+	return static_cast<int>(alliesStraight.size() + alliesHoming.size());
 }
 
 REGISTER_SCENE(SceneGame);
+

@@ -1,20 +1,21 @@
 #include "Collision.h"
-#include "ProjectileStraite.h"
-#include "ProjectileHoming.h"
 #include "Player.h"
-#include "EnemyManager.h"  // ← 追記
-#include "Enemy.h"         // ← 追記
+#include "EnemyManager.h"
+#include "Enemy.h"
 #include "Camera.h"
 #include "System/Input.h"
-#include "Picking_Ray.h" // ★Picking_Rayの定義が必要
-#include <imgui.h>       // ★ImGui判定に必要
+#include "Picking_Ray.h"
 #include <imgui.h>
-#include <cfloat>          // FLT_MAX
-#include <cmath>           // sqrtf
-#include "System/Graphics.h"   // 画面サイズフォールバック用（ビューポート未設定時）
+#include <cfloat>
+#include <cmath>
+#include "System/Graphics.h"
 #include <DirectXMath.h>
 #include <d3d11.h>
 #include <algorithm>
+#include "Core.h" 
+#include "GridMap.h"
+#include "MathUtils.h"
+
 using namespace DirectX;
 
 
@@ -53,12 +54,12 @@ const std::vector<Player*>& Player::GetAllPlayers()
 //初期化
 void Player::Initialize()
 {
-	//// 1. まずマネージャーから元となるモデルを取得（これは共有リソース）
-	//Model* sourceModel = ModelManager::Instance().Load("Data/Model/Slime/Player_Slime.mdl");
+	//親スライムは攻撃しない
+	autoAttackEnabled = false;
 
-	// 1. ファイルから直接モデルを生成し、このプレイヤー専用の独立したインスタンスを作る
-	//    (コピーだと親子関係のポインタが元モデルを指してしまい、アニメーションが正しく計算されないため)
-	model = new Model("Data/Model/Slime/Player_Slime.mdl");
+	//直接new Modelせず、Manager経由でインスタンス生成（高速化）
+		// model = new Model("Data/Model/Slime/Player_Slime.mdl");
+	model = ModelManager::Instance().CreateNewInstance("Data/Model/Slime/Player_Slime.mdl");
 	// モデルが大きいのでスケーリング
 	scale.x = scale.y = scale.z = 0.005f;
 
@@ -71,19 +72,10 @@ void Player::Initialize()
 		// ノード名をstd::stringとして取得
 		std::string nodeName = nodes[i].name;
 
-		// 【デバッグ用】出力ウィンドウに全ノード名を表示（VSの「出力」タブで確認できます）
-		// これで実際の名前が "RootNode/joint4" なのか "Joint4" なのか確認できます
-		char debugStr[256];
-		sprintf_s(debugStr, "Node[%d]: %s\n", i, nodeName.c_str());
-		OutputDebugStringA(debugStr);
-
-		// 「joint4」という文字が含まれていれば頭とみなす (部分一致検索)
 		if (nodeName.find("joint4") != std::string::npos)
 		{
 			headBoneIndex = i;
 		}
-		// 「pTorus1」という文字が含まれていれば王冠とみなす
-		// ※もし名前が違っていたら、出力ウィンドウに出た名前に書き換えてください
 		else if (nodeName.find("pTorus1") != std::string::npos)
 		{
 			crownNodeIndex = i;
@@ -105,16 +97,14 @@ void Player::Initialize()
 	animator.SetModel(model /* or model.get() */);
 	animator.SetBlendSeconds(0.2f);
 	animator.Play("Take 001", true);
+
+	pathRecalcTimer = MathUtils::RandomRenge(0.0f, 0.5f);
 }
 
 //終了化
 void Player::Finalize()
 {
-	if (model)
-	{
-		delete model;
 		model = nullptr;
-	}
 }
 
 void Player::Update(float elapsedTime)
@@ -122,25 +112,26 @@ void Player::Update(float elapsedTime)
 	animator.Update(elapsedTime);
 	cylinder->center = position;
 
-     const bool isActive = (this == GetActivePtr());
-     if (isActive) {
-         // 入力は“選択された個体のみ”
-		 InputToggleAttackPriority();
-         InputMove(elapsedTime);
-         InputJump();
-         InputProjectile();
-         AutoAttackUpdate(elapsedTime);   // ← 非アクティブでも撃たせたいなら下へ移動
-     } else {
-         // 非アクティブでも自動攻撃させたいならこちらで呼ぶ
-         AutoAttackUpdate(elapsedTime);
-     }
+	const bool isActive = (this == GetActivePtr());
+	if (isActive) {
+		// 入力は“選択された個体のみ”
+		InputToggleAttackPriority();
+		InputMove(elapsedTime);
+		InputJump();
+		InputProjectile();
+		//AutoAttackUpdate(elapsedTime);   // ← 手動操作時は自動攻撃しない
+	}
+	else {
+		// 非アクティブ（自動）時
+		// AutoAttackUpdate(elapsedTime); // ★親スライムの攻撃はOFFにするためコメントアウト
 
-	 if (!IsActive() && autoMoveToEnemyEnabled) 
-	 {
-		 UpdateAutoMoveToEnemy(elapsedTime);
-	 }
+		// ★追加: コアへの自動移動
+		UpdateMoveToCore(elapsedTime);
+	}
 
-	//速力更新処理
+	// ★注: UpdateAutoMoveToEnemy(elapsedTime) は使わずに UpdateMoveToCore を使う
+
+   //速力更新処理
 	UpdateVelocity(elapsedTime);
 
 	//弾丸更新処理
@@ -152,9 +143,6 @@ void Player::Update(float elapsedTime)
 	//プレイヤーと柵との衝突処理
 	CollisionPlayerVsFences();
 
-	//弾丸と敵の衝突処理
-	//CollisionProjectilesVsEnemies();
-
 	// オブジェクト行列を更新
 	UpdateTransform();
 
@@ -164,18 +152,89 @@ void Player::Update(float elapsedTime)
 	// 王冠の行列を、頭のボーンの行列で上書きして強制的に追従させる
 	if (headBoneIndex != -1 && crownNodeIndex != -1)
 	{
-		// constを外してアクセス
 		Model::Node* nodesPtr = const_cast<Model::Node*>(model->GetNodes().data());
-
-		// 頭(joint4)と王冠(pTorus1)のポインタ
 		auto& headNode = nodesPtr[headBoneIndex];
 		auto& crownNode = nodesPtr[crownNodeIndex];
-
-		// ローカル座標のコピーは削除（親階層が違うため、位置がおかしくなる原因になります）
-
-		// グローバル行列（ワールド空間での位置・回転）のみをコピーすれば、
-		// レンダリング時に頭と同じ位置に表示されます。
 		crownNode.globalTransform = headNode.globalTransform;
+	}
+}
+
+// ★追加: コアへ向かう処理
+void Player::UpdateMoveToCore(float elapsedTime)
+{
+	Core* core = Core::Instance();
+	// コアが存在しない、またはHPがない場合は動かない
+	if (!core || core->GetHP() <= 0.0f) {
+		Move(elapsedTime, 0, 0, 0);
+		return;
+	}
+
+	if (!gridMap) return;
+
+	pathRecalcTimer -= elapsedTime;
+	if (pathRecalcTimer <= 0.0f)
+	{
+		pathRecalcTimer = 0.5f; // 0.5秒ごとに経路更新
+
+		auto start = gridMap->WorldToCell(position.x, position.z);
+		auto goal = gridMap->WorldToCell(core->position.x, core->position.z);
+
+		// A*探索実行
+		currentPath = aStar.FindPath(start.first, start.second, goal.first, goal.second, *gridMap);
+		pathIndex = 0;
+	}
+
+	DirectX::XMFLOAT3 targetPos = core->position;
+	bool hasPath = !currentPath.empty();
+
+	// 経路がある場合は次のノードを目指す
+	if (hasPath && pathIndex < currentPath.size())
+	{
+		auto [cx, cz] = currentPath[pathIndex];
+		targetPos = gridMap->GetWorldPosition(cx, cz);
+
+		// ノードに近づいたら次のノードへ
+		float dx = targetPos.x - position.x;
+		float dz = targetPos.z - position.z;
+		if ((dx * dx + dz * dz) < 0.5f * 0.5f) // 0.5m以内なら到達とみなす
+		{
+			pathIndex++;
+			if (pathIndex < currentPath.size()) {
+				auto [nextCx, nextCz] = currentPath[pathIndex];
+				targetPos = gridMap->GetWorldPosition(nextCx, nextCz);
+			}
+		}
+	}
+	else if (!hasPath)
+	{
+		// ★重要: 壁などで完全に塞がれていて経路が見つからない場合でも、
+		// コアの方角へ直進することで壁に密着し、味方スライムの射程に入れるようにする。
+		targetPos = core->position;
+	}
+
+	// 移動処理
+	float vx = targetPos.x - position.x;
+	float vz = targetPos.z - position.z;
+	float dist = sqrtf(vx * vx + vz * vz);
+
+	if (dist > 0.001f)
+	{
+		vx /= dist;
+		vz /= dist;
+
+		// コアの少し手前で止まる (3.0fは適宜調整)
+		// ただし、経路探索中の場合はノードまでしっかり進む
+		if (!hasPath && dist < 3.0f) {
+			Move(elapsedTime, 0, 0, 0);
+		}
+		else {
+			Move(elapsedTime, vx, vz, moveSpeed * autoMoveSpeedRate);
+			Turn(elapsedTime, vx, vz, turnSpeed * autoMoveTurnRate);
+		}
+	}
+	else
+	{
+		Move(elapsedTime, 0, 0, 0);
 	}
 }
 
@@ -215,30 +274,26 @@ void Player::DrawDebugGUI()
 
 			// スケール
 			ImGui::InputFloat3("Scale", &scale.x);
-
-			// 回転値
-			//ImGui::InputFloat("rot", &rot);
-
 		}
-		 // 自動攻撃のデバッグ設定
-         if (ImGui::CollapsingHeader("Auto Attack", ImGuiTreeNodeFlags_DefaultOpen))
-         {
-             ImGui::Checkbox("Enabled", &autoAttackEnabled);
-             ImGui::DragFloat("Range", &autoAttackRange, 0.1f, 0.0f, 100.0f);
-             ImGui::DragFloat("Interval (sec)", &autoAttackInterval, 0.01f, 0.1f, 10.0f);
-             // 現在のタイマー表示
-             ImGui::Text("Timer: %.2f", autoAttackTimer);
-			 // ★ 優先度切り替えボタン
-			 const char* modeLabel = (attackPriority == AttackPriority::CoreFirst)
-				 ? "Core → Enemy"
-				 : "Enemy → Core";
-			 if (ImGui::Button(modeLabel, ImVec2(150, 0))) 
-			 {
-				 attackPriority = (attackPriority == AttackPriority::CoreFirst)
-					 ? AttackPriority::EnemyFirst
-					 : AttackPriority::CoreFirst;
-			 }
-         }
+		// 自動攻撃のデバッグ設定
+		if (ImGui::CollapsingHeader("Auto Attack", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::Checkbox("Enabled", &autoAttackEnabled);
+			ImGui::DragFloat("Range", &autoAttackRange, 0.1f, 0.0f, 100.0f);
+			ImGui::DragFloat("Interval (sec)", &autoAttackInterval, 0.01f, 0.1f, 10.0f);
+			// 現在のタイマー表示
+			ImGui::Text("Timer: %.2f", autoAttackTimer);
+			// ★ 優先度切り替えボタン
+			const char* modeLabel = (attackPriority == AttackPriority::CoreFirst)
+				? "Core → Enemy"
+				: "Enemy → Core";
+			if (ImGui::Button(modeLabel, ImVec2(150, 0)))
+			{
+				attackPriority = (attackPriority == AttackPriority::CoreFirst)
+					? AttackPriority::EnemyFirst
+					: AttackPriority::CoreFirst;
+			}
+		}
 	}
 
 	ImGui::End();
@@ -304,7 +359,7 @@ void Player::CollisionPlayerVsEnemies()
 		DirectX::XMFLOAT3 outPosition;
 
 		if (Collision::IntersectCylinderVsCylinder2(
-			position, 
+			position,
 			radius,
 			height,
 			enemy->GetPosition(),
@@ -312,10 +367,6 @@ void Player::CollisionPlayerVsEnemies()
 			enemy->GetHeight(),
 			outPosition))
 		{
-			// 押し出し後の位置設定
-			//enemy->SetPosition(outPosition);
-						
-			// 敵の真上付近に当たったかを判定
 			DirectX::XMVECTOR P = DirectX::XMLoadFloat3(&position);
 			DirectX::XMVECTOR E = DirectX::XMLoadFloat3(&enemy->GetPosition());
 			DirectX::XMVECTOR V = DirectX::XMVectorSubtract(P, E);
@@ -326,16 +377,11 @@ void Player::CollisionPlayerVsEnemies()
 			// 上から踏んづけた場合は小ジャンプする
 			if (normal.y > 0.8f)
 			{
-				// 小ジャンプする
 				Jump(jumpSpeed * 0.5f);
-
-				//踏みつけ処理も実装しているので、ダメージ処理を実装してみる。
-				//enemy->ApplyDamage(1);
-				enemy->ApplyDamage(1,0.5f);
+				enemy->ApplyDamage(1, 0.5f);
 			}
 			else
 			{
-				// 押し出し後の位置設定
 				enemy->SetPosition(outPosition);
 			}
 
@@ -378,26 +424,35 @@ void Player::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* render
 		/*radius=*/GetRadius() + 0.2f,                         // 半径（ワールド単位：調整可）
 		/*height=*/0.05f,                        // 薄い円柱でOK
 		DirectX::XMFLOAT4(1, 1, 0, 0.5f));       // 色（半透明の黄）
-	 // --- 自動攻撃範囲の可視化 ---
-    if (autoAttackEnabled)
-    {
-        // 攻撃範囲を円柱で表示（スライムの索敵円柱を参考に）:contentReference[oaicite:1]{index=1}
-        renderer->RenderCylinder(
-            rc,
-            position,              // プレイヤーの位置を中心に
-            autoAttackRange,       // 半径
-            1.0f,                  // 高さ（見やすくするために低め）
-            DirectX::XMFLOAT4(0, 1, 1, 1.0f) // 色：青・半透明
-        );
-    }
+	// --- 自動攻撃範囲の可視化 ---
+	if (autoAttackEnabled)
+	{
+		renderer->RenderCylinder(
+			rc,
+			position,              // プレイヤーの位置を中心に
+			autoAttackRange,       // 半径
+			1.0f,                  // 高さ（見やすくするために低め）
+			DirectX::XMFLOAT4(0, 1, 1, 1.0f) // 色：青・半透明
+		);
+	}
 	// --- 選択中マーカー（薄い黄色リング） ---
-    if (this == GetActivePtr()) {
-        DirectX::XMFLOAT3 ringPos = position; ringPos.y += 0.02f;
-        renderer->RenderCylinder(
-            rc, ringPos, radius + 0.15f, 0.05f,
-            DirectX::XMFLOAT4(1, 1, 0, 0.8f)
-        );
-    }
+	if (this == GetActivePtr()) {
+		DirectX::XMFLOAT3 ringPos = position; ringPos.y += 0.02f;
+		renderer->RenderCylinder(
+			rc, ringPos, radius + 0.15f, 0.05f,
+			DirectX::XMFLOAT4(1, 1, 0, 0.8f)
+		);
+	}
+
+	// ★追加: 経路のデバッグ表示
+	if (!currentPath.empty())
+	{
+		for (const auto& cell : currentPath)
+		{
+			DirectX::XMFLOAT3 pos = gridMap->GetWorldPosition(cell.first, cell.second);
+			renderer->RenderSphere(rc, pos, 0.2f, DirectX::XMFLOAT4(0, 1, 0, 1)); // 緑の点
+		}
+	}
 }
 
 void Player::OnLanding()
@@ -424,13 +479,7 @@ void Player::InputProjectile()
 		pos.y = position.y + height * 0.5f;
 		pos.z = position.z;
 
-		// 発射
-		//ProjectileStraite* projectile = new ProjectileStraite();
-		ProjectileStraite* projectile = new ProjectileStraite(&projectileManager);
-		projectile->Launch(dir, pos);
 
-		//弾丸クラスのコンストラクタで呼び出すようになったので削除
-		//projectileManager.Register(projectile);
 	}
 
 	// 追尾弾丸発射
@@ -476,9 +525,6 @@ void Player::InputProjectile()
 			}
 		}
 
-		// 発射
-		ProjectileHoming* projectile = new ProjectileHoming(&projectileManager);
-		projectile->Launch(dir, pos, target);
 	}
 
 }
@@ -587,35 +633,37 @@ void Player::AutoAttackUpdate(float elapsedTime)
 			enemyInRange = true;
 		}
 	}
-    
-    	// ==============================
-    	// 2) 優先度に基づいて最終ターゲットを決定
-    	// ==============================
-    	DirectX::XMFLOAT3 finalTargetPos{};
-    	bool hasTarget = false;
-    
-    	if (attackPriority == AttackPriority::CoreFirst)
-    	{
-    		if (coreInRange) {
-    			finalTargetPos = coreTargetPos;
-    			hasTarget = true;
-    		} else if (enemyInRange) {
-    			finalTargetPos = enemyTargetPos;
-    			hasTarget = true;
-    		}
-    	}
-    	else // (attackPriority == AttackPriority::EnemyFirst)
-    	{
-    		if (enemyInRange) {
-    			finalTargetPos = enemyTargetPos;
-    			hasTarget = true;
-    		} else if (coreInRange) {
-    			finalTargetPos = coreTargetPos;
-    			hasTarget = true;
-    		}
-    	}
-    
-    	// ========= 3) 発射 =========
+
+	// ==============================
+	// 2) 優先度に基づいて最終ターゲットを決定
+	// ==============================
+	DirectX::XMFLOAT3 finalTargetPos{};
+	bool hasTarget = false;
+
+	if (attackPriority == AttackPriority::CoreFirst)
+	{
+		if (coreInRange) {
+			finalTargetPos = coreTargetPos;
+			hasTarget = true;
+		}
+		else if (enemyInRange) {
+			finalTargetPos = enemyTargetPos;
+			hasTarget = true;
+		}
+	}
+	else // (attackPriority == AttackPriority::EnemyFirst)
+	{
+		if (enemyInRange) {
+			finalTargetPos = enemyTargetPos;
+			hasTarget = true;
+		}
+		else if (coreInRange) {
+			finalTargetPos = coreTargetPos;
+			hasTarget = true;
+		}
+	}
+
+	// ========= 3) 発射 =========
 	if (hasTarget) {
 		DirectX::XMFLOAT3 dir{
 			finalTargetPos.x - pos.x,
@@ -626,8 +674,7 @@ void Player::AutoAttackUpdate(float elapsedTime)
 		if (len < 1e-3f) return;
 		dir.x /= len; dir.y /= len; dir.z /= len;
 
-		auto* projectile = new ProjectileStraite(&projectileManager);
-		projectile->Launch(dir, pos);
+
 
 		autoAttackTimer = autoAttackInterval;
 	}
@@ -663,7 +710,7 @@ std::shared_ptr<Enemy> Player::FindNearestEnemy() const
 }
 
 // 非アクティブ時の自動移動（敵に向かい、近づきすぎたら停止）
-void Player::UpdateAutoMoveToEnemy(float dt) 
+void Player::UpdateAutoMoveToEnemy(float dt)
 {
 	std::shared_ptr<Enemy> target = FindNearestEnemy();
 	if (!target) return;
@@ -704,10 +751,10 @@ void Player::InputToggleAttackPriority()
 	// 'X'キー（GamePad::BTN_B としてエミュレートされている）が押された瞬間
 	if (gamePad.GetButtonDown() & GamePad::BTN_B)
 	{
-		if (attackPriority == AttackPriority::CoreFirst) 
+		if (attackPriority == AttackPriority::CoreFirst)
 		{
 			attackPriority = AttackPriority::EnemyFirst;
-		} 
+		}
 		else
 		{
 			attackPriority = AttackPriority::CoreFirst;

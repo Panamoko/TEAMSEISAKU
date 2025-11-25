@@ -10,6 +10,8 @@ class Model
 {
 public:
 	Model(const char* filename);
+	//既存のリソースから作成するコンストラクタ
+	Model(const std::shared_ptr<ModelResource>& resource, const char* filename);
 	~Model() {}
 
 	std::string name;
@@ -17,8 +19,8 @@ public:
 
 	struct Node
 	{
-		const char*			name;
-		Node*				parent;
+		const char* name;
+		Node* parent;
 		DirectX::XMFLOAT3	scale;
 		DirectX::XMFLOAT4	rotate;
 		DirectX::XMFLOAT3	translate;
@@ -51,6 +53,9 @@ public:
 		DirectX::XMFLOAT3& outHalfSize,
 		DirectX::XMFLOAT3 outAxis[3]);         // 3本の軸
 private:
+	//ノード初期化処理を共通化
+	void InitializeNodes();
+
 	std::shared_ptr<ModelResource>	resource;
 	std::vector<Node>				nodes;
 };

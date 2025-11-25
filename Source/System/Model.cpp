@@ -2,7 +2,7 @@
 #include "Model.h"
 #include <filesystem>
 
-// コンストラクタ
+// コンストラクタ（ファイルから読み込み）
 Model::Model(const char* filename)
 {
 	if (filename == nullptr)
@@ -21,7 +21,33 @@ Model::Model(const char* filename)
 	resource = std::make_shared<ModelResource>();
 	resource->Load(Graphics::Instance().GetDevice(), filename);
 
-	// ノード
+	// ノード構築
+	InitializeNodes();
+
+	// 行列計算
+	UpdateTransform();
+}
+
+// ★追加: コンストラクタ（リソース共有）
+Model::Model(const std::shared_ptr<ModelResource>& resource, const char* filename)
+	: resource(resource) // リソースを共有
+{
+	if (filename)
+	{
+		name = std::filesystem::path(filename).stem().string();
+	}
+	// ノード構築
+	InitializeNodes();
+
+	// 行列計算
+	UpdateTransform();
+}
+
+// ★追加: ノード構築処理の共通化
+void Model::InitializeNodes()
+{
+	if (!resource) return;
+
 	const std::vector<ModelResource::Node>& resNodes = resource->GetNodes();
 
 	nodes.resize(resNodes.size());
@@ -41,14 +67,12 @@ Model::Model(const char* filename)
 			dst.parent->children.emplace_back(&dst);
 		}
 	}
-
-	// 行列計算
-	UpdateTransform();
 }
 
 // 変換行列計算
 void Model::UpdateTransform()
 {
+	// ... (変更なし) ...
 	for (Node& node : nodes)
 	{
 		// ローカル行列算出

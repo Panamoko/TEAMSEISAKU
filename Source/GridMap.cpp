@@ -1,5 +1,6 @@
 #include "GridMap.h"
 #include <cmath>
+#include <algorithm> // clamp用
 
 GridMap::GridMap()
 {
@@ -30,7 +31,7 @@ void GridMap::Build(const std::vector<std::shared_ptr<GameObject>>& objects)
     int cx = width / 2;
     int cz = height / 2;
 
-    auto WorldToCell = [&](float x, float z) {
+    auto WorldToCellLocal = [&](float x, float z) {
         int gx = cx + static_cast<int>(std::floor(x / cell_size));
         int gz = cz + static_cast<int>(std::floor(z / cell_size));
         return std::pair<int, int>{gx, gz};
@@ -80,8 +81,8 @@ void GridMap::Build(const std::vector<std::shared_ptr<GameObject>>& objects)
                         maxPos.z = (std::max)(maxPos.z, pos.z);
                     }
 
-            auto [startX, startZ] = WorldToCell(minPos.x, minPos.z);
-            auto [endX, endZ] = WorldToCell(maxPos.x, maxPos.z);
+            auto [startX, startZ] = WorldToCellLocal(minPos.x, minPos.z);
+            auto [endX, endZ] = WorldToCellLocal(maxPos.x, maxPos.z);
 
             startX = std::clamp(startX, 0, width - 1);
             startZ = std::clamp(startZ, 0, height - 1);
@@ -106,8 +107,8 @@ void GridMap::Build(const std::vector<std::shared_ptr<GameObject>>& objects)
         case ColliderType::Box:
         {
             BoxCollider* box = static_cast<BoxCollider*>(col);
-            auto [startX, startZ] = WorldToCell(box->box_min.x, box->box_min.z);
-            auto [endX, endZ] = WorldToCell(box->box_max.x, box->box_max.z);
+            auto [startX, startZ] = WorldToCellLocal(box->box_min.x, box->box_min.z);
+            auto [endX, endZ] = WorldToCellLocal(box->box_max.x, box->box_max.z);
             startX = std::clamp(startX, 0, width - 1);
             startZ = std::clamp(startZ, 0, height - 1);
             endX = std::clamp(endX, 0, width - 1);
@@ -122,7 +123,7 @@ void GridMap::Build(const std::vector<std::shared_ptr<GameObject>>& objects)
         {
             SphereCollider* sphere = static_cast<SphereCollider*>(col);
             int r = static_cast<int>(std::ceil(sphere->radius / cell_size));
-            auto [cxCell, czCell] = WorldToCell(sphere->center.x, sphere->center.z);
+            auto [cxCell, czCell] = WorldToCellLocal(sphere->center.x, sphere->center.z);
             for (int x = cxCell - r; x <= cxCell + r; ++x)
                 for (int z = czCell - r; z <= czCell + r; ++z)
                 {
@@ -138,7 +139,7 @@ void GridMap::Build(const std::vector<std::shared_ptr<GameObject>>& objects)
         {
             CylinderCollider* cyl = static_cast<CylinderCollider*>(col);
             int r = static_cast<int>(std::ceil(cyl->radius / cell_size));
-            auto [cxCell, czCell] = WorldToCell(cyl->center.x, cyl->center.z);
+            auto [cxCell, czCell] = WorldToCellLocal(cyl->center.x, cyl->center.z);
             for (int x = cxCell - r; x <= cxCell + r; ++x)
                 for (int z = czCell - r; z <= czCell + r; ++z)
                 {
@@ -244,4 +245,17 @@ std::pair<int, int> GridMap::WorldToCell(float worldX, float worldZ) const
     gz = std::clamp(gz, 0, height - 1);
 
     return { gx, gz };
+}
+
+// ★追加: セル座標からワールド座標を取得
+DirectX::XMFLOAT3 GridMap::GetWorldPosition(int cellX, int cellZ) const
+{
+    int cx = width / 2;
+    int cz = height / 2;
+
+    // セルの中心座標を計算
+    float worldX = (cellX - cx + 0.5f) * cell_size;
+    float worldZ = (cellZ - cz + 0.5f) * cell_size;
+
+    return DirectX::XMFLOAT3(worldX, 0.0f, worldZ);
 }

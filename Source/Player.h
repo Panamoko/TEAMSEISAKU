@@ -6,9 +6,12 @@
 #include <vector>
 #include <memory>
 #include"Animator.h"
+#include "AStar.h" // ★追加
+
 class Enemy;
 class Picking_Ray;
 class Model;
+class GridMap; // ★前方宣言
 
 // プレイヤー
 class Player : public Character
@@ -57,9 +60,8 @@ public:
 	// マウス入力によるスポーン処理
 	static void UpdateSpawn(std::vector<std::unique_ptr<Player>>& players, const Picking_Ray& pickingRay);
 
-	// ★削除: ここにあった crownModel と headBoneIndex は消すか移動します
-	// Model* crownModel = nullptr;  <-- 不要なので削除
-	// int headBoneIndex = -1;       <-- privateへ移動
+	// ★追加: GridMapをセット
+	void SetGridMap(const GridMap* map) { gridMap = map; }
 
 protected:
 	//着地したときに呼ばれる
@@ -92,6 +94,9 @@ private:
 
 	// 自動移動更新
 	void UpdateAutoMoveToEnemy(float dt);
+
+	// ★追加: コアへの自動移動更新
+	void UpdateMoveToCore(float elapsedTime);
 
 	//衝突処理
 	void OnCollision(GameObject* object) override;
@@ -137,4 +142,11 @@ private:
 	static std::vector<Player*> sAllPlayers;
 
 	CylinderCollider* cylinder;
+
+	//経路探索用
+	const GridMap* gridMap = nullptr;
+	AStar aStar;
+	std::vector<std::pair<int, int>> currentPath;
+	int pathIndex = 0;
+	float pathRecalcTimer = 0.0f;
 };
