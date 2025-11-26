@@ -28,6 +28,8 @@ public:
 	int GetWidth()const { return width; }
 	int GetHeight()const { return height; }
 
+	bool IsOnMap(int cell_x, int cell_z)const;
+
 private:
 	int width;//マップの横方向のセル数
 	int height;//マップの縦方向のセル数

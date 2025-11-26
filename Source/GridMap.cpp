@@ -259,3 +259,20 @@ DirectX::XMFLOAT3 GridMap::GetWorldPosition(int cellX, int cellZ) const
 
     return DirectX::XMFLOAT3(worldX, 0.0f, worldZ);
 }
+
+bool GridMap::IsOnMap(int cell_x, int cell_z) const
+{
+    //XÀ•W‚ª [0, width-1] ‚Ì”ÍˆÍ“à‚©
+    if (cell_x < 0 || cell_x >= width)
+    {
+        return false;
+    }
+
+    //ZÀ•W‚ª [0, height-1] ‚Ì”ÍˆÍ“à‚©
+    if (cell_z < 0 || cell_z >= height)
+    {
+        return false;
+    }
+
+    return true;
+}

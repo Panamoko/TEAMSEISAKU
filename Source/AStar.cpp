@@ -232,6 +232,9 @@ std::vector<std::pair<int, int>> AStar::ReplanPath(
             for (size_t i = 0; i < neighbor_count; i++)
             {
                 auto next_pos = neighbors_array[i];
+
+                if (!gridMap.IsOnMap(next_pos.first, next_pos.second))continue;
+
                 if (visited_cells.find(next_pos) == visited_cells.end())
                 {
                     visited_cells.insert(next_pos);
@@ -296,6 +299,9 @@ std::vector<std::pair<int, int>> AStar::ReplanPath(
             for (size_t i = 0; i < neighbor_count; ++i)
             {
                 auto next_pos = neighbors_array[i];
+
+                if (!gridMap.IsOnMap(next_pos.first, next_pos.second))continue;
+
                 if (visited_cells.find(next_pos) == visited_cells.end())
                 {
                     visited_cells.insert(next_pos);
@@ -437,15 +443,13 @@ size_t AStar::GetNeighbors(
         int neighborX = cellX + offsetX[i];
         int neighborZ = cellZ + offsetZ[i];
 
-        //通行可能なら隣接セルとして追加
-        if (!grid_map.IsBlocked(neighborX, neighborZ))
-        {
-            out_neighbors[count] = { neighborX, neighborZ }; // 配列に直接書き込み
-            count++;
-        }
+        // ★隣接するすべてのセルを返す。
+
+        out_neighbors[count] = { neighborX, neighborZ }; // 配列に直接書き込み
+        count++;
     }
 
-    return count; // 見つかったセルの数を返す
+    return count; // 常に 4 を返す (4方向の場合)}
 }
 
 size_t AStar::CoordinateToIndex(int cell_x, int cell_z) const
