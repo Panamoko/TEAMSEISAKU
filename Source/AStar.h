@@ -111,6 +111,10 @@ private:
 	//座標を配列のインデックスに変換
 	size_t CoordinateToIndex(int cell_x, int cell_z)const;
 
+	std::vector < std::pair<int, int>> SmoothPath(const std::vector<std::pair<int, int>>& path, const GridMap& gridMap)const;
+
+	bool HasLineOfSight(int start_x, int start_z, int end_x, int end_z, const GridMap& gridMap)const;
+
 	int map_width_ = 0;//マップの幅
 
 	//ノード管理用マップ

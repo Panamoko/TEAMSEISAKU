@@ -83,7 +83,7 @@ void SceneGame::Initialize()
 
 	Serializer::LoadScene(objects, sprites2d, scene_file_name);
 
-	grid_map.Initialize(101, 101, 2.4);
+	grid_map.Initialize(101, 101, 1.1);
 }
 
 // èIóπâª

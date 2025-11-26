@@ -112,6 +112,12 @@ std::vector<std::pair<int, int>> AStar::FindPath(
             auto neighbor_x = neighbors_array[i].first;
             auto neighbor_z = neighbors_array[i].second;
 
+            //マップ境界チェック
+            if (!gridMap.IsOnMap(neighbor_x, neighbor_z)) continue;
+
+            //IsBlocked チェック
+            if (gridMap.IsBlocked(neighbor_x, neighbor_z))continue;
+
             //隣接セルの座標からインデックスを計算し、対応するノードポインタを配列から取得
             size_t neighbor_index = neighbor_z * map_width_ + neighbor_x;
             neighbor_node = node_grid_pointers[neighbor_index];
@@ -182,6 +188,18 @@ std::vector<std::pair<int, int>> AStar::ReplanPath(
     const GridMap& gridMap,
     int agent_cellX,int agent_cellZ)
 {
+    //ゴール到達判定の緩和
+    const int GOAL_TOLERANCE_SQUARED = 2;
+    int dist_x = agent_cellX - goalX;
+    int dist_z = agent_cellZ - goalZ;
+    int dist_sq = (dist_x * dist_x) + (dist_z * dist_z);
+
+    if (dist_sq <= GOAL_TOLERANCE_SQUARED)
+    {
+        last_path.clear();
+        return last_path;//ゴールに十分近いため、経路探索を終了
+    }
+
     std::pair<int, int> neighbors_array[4];
     size_t neighbor_count;
 
@@ -347,7 +365,13 @@ std::vector<std::pair<int, int>> AStar::ReplanPath(
         }
 
         //経路上に障害物があるかチェック
-        for (int i = replan_start_index; i < static_cast<int>(last_path.size()); i++)
+        constexpr int LOOKAHEAD_NODES = 20;
+        int check_end_index = (std::min)(
+            static_cast<int>(last_path.size()),
+            replan_start_index + LOOKAHEAD_NODES
+            );
+
+        for (int i = replan_start_index; i < check_end_index; i++)
         {
             auto [x, z] = last_path[i];
             if (gridMap.IsBlocked(x, z))
@@ -360,7 +384,10 @@ std::vector<std::pair<int, int>> AStar::ReplanPath(
 
     //経路が問題なければそのまま返す
     if (!path_blocked && !last_path.empty())
+    {
+        //last_path = SmoothPath(last_path, gridMap);
         return last_path;
+    }
 
     /*部分再探索の始点を決定*/
     int new_start_x = agent_cellX;
@@ -374,38 +401,39 @@ std::vector<std::pair<int, int>> AStar::ReplanPath(
 
     if (new_path_segment.empty())
     {
-        //再探索失敗 → 前回の経路をそのまま返す
+       // last_path = SmoothPath(last_path, gridMap);
+
         return last_path;
     }
 
-    //経路の結合
     if (!last_path.empty() && !path_blocked)
     {
         std::vector<std::pair<int, int>> merged_path;
 
-        //エージェントの現在地から最も近い経路上の点 (replan_start_index) までの古い経路部分をコピー
+        //エージェントの現在地より前の、古い経路部分 (replan_start_indexまで) をコピー
         for (int i = 0; i < replan_start_index; i++)
         {
             merged_path.push_back(last_path[i]);
         }
 
-        //新しい経路セグメントを結合
+        //新しい経路セグメント (new_path_segment) を結合
         for (const auto& cell : new_path_segment)
         {
-            //結合された経路の末尾と新しいセグメントの先頭が同じでなければ追加
             if (merged_path.empty() || merged_path.back() != cell)
             {
                 merged_path.push_back(cell);
             }
         }
 
+        //結合結果を last_path に反映
         last_path = merged_path;
     }
     else
     {
-        //全探索が必要な場合
         last_path = new_path_segment;
     }
+
+    //last_path = SmoothPath(last_path, gridMap);
 
     return last_path;
 }
@@ -455,4 +483,119 @@ size_t AStar::GetNeighbors(
 size_t AStar::CoordinateToIndex(int cell_x, int cell_z) const
 {
     return static_cast<size_t>(cell_z * map_width_ + cell_x);
+}
+
+std::vector<std::pair<int, int>> AStar::SmoothPath(
+    const std::vector<std::pair<int, int>>& path,
+    const GridMap& gridMap) const
+{
+    // 経路が空、または短すぎる場合は平滑化しない
+    if (path.size() <= 2)
+    {
+        return path;
+    }
+
+    std::vector<std::pair<int, int>> smooth_path;
+
+    //始点 P_start は、必ず最初のノード
+    smooth_path.push_back(path[0]);
+    int start_index = 0;
+
+    //経路の残りのノードをチェックしていく
+    for (size_t current_index = 1; current_index < path.size(); current_index++)
+    {
+        auto current_pos = path[current_index];
+
+        //P_start から P_candidate まで視線が通るかチェック
+        bool line_of_sight = HasLineOfSight(
+            smooth_path.back().first, smooth_path.back().second,
+            current_pos.first, current_pos.second,
+            gridMap
+        );
+
+        if (line_of_sight)
+        {
+            //視線が通る場合
+            if (current_index == path.size() - 1)
+            {
+                smooth_path.push_back(current_pos);
+            }
+        }
+        else
+        {
+            //視線が通らない場合
+
+            size_t final_index = current_index - 1;
+
+            //P_start と final_index のノードが異なる場合のみ追加 (重複防止)
+            if (final_index > start_index)
+            {
+                smooth_path.push_back(path[final_index]);
+                start_index = final_index;
+            }
+
+            start_index = final_index;
+            current_index--;
+        }
+    }
+
+    return smooth_path;
+}
+
+//経路上のセルをチェック
+bool AStar::HasLineOfSight(
+    int start_x, int start_z,
+    int end_x, int end_z,
+    const GridMap& gridMap) const
+{
+    // 始点と終点が同じ場合は、視線は通っている
+    if (start_x == end_x && start_z == end_z) return true;
+
+    int dx = std::abs(end_x - start_x);
+    int dz = std::abs(end_z - start_z);
+    int step_x = (start_x < end_x) ? 1 : -1;
+    int step_z = (start_z < end_z) ? 1 : -1;
+    int error_val;
+
+    int x = start_x;
+    int z = start_z;
+
+    if (dx >= dz) // X軸方向の移動が主
+    {
+        error_val = 2 * dz - dx;
+        while (x != end_x)
+        {
+            x += step_x; // 常にX軸方向にステップ
+
+            if (error_val >= 0)
+            {
+                z += step_z; // Z軸方向にもステップ（対角移動）
+                error_val -= 2 * dx;
+            }
+            error_val += 2 * dz;
+
+            // 新しいセル (x, z) が障害物かどうかをチェック
+            if (gridMap.IsBlocked(x, z)) return false;
+        }
+    }
+    else // Z軸方向の移動が主
+    {
+        error_val = 2 * dx - dz;
+        while (z != end_z)
+        {
+            z += step_z; // 常にZ軸方向にステップ
+
+            if (error_val >= 0)
+            {
+                x += step_x; // X軸方向にもステップ（対角移動）
+                error_val -= 2 * dz;
+            }
+            error_val += 2 * dx;
+
+            // 新しいセル (x, z) が障害物かどうかをチェック
+            if (gridMap.IsBlocked(x, z)) return false;
+        }
+    }
+
+    return true;
 }
