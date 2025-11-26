@@ -184,59 +184,135 @@ std::vector<std::pair<int, int>> AStar::ReplanPath(
 {
     std::pair<int, int> neighbors_array[4];
     size_t neighbor_count;
-    bool found = false;
 
     //ゴールチェック 
+    int new_goalX = goalX;
+    int new_goalZ = goalZ;
+
     if (gridMap.IsBlocked(goalX, goalZ))
     {
-        //ゴールが塞がれていたら、近傍セルに代替ゴールを探す
-        neighbor_count = GetNeighbors(goalX, goalZ, gridMap, neighbors_array);
-        bool found = false;
-        for (size_t i = 0; i < neighbor_count; ++i)
-        {
-            auto [nx, nz] = neighbors_array[i];
+        //探索範囲の限界を設定
+        const int MAX_SEARCH_DISTANCE = 50;
 
-            if (!gridMap.IsBlocked(nx, nz))
+        std::queue<std::pair<int, int>> search_queue;
+        std::unordered_set<std::pair<int, int>, pair_hash> visited_cells;
+
+        search_queue.push({ goalX,goalZ });
+        visited_cells.insert({ goalX,goalZ });
+
+        bool found = false;
+
+        //BFS(幅優先探索) を実行し、最も近い通行可能セルを探す
+        while (!search_queue.empty())
+        {
+            auto current_pos = search_queue.front();
+            search_queue.pop();
+
+            int current_x = current_pos.first;
+            int current_z = current_pos.second;
+
+            //探索距離が制限を超えたら終了
+            if (std::abs(current_x - goalX) > MAX_SEARCH_DISTANCE ||
+                std::abs(current_z - goalZ) > MAX_SEARCH_DISTANCE)
             {
-                goalX = nx;
-                goalZ = nz;
+                break;
+            }
+
+            //通行可能なセルが見つかった場合
+            if (!gridMap.IsBlocked(current_x, current_z))
+            {
+                new_goalX = current_x;
+                new_goalZ = current_z;
                 found = true;
                 break;
             }
+
+            //隣接セル（4方向）を取得
+            neighbor_count = GetNeighbors(current_x, current_z, gridMap, neighbors_array);
+            for (size_t i = 0; i < neighbor_count; i++)
+            {
+                auto next_pos = neighbors_array[i];
+                if (visited_cells.find(next_pos) == visited_cells.end())
+                {
+                    visited_cells.insert(next_pos);
+                    search_queue.push(next_pos);
+                }
+            }
+
         }
 
         if (!found)
         {
-            //周囲すべて障害物 → 経路破綻
+            //代替ゴールが見つからなかった
             last_path.clear();
             return last_path;
         }
+
+        //見つかった場合は、新しいゴール座標をセット
+        goalX = new_goalX;
+        goalZ = new_goalZ;
     }
 
     //自身の位置がふさがれていた場合
     if (gridMap.IsBlocked(agent_cellX, agent_cellZ))
     {
-        //周囲に空いているセルを探す
-        neighbor_count = GetNeighbors(agent_cellX, agent_cellZ, gridMap, neighbors_array);        bool found = false;
-        for (size_t i = 0; i < neighbor_count; ++i)
-        {
-            auto [nx, nz] = neighbors_array[i];
+        const int MAX_SEARCH_DISTANCE = 50; // ゴール探索と同じ距離制限
 
-            if (!gridMap.IsBlocked(nx, nz))
+        std::queue<std::pair<int, int>> search_queue;
+        std::unordered_set<std::pair<int, int>, pair_hash> visited_cells;
+
+        search_queue.push({ agent_cellX, agent_cellZ });
+        visited_cells.insert({ agent_cellX, agent_cellZ });
+
+        int new_agent_cellX = agent_cellX;
+        int new_agent_cellZ = agent_cellZ;
+        bool found = false;
+
+        // BFS (幅優先探索) を実行し、最も近い通行可能セルを探す
+        while (!search_queue.empty())
+        {
+            auto current_pos = search_queue.front();
+            search_queue.pop();
+
+            int current_x = current_pos.first;
+            int current_z = current_pos.second;
+
+            if (std::abs(current_x - agent_cellX) > MAX_SEARCH_DISTANCE ||
+                std::abs(current_z - agent_cellZ) > MAX_SEARCH_DISTANCE)
             {
-                agent_cellX = nx;
-                agent_cellZ = nz;
+                break;
+            }
+
+            // 通行可能なセルが見つかった場合
+            if (!gridMap.IsBlocked(current_x, current_z))
+            {
+                new_agent_cellX = current_x;
+                new_agent_cellZ = current_z;
                 found = true;
                 break;
             }
-        }
 
+            neighbor_count = GetNeighbors(current_x, current_z, gridMap, neighbors_array);
+            for (size_t i = 0; i < neighbor_count; ++i)
+            {
+                auto next_pos = neighbors_array[i];
+                if (visited_cells.find(next_pos) == visited_cells.end())
+                {
+                    visited_cells.insert(next_pos);
+                    search_queue.push(next_pos);
+                }
+            }
+        }
         if (!found)
         {
             //周囲すべて障害物 → 経路破綻
             last_path.clear();
             return last_path;
         }
+
+        //見つかった場合は、新しいエージェント座標をセット
+        agent_cellX = new_agent_cellX;
+        agent_cellZ = new_agent_cellZ;
     }
 
     //経路上の障害物検出
@@ -280,22 +356,51 @@ std::vector<std::pair<int, int>> AStar::ReplanPath(
     if (!path_blocked && !last_path.empty())
         return last_path;
 
-
-
+    /*部分再探索の始点を決定*/
+    int new_start_x = agent_cellX;
+    int new_start_z = agent_cellZ;
 
     //部分再探索実行
-    auto new_path = FindPath(
-        agent_cellX, agent_cellZ, // 始点をエージェントの現在地に設定
+    auto new_path_segment = FindPath(
+        new_start_x, new_start_z, // 始点をエージェントの現在地に設定
         goalX, goalZ, gridMap
     );
 
-    if (new_path.empty())
+    if (new_path_segment.empty())
     {
         //再探索失敗 → 前回の経路をそのまま返す
         return last_path;
     }
 
-    last_path = new_path;
+    //経路の結合
+    if (!last_path.empty() && !path_blocked)
+    {
+        std::vector<std::pair<int, int>> merged_path;
+
+        //エージェントの現在地から最も近い経路上の点 (replan_start_index) までの古い経路部分をコピー
+        for (int i = 0; i < replan_start_index; i++)
+        {
+            merged_path.push_back(last_path[i]);
+        }
+
+        //新しい経路セグメントを結合
+        for (const auto& cell : new_path_segment)
+        {
+            //結合された経路の末尾と新しいセグメントの先頭が同じでなければ追加
+            if (merged_path.empty() || merged_path.back() != cell)
+            {
+                merged_path.push_back(cell);
+            }
+        }
+
+        last_path = merged_path;
+    }
+    else
+    {
+        //全探索が必要な場合
+        last_path = new_path_segment;
+    }
+
     return last_path;
 }
 

@@ -5,6 +5,7 @@
 #include <queue>
 #include "GridMap.h"
 #include <unordered_map>
+#include <cmath>
 
 class AStar
 {
