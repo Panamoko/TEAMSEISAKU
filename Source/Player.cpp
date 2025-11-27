@@ -160,7 +160,6 @@ void Player::Update(float elapsedTime)
 }
 
 // ★追加: コアへ向かう処理
-
 void Player::UpdateMoveToCore(float elapsedTime)
 {
 	Core* core = Core::Instance();
@@ -173,66 +172,22 @@ void Player::UpdateMoveToCore(float elapsedTime)
 	if (!gridMap) return;
 
 	pathRecalcTimer -= elapsedTime;
-	if (pathRecalcTimer <= 0.0f)
+	if (pathRecalcTimer <= 0.0f && once)
 	{
 		pathRecalcTimer = 0.5f; // 0.5秒ごとに経路更新
 
 		auto start = gridMap->WorldToCell(position.x, position.z);
-
-		// ===========================================================
-		// ★修正: スタート地点が障害物の場合の救済処理 (スタック回避)
-		// 壁の近くにいると足元が「障害物」判定になり、A*が失敗するため、
-		// 周囲の「通れるマス」をスタート地点として代用します。
-		// ===========================================================
-		if (gridMap->IsBlocked(start.first, start.second))
-		{
-			bool foundSafeCell = false;
-			// 周囲 2 マス分を探索
-			int searchRange = 2;
-			for (int r = 1; r <= searchRange && !foundSafeCell; ++r)
-			{
-				for (int x = -r; x <= r; ++x)
-				{
-					for (int z = -r; z <= r; ++z)
-					{
-						int nx = start.first + x;
-						int nz = start.second + z;
-
-						// マップ範囲内かつ、障害物でない場所が見つかったら
-						if (gridMap->IsOnMap(nx, nz) && !gridMap->IsBlocked(nx, nz))
-						{
-							// スタート地点をそこにずらす
-							start.first = nx;
-							start.second = nz;
-							foundSafeCell = true;
-							break;
-						}
-					}
-					if (foundSafeCell) break;
-				}
-			}
-		}
-		// ===========================================================
-
 		auto goal = gridMap->WorldToCell(core->position.x, core->position.z);
 
 		// A*探索実行
-		std::vector<std::pair<int, int>> rawPath = aStar.FindPath(
+		currentPath = aStar.ReplanPath(
 			start.first, start.second,
 			goal.first, goal.second,
-			*gridMap);
-
-		if (!rawPath.empty())
-		{
-			// 見つかったら滑らかにする
-			currentPath = aStar.SmoothPath(rawPath, *gridMap);
-		}
-		else
-		{
-			currentPath.clear();
-		}
+			*gridMap,
+			start.first, start.second);
 
 		pathIndex = 0;
+		once = false;
 	}
 
 	DirectX::XMFLOAT3 targetPos = core->position;
@@ -258,10 +213,9 @@ void Player::UpdateMoveToCore(float elapsedTime)
 	}
 	else if (!hasPath)
 	{
-		// ★修正: 経路がない時に無理に動かすと壁に突っ込み続けるので、
-		// 一旦停止させて次の再計算（救済処理）を待つ
-		Move(elapsedTime, 0, 0, 0);
-		return;
+		// ★重要: 壁などで完全に塞がれていて経路が見つからない場合でも、
+		// コアの方角へ直進することで壁に密着し、味方スライムの射程に入れるようにする。
+		targetPos = core->position;
 	}
 
 	// 移動処理
@@ -274,7 +228,8 @@ void Player::UpdateMoveToCore(float elapsedTime)
 		vx /= dist;
 		vz /= dist;
 
-		// コアの少し手前で止まる
+		// コアの少し手前で止まる (3.0fは適宜調整)
+		// ただし、経路探索中の場合はノードまでしっかり進む
 		if (!hasPath && dist < 3.0f) {
 			Move(elapsedTime, 0, 0, 0);
 		}
