@@ -8,18 +8,18 @@
 
 #include "Editor.h"
 #include "GameObject.h"
+#include "GameSprite.h"
 
 class GameObject;
-struct SpriteObject;
 
 using json = nlohmann::json;
 
 //JSONへ変換
 void to_json(json& j, const GameObject& obj);
-void to_json(json& j, const SpriteObject& sp);
+void to_json(json& j, const GameSprite& sp);
 //JSONから復元
 void from_json(const json& j, GameObject& obj);
-void from_json(const json& j, SpriteObject& sp);
+void from_json(const json& j, GameSprite& sp);
 
 
 class Serializer
@@ -30,14 +30,14 @@ public:
 	//データをファイルに保存
 	static void SaveScene(
 		const std::vector<std::shared_ptr<GameObject>>& objects,
-		const std::vector<std::unique_ptr<SpriteObject>>& sprites,
+		const std::vector<std::unique_ptr<GameSprite>>& sprites,
 		const std::string& filename
 	);
 
 	//ファイルからデータを復元
 	static bool LoadScene(
 		std::vector<std::shared_ptr<GameObject>>& objects,
-		std::vector<std::unique_ptr<SpriteObject>>& sprites,
+		std::vector<std::unique_ptr<GameSprite>>& sprites,
 		const std::string& filename
 	);
 

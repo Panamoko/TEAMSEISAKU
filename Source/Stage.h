@@ -25,7 +25,7 @@ private:
     //Model* model = nullptr;
     editor game_editor;
     std::vector<std::unique_ptr<GameObject>> objects;
-    std::vector<std::unique_ptr<SpriteObject>> sprites2d;
+    std::vector<std::unique_ptr<GameSprite>> sprites2d;
 
 };
 

@@ -58,7 +58,7 @@ editor::~editor()
 
 void editor::render(
 	std::vector<std::shared_ptr<GameObject>>& objects,
-	std::vector<std::unique_ptr<SpriteObject>>& sprites,
+	std::vector<std::unique_ptr<GameSprite>>& sprites,
 	const std::vector<std::unique_ptr<Model>>& models,
 	ModelRenderer* renderer)
 {
@@ -246,12 +246,12 @@ void editor::AddObject(
 }
 
 void editor::AddSprite(
-	std::vector<std::unique_ptr<SpriteObject>>& sprites,
+	std::vector<std::unique_ptr<GameSprite>>& sprites,
 	const std::string& baseName,
 	int texture_index)
 {
 	std::string name = MakeUniqueSpriteName(sprites, baseName);
-	auto sp = std::make_unique<SpriteObject>();
+	auto sp = std::make_unique<GameSprite>();
 	sp->name = name;
 	sp->texture = baseName;
 	sp->sprite_index = texture_index;
@@ -269,7 +269,7 @@ void editor::CreatNewScene(const std::string& scene_name)
 
 	//空のシーンデータを作成してファイルに保存
 	std::vector<std::shared_ptr<GameObject>> empty_objects;
-	std::vector<std::unique_ptr<SpriteObject>> empty_sprites;
+	std::vector<std::unique_ptr<GameSprite>> empty_sprites;
 	Serializer::SaveScene(empty_objects, empty_sprites, SCENE_DIRECTORY + new_file_name);
 
 	//SceneFactory を使って新しいシーンのインスタンスを生成
@@ -520,7 +520,7 @@ void editor::Draw3DEditor(
 }
 
 void editor::Draw2DEditor(
-	std::vector<std::unique_ptr<SpriteObject>>& sprites)
+	std::vector<std::unique_ptr<GameSprite>>& sprites)
 {
 	ImGui::Text("Add New 2DSprite");
 
@@ -551,7 +551,7 @@ void editor::Draw2DEditor(
 	ImGui::Separator();
 	for (size_t i = 0; i < sprites.size(); i++)
 	{
-		SpriteObject* sp = sprites[i].get();
+		GameSprite* sp = sprites[i].get();
 		if (ImGui::Selectable(sp->name.c_str(), select_index2D == (int)i))
 		{
 			select_index2D = (int)i;
@@ -567,7 +567,7 @@ void editor::Draw2DEditor(
 
 	if (select_index2D >= 0 && select_index2D < (int)sprites.size())
 	{
-		SpriteObject* sp = sprites[select_index2D].get();
+		GameSprite* sp = sprites[select_index2D].get();
 		char buf[128];
 		strncpy_s(buf, sizeof(buf), sp->name.c_str(), _TRUNCATE);
 		if (ImGui::InputText("Name", buf, sizeof(buf)))
@@ -646,7 +646,7 @@ void editor::Delete3DModel(const std::shared_ptr<GameObject>& obj)
 
 void editor::ToggleMode(
 	std::vector<std::shared_ptr<GameObject>>& objects,
-	std::vector<std::unique_ptr<SpriteObject>>& sprites
+	std::vector<std::unique_ptr<GameSprite>>& sprites
 )
 {
 	Scene* current_scene = SceneManager::Instance().GetCurrentScene();
@@ -686,7 +686,7 @@ std::string editor::MakeUniqueName(const std::vector<std::shared_ptr<GameObject>
 	return cand;
 }
 
-std::string editor::MakeUniqueSpriteName(const std::vector<std::unique_ptr<SpriteObject>>& sprites, const std::string& base)
+std::string editor::MakeUniqueSpriteName(const std::vector<std::unique_ptr<GameSprite>>& sprites, const std::string& base)
 {
 	int i = 1;
 	std::string cand = base;
@@ -697,14 +697,3 @@ std::string editor::MakeUniqueSpriteName(const std::vector<std::unique_ptr<Sprit
 	while (exists(cand)) { ++i; cand = base + std::to_string(i); }
 	return cand;
 }
-
-SpriteObject::SpriteObject()
-	: name("NewSprite"),
-	texture(""),
-	position{ 0, 0 },
-	size{ 100, 100 },
-	rotation(0.0f),
-	color{ 1,1,1,1 },
-	sprite_index(0),
-	uv_min{ 0,0 },
-	uv_max{ 1.0f,1.0f } {}

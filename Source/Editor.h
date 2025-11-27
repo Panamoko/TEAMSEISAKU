@@ -14,26 +14,9 @@
 #include "Factory.h"
 #include "Scene.h"
 #include "Serializer.h"
+#include "GameSprite.h"
 
 using json = nlohmann::json;
-
-struct SpriteObject
-{
-	std::string name;
-	std::string texture;
-	DirectX::XMFLOAT2 position;
-	DirectX::XMFLOAT2 size;
-	float rotation;
-	DirectX::XMFLOAT4 color;
-
-	int sprite_index;
-
-	// 追加：UV座標（0～1範囲）
-	DirectX::XMFLOAT2 uv_min;  // 左上
-	DirectX::XMFLOAT2 uv_max;  // 右下
-
-	SpriteObject();
-};
 
 //3D空間での最終変換を反映
 void ApplyTransform(GameObject& obj);
@@ -46,7 +29,7 @@ public:
 	//ImGui描画
 	void render(
 		std::vector<std::shared_ptr<GameObject>>& objects,
-		std::vector<std::unique_ptr<SpriteObject>>& sprites,
+		std::vector<std::unique_ptr<GameSprite>>& sprites,
 		const std::vector<std::unique_ptr<Model>>& models,
 		ModelRenderer* model);
 	//オブジェクト追加
@@ -59,7 +42,7 @@ public:
 	);
 
 	void AddSprite(
-		std::vector<std::unique_ptr<SpriteObject>>& sprites,
+		std::vector<std::unique_ptr<GameSprite>>& sprites,
 		const std::string& baseName,
 		int texture_index);
 
@@ -70,7 +53,7 @@ public:
 	);
 
 	void Draw2DEditor(
-		std::vector<std::unique_ptr<SpriteObject>>& sprites);
+		std::vector<std::unique_ptr<GameSprite>>& sprites);
 
 	void Delete3DModel(const std::shared_ptr<GameObject>& obj);
 
@@ -90,7 +73,7 @@ public:
 	//モード切替
 	void ToggleMode(
 		std::vector<std::shared_ptr<GameObject>>& objects,
-		std::vector<std::unique_ptr<SpriteObject>>& sprites);
+		std::vector<std::unique_ptr<GameSprite>>& sprites);
 	GameMode GetMode()const { return editor_mode; }
 	bool PlayGame()const { return play; };
 private:
@@ -119,6 +102,6 @@ private:
 
 	//同じ名前が存在しないように、新しいオブジェクト名を自動生成
 	std::string MakeUniqueName(const std::vector<std::shared_ptr<GameObject>>& objects, const std::string& base);
-	std::string MakeUniqueSpriteName(const std::vector<std::unique_ptr<SpriteObject>>& sprites, const std::string& base);
+	std::string MakeUniqueSpriteName(const std::vector<std::unique_ptr<GameSprite>>& sprites, const std::string& base);
 };
 
