@@ -66,7 +66,7 @@ std::vector<std::pair<int, int>> AStar::FindPath(
     std::priority_queue<Node*, std::vector<Node*>, CompareNode> open_list;
 
     open_list.push(start_node);//作成したスタートノードをOpen Listに入れる
-    max_search_nodes = 10000;//ノード探索数の上限を設定
+    max_search_nodes = 50000;//ノード探索数の上限を設定
 
     //探索ループ開始
     while (!open_list.empty())

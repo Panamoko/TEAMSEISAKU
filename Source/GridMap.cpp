@@ -45,6 +45,9 @@ void GridMap::Build(const std::vector<std::shared_ptr<GameObject>>& objects)
         if (obj->type != GameObject::Type::Gimmic)
             continue;
 
+        if (obj->class_name == "Core")
+            continue;
+
         Collider* col = obj->collider.get();
 
         switch (col->type)

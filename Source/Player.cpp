@@ -171,23 +171,35 @@ void Player::UpdateMoveToCore(float elapsedTime)
 
 	if (!gridMap) return;
 
+	// --- 修正: 定期的に経路を再計算 (onceフラグは使わない) ---
 	pathRecalcTimer -= elapsedTime;
-	if (pathRecalcTimer <= 0.0f && once)
+
+	// 経路がない、またはタイマーが切れたら再計算
+	if (currentPath.empty() || pathRecalcTimer <= 0.0f)
 	{
-		pathRecalcTimer = 0.5f; // 0.5秒ごとに経路更新
+		pathRecalcTimer = 0.5f; // 0.5秒ごとに更新
 
 		auto start = gridMap->WorldToCell(position.x, position.z);
 		auto goal = gridMap->WorldToCell(core->position.x, core->position.z);
 
-		// A*探索実行
-		currentPath = aStar.ReplanPath(
-			start.first, start.second,
-			goal.first, goal.second,
-			*gridMap,
-			start.first, start.second);
+		// A*で経路探索
+		currentPath = aStar.FindPath(start.first, start.second, goal.first, goal.second, *gridMap);
 
-		pathIndex = 0;
-		once = false;
+		if (currentPath.empty()) {
+			// これが出ているなら「スタート地点が壁の中」か「ゴールまで道がない」
+			printf("Path Not Found! Start(%d,%d) -> Goal(%d,%d)\n", start.first, start.second, goal.first, goal.second);
+		}
+		else {
+			// これが出ているのに動かないなら、移動処理(Move)か到達判定がおかしい
+			printf("Path Found! Size: %d\n", (int)currentPath.size());
+		}
+
+		// 経路が見つかった場合、インデックスをリセット
+		// [0]は現在地なので、[1]（次の地点）を目指すのが基本
+		if (!currentPath.empty())
+		{
+			pathIndex = (currentPath.size() > 1) ? 1 : 0;
+		}
 	}
 
 	DirectX::XMFLOAT3 targetPos = core->position;
@@ -199,12 +211,16 @@ void Player::UpdateMoveToCore(float elapsedTime)
 		auto [cx, cz] = currentPath[pathIndex];
 		targetPos = gridMap->GetWorldPosition(cx, cz);
 
-		// ノードに近づいたら次のノードへ
+		// --- 修正: XZ平面での距離チェック (高さyは無視) ---
 		float dx = targetPos.x - position.x;
 		float dz = targetPos.z - position.z;
-		if ((dx * dx + dz * dz) < 0.5f * 0.5f) // 0.5m以内なら到達とみなす
+		float distSq = dx * dx + dz * dz;
+
+		// 到達判定（半径0.5m以内なら次へ）
+		if (distSq < 0.5f * 0.5f)
 		{
 			pathIndex++;
+			// まだ続きがあるならターゲット位置を即時更新
 			if (pathIndex < currentPath.size()) {
 				auto [nextCx, nextCz] = currentPath[pathIndex];
 				targetPos = gridMap->GetWorldPosition(nextCx, nextCz);
@@ -213,9 +229,9 @@ void Player::UpdateMoveToCore(float elapsedTime)
 	}
 	else if (!hasPath)
 	{
-		// ★重要: 壁などで完全に塞がれていて経路が見つからない場合でも、
-		// コアの方角へ直進することで壁に密着し、味方スライムの射程に入れるようにする。
-		targetPos = core->position;
+		// 経路が見つからない場合は停止（無理に進むと壁に埋まるため）
+		Move(elapsedTime, 0, 0, 0);
+		return;
 	}
 
 	// 移動処理
@@ -228,15 +244,23 @@ void Player::UpdateMoveToCore(float elapsedTime)
 		vx /= dist;
 		vz /= dist;
 
-		// コアの少し手前で止まる (3.0fは適宜調整)
-		// ただし、経路探索中の場合はノードまでしっかり進む
-		if (!hasPath && dist < 3.0f) {
-			Move(elapsedTime, 0, 0, 0);
+		// 経路の終端（コア付近）に来たら手前で止まる制御
+		if (pathIndex >= currentPath.size())
+		{
+			float distToCoreSq =
+				(core->position.x - position.x) * (core->position.x - position.x) +
+				(core->position.z - position.z) * (core->position.z - position.z);
+
+			// コアの手前 3.0f で停止
+			if (distToCoreSq < 3.0f * 3.0f)
+			{
+				Move(elapsedTime, 0, 0, 0);
+				return;
+			}
 		}
-		else {
-			Move(elapsedTime, vx, vz, moveSpeed * autoMoveSpeedRate);
-			Turn(elapsedTime, vx, vz, turnSpeed * autoMoveTurnRate);
-		}
+
+		Move(elapsedTime, vx, vz, moveSpeed * autoMoveSpeedRate);
+		Turn(elapsedTime, vx, vz, turnSpeed * autoMoveTurnRate);
 	}
 	else
 	{
