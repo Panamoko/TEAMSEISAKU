@@ -82,6 +82,9 @@
     <Filter Include="Source\Utility">
       <UniqueIdentifier>{77b13ae7-805c-45f2-b249-b8eb9205affc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\ChangeSceneSytem">
+      <UniqueIdentifier>{18dfa992-025a-4fa2-8d41-3483bb0ab90f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui-docking\imconfig.h">
@@ -316,6 +319,9 @@
     <ClInclude Include="Source\AllySlimeMelee.h">
       <Filter>Source\Character\Player</Filter>
     </ClInclude>
+    <ClInclude Include="Source\ChangeSceneSytem.h">
+      <Filter>Source\ChangeSceneSytem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -527,6 +533,9 @@
     </ClCompile>
     <ClCompile Include="Source\AllySlimeMelee.cpp">
       <Filter>Source\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ChangeSceneSytem.cpp">
+      <Filter>Source\ChangeSceneSytem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
