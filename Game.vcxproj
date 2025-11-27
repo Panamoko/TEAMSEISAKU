@@ -167,6 +167,8 @@
     <ClInclude Include="Source\SceneManager.h" />
     <ClInclude Include="Source\SceneTitle.h" />
     <ClInclude Include="Source\Serializer.h" />
+    <ClInclude Include="Source\SpriteManager.h" />
+    <ClInclude Include="Source\SpriteResource.h" />
     <ClInclude Include="Source\Stage.h" />
     <ClInclude Include="Source\StageManager.h" />
     <ClInclude Include="Source\System\Audio.h" />
@@ -245,6 +247,8 @@
     <ClCompile Include="Source\SceneManager.cpp" />
     <ClCompile Include="Source\SceneTitle.cpp" />
     <ClCompile Include="Source\Serializer.cpp" />
+    <ClCompile Include="Source\SpriteManager.cpp" />
+    <ClCompile Include="Source\SpriteResource.cpp" />
     <ClCompile Include="Source\Stage.cpp" />
     <ClCompile Include="Source\StageManager.cpp" />
     <ClCompile Include="Source\System\Audio.cpp" />

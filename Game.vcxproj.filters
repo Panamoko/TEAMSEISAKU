@@ -328,6 +328,12 @@
     <ClInclude Include="Source\GameSprite.h">
       <Filter>Source\GameSprite</Filter>
     </ClInclude>
+    <ClInclude Include="Source\SpriteManager.h">
+      <Filter>Source\GameSprite</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\SpriteResource.h">
+      <Filter>Source\GameSprite</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -544,6 +550,12 @@
       <Filter>Source\ChangeSceneSytem</Filter>
     </ClCompile>
     <ClCompile Include="Source\GameSprite.cpp">
+      <Filter>Source\GameSprite</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\SpriteManager.cpp">
+      <Filter>Source\GameSprite</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\SpriteResource.cpp">
       <Filter>Source\GameSprite</Filter>
     </ClCompile>
   </ItemGroup>
