@@ -46,8 +46,17 @@ public:
 	// 高さ取得
 	float GetHeight() const { return height; }
 
+	// HP取得
+	int GetHealth() const { return health; }
+	
+	// 最大HP取得（現在は初期値5で固定のようなので、適宜定数か変数を返します）
+	int GetMaxHealth() const { return 5; }
+
 	// ダメージを与える
 	bool ApplyDamage(int damage, float invincibleTime);
+
+	// 回復させる
+	void Heal(int amount);
 
 	// 衝撃を与える
 	void AddImpulse(const DirectX::XMFLOAT3& impulse);

@@ -7,7 +7,7 @@
 #include "EnemySlime.h"
 #include "Player.h"
 #include "AllySlime.h"         // Šù‘¶’¼ü’e
-#include "AllySlimeHoming.h"   // V‹K’Ç”ö’e
+#include "AllySlimeHeal.h"   // V‹K’Ç”ö’e
 #include <cfloat>          // š FLT_MAX —p
 #include "System/Mouse.h"  // š Mouse::BTN_LEFT / GetX()/GetY() ‚ğg‚¤‚È‚ç–¾¦“I‚É
 #include "CollisionManager.h"
@@ -225,6 +225,7 @@ void SceneGame::Render()
 #if 1
 	game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), modelRenderer);
 #endif
+	modelRenderer->BeginFrame(rc);
 	// 3Dƒ‚ƒfƒ‹•`‰æ
 	{
 		StageManager::Instance().Render(rc, modelRenderer);
@@ -323,7 +324,7 @@ void SceneGame::AddAllyHomingFor(Player* leader)
 		return;
 	}
 	int slot = CountAlliesFor(leader);
-	auto p = std::make_unique<AllySlimeHoming>(slot); // V‹KƒNƒ‰ƒX’Ç”ö’e
+	auto p = std::make_unique<AllySlimeHeal>(slot); // V‹KƒNƒ‰ƒX’Ç”ö’e
 	p->SetLeader(leader);
 	alliesHoming.emplace_back(std::move(p));
 }

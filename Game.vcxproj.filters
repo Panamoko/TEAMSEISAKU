@@ -261,9 +261,6 @@
     <ClInclude Include="Source\StageManager.h">
       <Filter>Source\Stage</Filter>
     </ClInclude>
-    <ClInclude Include="Source\AllySlimeHoming.h">
-      <Filter>Source\Character\Player</Filter>
-    </ClInclude>
     <ClInclude Include="Source\AllyTargeting.h">
       <Filter>Source\Character\Player</Filter>
     </ClInclude>
@@ -314,6 +311,9 @@
       <Filter>Source\Utility</Filter>
     </ClInclude>
     <ClInclude Include="Source\AllySlimeMelee.h">
+      <Filter>Source\Character\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AllySlimeHeal.h">
       <Filter>Source\Character\Player</Filter>
     </ClInclude>
   </ItemGroup>
@@ -474,9 +474,6 @@
     <ClCompile Include="Source\StageManager.cpp">
       <Filter>Source\Stage</Filter>
     </ClCompile>
-    <ClCompile Include="Source\AllySlimeHoming.cpp">
-      <Filter>Source\Character\Player</Filter>
-    </ClCompile>
     <ClCompile Include="Source\AllyTargeting.cpp">
       <Filter>Source\Character\Player</Filter>
     </ClCompile>
@@ -526,6 +523,9 @@
       <Filter>Source\Utility</Filter>
     </ClCompile>
     <ClCompile Include="Source\AllySlimeMelee.cpp">
+      <Filter>Source\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AllySlimeHeal.cpp">
       <Filter>Source\Character\Player</Filter>
     </ClCompile>
   </ItemGroup>
