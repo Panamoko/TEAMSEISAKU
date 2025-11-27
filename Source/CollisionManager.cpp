@@ -156,17 +156,17 @@ void CollisionManager::CheckAllCollision()
 			}
 
 			//‰~’Œ@VS OBB
-			else if (objectA->collider->type == ColliderType::Cylinder &&
-					 objectB->collider->type == ColliderType::OBB)
-			{
-				CylinderCollider* cylinderA = static_cast<CylinderCollider*>(objectA->collider.get());
-				OBB* obb_B = static_cast<OBB*>(objectB->collider.get());
+			//else if (objectA->collider->type == ColliderType::Cylinder &&
+			//		 objectB->collider->type == ColliderType::OBB)
+			//{
+			//	CylinderCollider* cylinderA = static_cast<CylinderCollider*>(objectA->collider.get());
+			//	OBB* obb_B = static_cast<OBB*>(objectB->collider.get());
 
-				isCollisionDetected = Collision::IntersectCylinder_Vs_OBB(
-					cylinderA, obb_B, normal, penetrarion);
-				if (isCollisionDetected)
-					Collision::ApplyPushOutWithWeight(objectA, objectB, normal, penetrarion);
-			}
+			//	isCollisionDetected = Collision::IntersectCylinder_Vs_OBB(
+			//		cylinderA, obb_B, normal, penetrarion);
+			//	if (isCollisionDetected)
+			//		Collision::ApplyPushOutWithWeight(objectA, objectB, normal, penetrarion);
+			//}
 
 			//OBB VS ‰~’Œ
 			else if (objectA->collider->type == ColliderType::OBB &&
@@ -177,12 +177,18 @@ void CollisionManager::CheckAllCollision()
 
 				isCollisionDetected = Collision::IntersectCylinder_Vs_OBB(
 					cylinder, obb, normal, penetrarion);
-				normal.x = -normal.x;
-				normal.x = -normal.y;
-				//normal.x = -normal.z;
+
+				//normal.x = -normal.x;
+				//normal.y = -normal.y;
+				//normal.z = -normal.z;
+
 				if (isCollisionDetected)
+				{
+					const float penetration_bias = 0.005f;
+					penetrarion += penetration_bias;
 					Collision::ApplyPushOutWithWeight(objectB, objectA, normal, penetrarion);
-					}
+				}
+			}
 
 			//‰~’Œ VS AABB
 			else if (objectA->collider->type == ColliderType::Cylinder &&

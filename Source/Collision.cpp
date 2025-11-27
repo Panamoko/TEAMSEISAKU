@@ -490,25 +490,34 @@ void Collision::ApplyPushOutWithWeight(
 {
 	if (penetration <= 1e-6f)return;
 
+	const float LINEAR_SLOP = 0.005f;
+	const float LINEAR_CORRECTION_RATIO = 0.2f;
+
+	float corrected_penetration = fmaxf(0.0f, penetration - LINEAR_SLOP);
+	corrected_penetration *= LINEAR_CORRECTION_RATIO;
+
+	if (corrected_penetration <= 1e-6f) return;
+
 	//重さ比率を計算
 	//weightが小さいほどよく動く
 	float weightA = objA->weight;
 	float weightB = objB->weight;
 
-	//どちらも固定ならスキップ
-	if (weightA <= 0.0f && weightB <= 0.0f)return;
+	//逆質量 im_A, im_B を計算
+	float im_A = (weightA > 1e-6f) ? 1.0f / weightA : 0.0f;
+	float im_B = (weightB > 1e-6f) ? 1.0f / weightB : 0.0f;
 
-	float total_weight = weightA + weightB;
-	if (total_weight <= 0.0f)return;
+	float total_inverse_mass = im_A + im_B;
+	if (total_inverse_mass <= 0.0f)return;
 
 	//比率(相手が重いほど自分が多く動く)
-	float move_rarioA = (weightB) / total_weight;
-	float move_rarioB = (weightA) / total_weight;
+	float move_rarioA = (im_A) / total_inverse_mass;
+	float move_rarioB = (im_B) / total_inverse_mass;
 
 	//移動量ベクトルを計算（Aはマイナス方向、Bはプラス方向）
-	DirectX::XMVECTOR n = XMLoadFloat3(&normal);
-	DirectX::XMVECTOR moveA = DirectX::XMVectorScale(n, -penetration * move_rarioA);
-	DirectX::XMVECTOR moveB = DirectX::XMVectorScale(n, penetration * move_rarioB);
+	DirectX::XMVECTOR n = DirectX::XMVector3Normalize(XMLoadFloat3(&normal));
+	DirectX::XMVECTOR moveA = DirectX::XMVectorScale(n, -corrected_penetration * move_rarioA);
+	DirectX::XMVECTOR moveB = DirectX::XMVectorScale(n, corrected_penetration * move_rarioB);
 
 	DirectX::XMFLOAT3 mtdA, mtdB;
 	DirectX::XMStoreFloat3(&mtdA, moveA);
@@ -633,13 +642,32 @@ bool Collision::IntersectCylinder_Vs_OBB(
 	float dist = std::sqrtf(distSq);
 	float penetration = radius - dist;
 
-	outNormal = { dx / dist, 0.0f, dz / dist };
-	outPenetration = penetration;
+	// XZ平面の貫入量と法線
+	float xz_penetration = radius - dist;
+	XMVECTOR xz_normal_vec = { dx / dist, 0.0f, dz / dist, 0.0f };
 
-	// 上下方向にも軽く補正したい場合
+	// 高さ方向の重なり確認（Y軸）
 	float yOverlap = (std::min)(topA, topB) - (std::max)(bottomA, bottomB);
-	if (yOverlap > 0.0f && yOverlap < penetration)
+
+
+	// 重なりがなければ衝突ではない
+	if (yOverlap <= 1e-6f)
 	{
+		outNormal = { 0,0,0 };
+		outPenetration = 0.0f;
+		return false;
+	}
+
+	// 最小貫入量の軸を選択
+	if (xz_penetration < yOverlap)
+	{
+		// XZ平面の貫入量が最小
+		XMStoreFloat3(&outNormal, xz_normal_vec);
+		outPenetration = xz_penetration;
+	}
+	else
+	{
+		// Y軸の貫入量が最小
 		outNormal = { 0.0f, (cA.y > obb->center.y) ? 1.0f : -1.0f, 0.0f };
 		outPenetration = yOverlap;
 	}
