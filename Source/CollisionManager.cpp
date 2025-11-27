@@ -66,6 +66,11 @@ void CollisionManager::CheckAllCollision()
 			if (!objectA->IsActive() || !objectB->IsActive())continue;
 			if (!objectA->collider || !objectB->collider)continue;
 
+			//動かない物同士（ギミックやステージ）の判定はスキップする
+			bool isStaticA = (objectA->type == GameObject::Type::Gimmic || objectA->type == GameObject::Type::Stage);
+			bool isStaticB = (objectB->type == GameObject::Type::Gimmic || objectB->type == GameObject::Type::Stage);
+			if (isStaticA && isStaticB) continue;
+
 			bool isCollisionDetected = false;
 
 			//球 VS 球

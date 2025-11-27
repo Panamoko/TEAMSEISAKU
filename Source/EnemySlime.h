@@ -5,6 +5,8 @@
 #include "ProjectileManager.h"
 #include "Editor.h"
 #include "Animator.h"
+#include "AStar.h"
+#include "GridMap.h"
 
 class Player;
 
@@ -33,6 +35,8 @@ public:
 	//衝突処理
 	void OnCollision(GameObject* object) override;
 
+	// グリッドマップをセットする関数
+	void SetGridMap(const GridMap* map) { gridMap = map; }
 
 protected:
 	//ターゲット位置をランダム設定
@@ -40,6 +44,9 @@ protected:
 
 	//目標地点へ移動
 	void MoveToTarget(float elapsedTime, float moveSpeedRate, float turnSpeedRate);
+
+	// 分離行動（重なり防止）の計算
+	void ApplySeparationForce(float elapsedTime);
 
 	//徘徊ステートへ偏移
 	virtual void SetWanderState();
@@ -105,6 +112,12 @@ protected:
 	ProjectileManager	projectileManager;
 
 	Animator animator;
+
+	AStar aStar;
+	std::vector<std::pair<int, int>> currentPath; // 現在の経路
+	int pathIndex = 0; // 次に向かうノードのインデックス
+	float pathRecalcTimer = 0.0f; // 再計算用タイマー
+	const GridMap* gridMap = nullptr; // マップへの参照
 private:
 
 	editor game_editor;
@@ -112,4 +125,6 @@ private:
 
 	Model* slimeModel = nullptr;
 	CylinderCollider* cylinder;
+
+	std::unique_ptr<Model> uniqueModel;
 };

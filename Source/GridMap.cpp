@@ -42,6 +42,12 @@ void GridMap::Build(const std::vector<std::shared_ptr<GameObject>>& objects)
         if (!obj->IsActive() || !obj->collider)
             continue;
 
+        if (obj->type != GameObject::Type::Gimmic)
+            continue;
+
+        if (obj->class_name == "Core")
+            continue;
+
         Collider* col = obj->collider.get();
 
         switch (col->type)
@@ -50,14 +56,23 @@ void GridMap::Build(const std::vector<std::shared_ptr<GameObject>>& objects)
         {
             OBB* obb = static_cast<OBB*>(col);
 
-            XMVECTOR center = XMLoadFloat3(&obb->center);
-            XMVECTOR axes[3] = {
-                XMLoadFloat3(&obb->axis[0]),
-                XMLoadFloat3(&obb->axis[1]),
-                XMLoadFloat3(&obb->axis[2])
-            };
-            XMFLOAT3 half = obb->half;
+            // ★修正ポイント：判定用に一時的にOBBを太らせるコピーを作る
+            OBB checkOBB = *obb;
+            // セルサイズの半分くらい太らせることで、中心点がズレても引っかかるようにする
+            float fatMargin = cell_size * 0.5f;
+            checkOBB.half.x += fatMargin;
+            checkOBB.half.z += fatMargin;
 
+            // 以下の計算は checkOBB を使用する
+            XMVECTOR center = XMLoadFloat3(&checkOBB.center);
+            XMVECTOR axes[3] = {
+                XMLoadFloat3(&checkOBB.axis[0]),
+                XMLoadFloat3(&checkOBB.axis[1]),
+                XMLoadFloat3(&checkOBB.axis[2])
+            };
+            XMFLOAT3 half = checkOBB.half;
+
+            // ... (minPos, maxPos の計算はそのまま checkOBB の値を使用) ...
             XMFLOAT3 minPos = { FLT_MAX, FLT_MAX, FLT_MAX };
             XMFLOAT3 maxPos = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
 
@@ -65,6 +80,7 @@ void GridMap::Build(const std::vector<std::shared_ptr<GameObject>>& objects)
                 for (int dy = -1; dy <= 1; dy += 2)
                     for (int dz = -1; dz <= 1; dz += 2)
                     {
+                        // checkOBBの情報を使って頂点を計算
                         XMVECTOR vertex = center
                             + dx * half.x * axes[0]
                             + dy * half.y * axes[1]
@@ -95,9 +111,10 @@ void GridMap::Build(const std::vector<std::shared_ptr<GameObject>>& objects)
                 {
                     float wx = (x - cx + 0.5f) * cell_size;
                     float wz = (z - cz + 0.5f) * cell_size;
-                    XMFLOAT3 point{ wx, obb->center.y, wz };
+                    XMFLOAT3 point{ wx, checkOBB.center.y, wz };
 
-                    if (IsPointInsideOBB(obb, point))
+                    // ★ここも太らせたOBBで判定
+                    if (IsPointInsideOBB(&checkOBB, point))
                         grid[z * width + x].push_back(obj->GetID());
                 }
             }
@@ -184,21 +201,19 @@ void GridMap::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* rende
     {
         for (int x = 0; x < width; ++x)
         {
-            // 左右対称にするために、マップ中心を原点に合わせる
-            float worldX = (x * cell_size) - halfWidth + halfCell;
-            float worldZ = (z * cell_size) - halfHeight + halfCell;
+            // 障害物があるセルだけ描画（負荷軽減のため）
+            if (!grid[z * width + x].empty())
+            {
+                float worldX = (x * cell_size) - halfWidth + halfCell;
+                float worldZ = (z * cell_size) - halfHeight + halfCell;
 
-            XMFLOAT3 cellPos = { worldX, 0.01f, worldZ };
-            XMFLOAT3 angle = { 0,0,0 };
-            XMFLOAT3 cellSize = { cell_size, 0.05f, cell_size };
+                DirectX::XMFLOAT3 cellPos = { worldX, 0.1f, worldZ }; // 少し浮かせる
+                DirectX::XMFLOAT3 angle = { 0,0,0 };
+                DirectX::XMFLOAT3 size = { cell_size * 0.9f, 0.1f, cell_size * 0.9f }; // 少し隙間を空ける
 
-            // セルの状態で色を分ける（空 or 障害物）
-            XMFLOAT4 color = grid[z * width + x].empty()
-                ? XMFLOAT4{ 0.0f, 0.0f, 1.0f, 0.3f }   // 通行可能セル → 青
-            : XMFLOAT4{ 1.0f, 0.0f, 0.0f, 0.5f };  // 障害物セル → 赤
-
-            // デバッグ描画（矩形で可視化）
-            renderer->RenderBox(rc, cellPos, angle, cellSize, color);
+                // 赤色で表示
+                renderer->RenderBox(rc, cellPos, angle, size, { 1.0f, 0.0f, 0.0f, 0.5f });
+            }
         }
     }
 

@@ -18,28 +18,6 @@ void EnemyManager::Update(float elapsedTime)
 			return enemy->IsDestroyRequested();
 		});
 	enemies.erase(it, enemies.end());
-	//// 破棄処理
-	//// ※enemiesの範囲for文中でerase()すると不具合が発生してしまうため、
-	//// 　更新処理が終わった後に破棄リストに積まれたオブジェクトを削除する。
-	//for (auto enemy : removes)
-	//{
-	//	// std::vectorから要素を削除する場合はイテレーターで削除しなければならない
-	//	auto it = std::find_if(enemies.begin(), enemies.end(),
-	//		[enemy](const std::shared_ptr<Enemy>& e) {
-	//			return e.get() == enemy;
-	//		});
-	//	if (it != enemies.end())
-	//	{
-	//		enemies.erase(it);
-	//	}
-
-	//	// 削除
-	//	delete enemy;
-	//}
-	//// 破棄リストをクリア
-	//removes.clear();
-	// 敵同士の衝突処理
-	CollisionEnemyVsEnemies();
 }
 
 // 描画処理
