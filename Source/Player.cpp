@@ -172,7 +172,7 @@ void Player::UpdateMoveToCore(float elapsedTime)
 	if (!gridMap) return;
 
 	pathRecalcTimer -= elapsedTime;
-	if (pathRecalcTimer <= 0.0f)
+	if (pathRecalcTimer <= 0.0f && once)
 	{
 		pathRecalcTimer = 0.5f; // 0.5•b‚²‚Æ‚ÉŒo˜HXV
 
@@ -180,8 +180,14 @@ void Player::UpdateMoveToCore(float elapsedTime)
 		auto goal = gridMap->WorldToCell(core->position.x, core->position.z);
 
 		// A*’TõŽÀs
-		currentPath = aStar.FindPath(start.first, start.second, goal.first, goal.second, *gridMap);
+		currentPath = aStar.ReplanPath(
+			start.first, start.second,
+			goal.first, goal.second,
+			*gridMap,
+			start.first, start.second);
+
 		pathIndex = 0;
+		once = false;
 	}
 
 	DirectX::XMFLOAT3 targetPos = core->position;
