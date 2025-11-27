@@ -180,7 +180,12 @@ void Player::UpdateMoveToCore(float elapsedTime)
 		auto goal = gridMap->WorldToCell(core->position.x, core->position.z);
 
 		// A*’TõÀs
-		currentPath = aStar.FindPath(start.first, start.second, goal.first, goal.second, *gridMap);
+		currentPath = aStar.ReplanPath(
+			start.first, start.second,
+			goal.first, goal.second,
+			*gridMap,
+			start.first, start.second);
+
 		pathIndex = 0;
 	}
 
