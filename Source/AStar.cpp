@@ -1,6 +1,7 @@
 #include "AStar.h"
 #include <set>
 #include <unordered_set>
+#include <cmath>
 
 
 /*
@@ -50,18 +51,22 @@ std::vector<std::pair<int, int>> AStar::FindPath(
     start_node->node_z = start_cellZ;            //ノードのZ座標をセット
     start_node->goal_cost = 0.0f;                //スタートからのコストは0
     start_node->h_cost = Heuristic(start_cellX, start_cellZ, goal_cellX, goal_cellZ);//推定コストを計算
+    start_node->node_state = Node::OPEN; // OPEN状態にする
     
     //スタートノードの座標を一次元配列のインデックスに変換
     size_t start_index = start_cellZ * map_width_ + start_cellX;
 
     //ノードポインタ配列の対応する位置に、作成したスタートノードのポインタを保存
-    node_grid_pointers[start_index] = start_node;
+    if (start_index < node_grid_pointers.size())
+    {
+        node_grid_pointers[start_index] = start_node;
+    }
     
     //探索待ちのノードを管理する優先度付きキュー（Open List）を初期化
     std::priority_queue<Node*, std::vector<Node*>, CompareNode> open_list;
 
     open_list.push(start_node);//作成したスタートノードをOpen Listに入れる
-    max_search_nodes = 5000;//ノード探索数の上限を設定
+    max_search_nodes = 10000;//ノード探索数の上限を設定
 
     //探索ループ開始
     while (!open_list.empty())
@@ -95,74 +100,63 @@ std::vector<std::pair<int, int>> AStar::FindPath(
         current_node->node_state = Node::CLOSED;
 
         // 隣接セルを取得するためのスタック上の配列
-        std::pair<int, int> neighbors_array[4]; // 4方向なのでサイズは4
+        std::pair<int, int> neighbors_array[8]; // 8方向なのでサイズは8
 
         /*現在のノードから通行可能な隣接セルの座標を取得し、
         その数を格納*/
-        size_t neighbor_count = GetNeighbors(current_node->node_x, current_node->node_z, gridMap, neighbors_array);
+        size_t neighbor_count = GetNeighbors(current_node->node_x, current_node->node_z, goal_cellX, goal_cellZ, gridMap, neighbors_array);
 
         //取得した隣接セルを一つずつ処理するループを開始
         for (size_t i = 0; i < neighbor_count; ++i)
         {
-            //ノードが既に作成済みかチェック
-            Node* neighbor_node = nullptr;
-            float new_cost = current_node->goal_cost + move_cost;//隣接セルまでの新しいGコスト（new_cost）を計算
-
-            //隣接セルのX座標とZ座標を取得
             auto neighbor_x = neighbors_array[i].first;
             auto neighbor_z = neighbors_array[i].second;
 
-            //マップ境界チェック
-            if (!gridMap.IsOnMap(neighbor_x, neighbor_z)) continue;
+            // 斜め移動コスト計算
+            float move_cost = (neighbor_x != current_node->node_x && neighbor_z != current_node->node_z) ? 1.414f : 1.0f;
+            float new_goal_cost = current_node->goal_cost + move_cost;
 
-            //IsBlocked チェック
-            if (gridMap.IsBlocked(neighbor_x, neighbor_z))continue;
-
-            //隣接セルの座標からインデックスを計算し、対応するノードポインタを配列から取得
             size_t neighbor_index = neighbor_z * map_width_ + neighbor_x;
-            neighbor_node = node_grid_pointers[neighbor_index];
+            Node* neighbor_node = node_grid_pointers[neighbor_index];
 
             //隣接セルに対応するノードが既に存在する場合
-            if(neighbor_node != nullptr)
+            if (neighbor_node != nullptr)
             {
-                //隣接ノードがCLOSED（既に処理済み）であるかチェック
-                if (neighbor_node->node_state == Node::CLOSED)
+                // ★修正: 既存ノードがある場合、OPEN/CLOSED問わず、より良い経路なら更新する
+                // (一貫性のあるヒューリスティックならCLOSEDの更新は本来不要だが、安全策として入れても良い。
+                //  重要なのはOPEN状態のノード更新を見逃さないこと)
+
+                // 浮動小数点誤差対策
+                constexpr float EPS = 1e-5f;
+                if (new_goal_cost + EPS < neighbor_node->goal_cost)
                 {
-                    /*現在の経路で到達する新しいGコストが、
-                    既存のノードが持つ古いGコストより小さいかチェック*/
+                    neighbor_node->goal_cost = new_goal_cost;
+                    neighbor_node->parent = current_node;
 
-                    constexpr float EPS = 1e-5f;//浮動小数点誤差対策
-                    if (new_cost + EPS < neighbor_node->goal_cost)
-                    {
-                        //ノードのGコストを更新し、親ノードを現在のノードに設定
-                        neighbor_node->goal_cost = new_cost;
-                        neighbor_node->parent = current_node;
-
-                        //オープンリストに再追加
-                        open_list.push(neighbor_node);
-                    }
+                    // 更新したら再度OPENリストへ
+                    // (状態がCLOSEDだった場合は再オープンすることになる)
+                    neighbor_node->node_state = Node::OPEN;
+                    open_list.push(neighbor_node);
                 }
-
             }
             else
             {
-                //新しいノードを作成
-                auto neighborNode = node_pool.GetNode();
-                neighborNode->Reset();
-                neighborNode->node_x = neighbor_x;
-                neighborNode->node_z = neighbor_z;
-                neighborNode->goal_cost = current_node->goal_cost + move_cost;
-                neighborNode->h_cost = Heuristic(neighbor_x, neighbor_z, goal_cellX, goal_cellZ);
-                neighborNode->parent = current_node;
-                neighborNode->node_state = Node::OPEN;
+                // 新しいノードを作成
+                auto newNode = node_pool.GetNode();
+                newNode->Reset();
+                newNode->node_x = neighbor_x;
+                newNode->node_z = neighbor_z;
+                newNode->goal_cost = new_goal_cost;
+                newNode->h_cost = Heuristic(neighbor_x, neighbor_z, goal_cellX, goal_cellZ);
+                newNode->parent = current_node;
+                newNode->node_state = Node::OPEN;
 
-                node_grid_pointers[neighbor_index] = neighborNode;
-                open_list.push(neighborNode);
+                node_grid_pointers[neighbor_index] = newNode;
+                open_list.push(newNode);
             }
         }
     }
 
-    //ゴールに到達できなかった場合
     return {};
 }
 
@@ -200,7 +194,7 @@ std::vector<std::pair<int, int>> AStar::ReplanPath(
         return last_path;//ゴールに十分近いため、経路探索を終了
     }
 
-    std::pair<int, int> neighbors_array[4];
+    std::pair<int, int> neighbors_array[8];
     size_t neighbor_count;
 
     //ゴールチェック 
@@ -246,7 +240,7 @@ std::vector<std::pair<int, int>> AStar::ReplanPath(
             }
 
             //隣接セル（4方向）を取得
-            neighbor_count = GetNeighbors(current_x, current_z, gridMap, neighbors_array);
+            neighbor_count = GetNeighbors(current_x, current_z, -1, -1, gridMap, neighbors_array);
             for (size_t i = 0; i < neighbor_count; i++)
             {
                 auto next_pos = neighbors_array[i];
@@ -313,7 +307,7 @@ std::vector<std::pair<int, int>> AStar::ReplanPath(
                 break;
             }
 
-            neighbor_count = GetNeighbors(current_x, current_z, gridMap, neighbors_array);
+            neighbor_count = GetNeighbors(current_x, current_z, -1, -1, gridMap, neighbors_array);
             for (size_t i = 0; i < neighbor_count; ++i)
             {
                 auto next_pos = neighbors_array[i];
@@ -444,40 +438,53 @@ float AStar::Heuristic(
     int goal_cellX,
     int goal_cellZ) const
 {
-    float delta_x = static_cast<float>(std::abs(current_cellX - goal_cellX));
-    float delta_z = static_cast<float>(std::abs(current_cellZ - goal_cellZ));
-
-    // 4方向探索に最適なマンハッタン距離
-    return delta_x + delta_z;
-
-    //float deltaX = static_cast<float>(current_cellX - goal_cellX);
-    //float deltaZ = static_cast<float>(current_cellZ - goal_cellZ);
-
-    //return std::sqrt(deltaX * deltaX + deltaZ * deltaZ);
+    float dx = static_cast<float>(std::abs(current_cellX - goal_cellX));
+    float dz = static_cast<float>(std::abs(current_cellZ - goal_cellZ));
+    return std::sqrt(dx * dx + dz * dz);
 }
 
 size_t AStar::GetNeighbors(
     int cellX, int cellZ,
+    int goalX, int goalZ,
     const GridMap& grid_map,
     std::pair<int, int>* out_neighbors) const
 {
-    //4方向（左・右・上・下）
-    const int offsetX[4] = { -1,1,0,0 };
-    const int offsetZ[4] = { 0,0,-1,1 };
-    size_t count = 0; // 見つかったセルの数をカウント
+    const int offsetX[8] = { 0, 0, -1, 1, -1, 1, -1, 1 };
+    const int offsetZ[8] = { -1, 1, 0, 0, -1, -1, 1, 1 };
 
-    for (int i = 0; i < 4; i++)
+    size_t count = 0;
+
+    for (int i = 0; i < 8; i++)
     {
-        int neighborX = cellX + offsetX[i];
-        int neighborZ = cellZ + offsetZ[i];
+        int nx = cellX + offsetX[i];
+        int nz = cellZ + offsetZ[i];
 
-        // ★隣接するすべてのセルを返す。
+        // マップ範囲外チェック
+        if (!grid_map.IsOnMap(nx, nz)) continue;
 
-        out_neighbors[count] = { neighborX, neighborZ }; // 配列に直接書き込み
-        count++;
+        // ★重要修正: ゴール地点なら障害物でも通行可能とする
+        bool isGoal = (nx == goalX && nz == goalZ);
+
+        if (!isGoal)
+        {
+            // 障害物チェック (ゴールでなければ)
+            if (grid_map.IsBlocked(nx, nz)) continue;
+
+            // コーナーチェック (斜め移動時)
+            if (i >= 4)
+            {
+                if (grid_map.IsBlocked(cellX + offsetX[i], cellZ) ||
+                    grid_map.IsBlocked(cellX, cellZ + offsetZ[i]))
+                {
+                    continue;
+                }
+            }
+        }
+
+        out_neighbors[count++] = { nx, nz };
     }
 
-    return count; // 常に 4 を返す (4方向の場合)}
+    return count;
 }
 
 size_t AStar::CoordinateToIndex(int cell_x, int cell_z) const
@@ -528,14 +535,20 @@ std::vector<std::pair<int, int>> AStar::SmoothPath(
             size_t final_index = current_index - 1;
 
             //P_start と final_index のノードが異なる場合のみ追加 (重複防止)
-            if (final_index > start_index)
+            if (final_index <= static_cast<size_t>(start_index))
             {
-                smooth_path.push_back(path[final_index]);
-                start_index = final_index;
+                final_index = start_index + 1;
             }
 
-            start_index = final_index;
-            current_index--;
+            // パスの範囲内かチェック
+            if (final_index < path.size())
+            {
+                smooth_path.push_back(path[final_index]);
+                start_index = static_cast<int>(final_index);
+
+                // ループのインデックスをここから再開
+                current_index = final_index;
+            }
         }
     }
 
@@ -574,6 +587,8 @@ bool AStar::HasLineOfSight(
             }
             error_val += 2 * dz;
 
+            if (x == end_x && z == end_z) break;
+
             // 新しいセル (x, z) が障害物かどうかをチェック
             if (gridMap.IsBlocked(x, z)) return false;
         }
@@ -591,6 +606,8 @@ bool AStar::HasLineOfSight(
                 error_val -= 2 * dz;
             }
             error_val += 2 * dx;
+
+            if (x == end_x && z == end_z) break;
 
             // 新しいセル (x, z) が障害物かどうかをチェック
             if (gridMap.IsBlocked(x, z)) return false;

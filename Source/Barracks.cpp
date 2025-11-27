@@ -31,68 +31,76 @@ Barracks::Barracks()
 //ギミック更新処理
 void Barracks::Update(float elapsedTime)
 {
-	if (hp <= 0.0f)
-	{
-		is_active = false;
-		CollisionManager::Instance().Remove(this);
-		GimmicManager::Instance().Remove(this);
-		return;
-	}
+    if (hp <= 0.0f)
+    {
+        is_active = false;
+        CollisionManager::Instance().Remove(this);
+        GimmicManager::Instance().Remove(this);
+        return;
+    }
 
-	//スポーン位置設定
-	spawn_positon.x = position.x;
-	spawn_positon.y = position.y;
-	spawn_positon.z = position.z;
+    // ★変更: 先に兵舎の向きとサイズを計算して、スポーン位置を前方にずらす
 
-	spawn_timer += elapsedTime;
+    // 1. 兵舎の回転角度(Y軸)から前方ベクトルを計算
+    float radY = DirectX::XMConvertToRadians(angle.y);
+    float s = sinf(radY);
+    float c = cosf(radY);
+    DirectX::XMFLOAT3 forward = { s, 0.0f, c }; // Z軸が前方
 
-	current_enemy_count = static_cast<int>(spawned_enemies.size());//スポーンしている敵の数を確認
+    // 2. ずらす距離を計算
+    // モデルの奥行き(70.0f * scale.z)の半分 + エネミーの半径分 + 余裕(1.5m)
+    // scaleが0.04の場合、70*0.04=2.8m なので、2.8 + 1.5 = 4.3m 前に出す
+    float halfDepth = 70.0f * scale.z;
+    float spawnOffset = halfDepth + 1.5f;
 
-	//敵のスポーン数チェックと経過時間チェック
-	if (current_enemy_count < max_enemy_count && spawn_timer >= spawn_interval)
-	{
-		spawn_timer = 0.0f;							//経過時間をリセット
+    // 3. スポーン位置決定
+    spawn_positon.x = position.x + forward.x * spawnOffset;
+    spawn_positon.y = position.y;
+    spawn_positon.z = position.z + forward.z * spawnOffset;
 
-		enemys = std::make_shared<EnemySlime>();	//敵をスポーン
-		enemys->SetPosition(spawn_positon);			//スポーン位置本設定
-		enemys->SetTerritory(spawn_positon, 10.0f);
-		EnemyManager::Instance().Register(enemys);	//敵を登録
-		spawned_enemies.push_back(enemys);			//兵舎にも敵を登録
-		GameObjectManager::Instance().AddObject(enemys);
-	}
+    // --- ここからは既存の処理 ---
 
-	//兵舎が管理する敵の死体を整理
-	spawned_enemies.erase(
-		std::remove_if(
-			spawned_enemies.begin(),
-			spawned_enemies.end(),
-			[&](const std::shared_ptr<Enemy>& enemy)
-			{
-				return enemy->IsDestroyRequested();
-			}),
-		spawned_enemies.end()
-	);
+    spawn_timer += elapsedTime;
+    current_enemy_count = static_cast<int>(spawned_enemies.size());
 
-	// 各軸の向きを更新（Y軸回転のみと仮定）
-	DirectX::XMFLOAT3 rotation = {
-	DirectX::XMConvertToRadians(angle.x),
-	DirectX::XMConvertToRadians(angle.y),
-	DirectX::XMConvertToRadians(angle.z)
-	};
-	float c = cosf(rotation.y);
-	float s = sinf(rotation.y);
-	obb->axis[0] = DirectX::XMFLOAT3(c, 0.0f, -s); // X軸（右）
-	obb->axis[1] = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f); // Y軸（上）
-	obb->axis[2] = DirectX::XMFLOAT3(s, 0.0f, c);  // Z軸（前）
+    if (current_enemy_count < max_enemy_count && spawn_timer >= spawn_interval)
+    {
+        spawn_timer = 0.0f;
 
-	// ---- OBBサイズ設定 ----
-	// モデルサイズに合わせたハーフサイズを設定
-	// (モデル単位を1とした場合の半分の大きさ)
-	obb->half = DirectX::XMFLOAT3(48.0f * scale.x, 70.0f * scale.y, 70.0f * scale.z);
+        // 近距離型を生成
+        enemys = std::make_shared<EnemySlimeMelee>();
 
-	//OBB設定
-	obb->center = position;
-	obb->center.z += 0.5f;
+        enemys->SetPosition(spawn_positon);         // ずらした位置に配置
+        enemys->SetTerritory(spawn_positon, 10.0f); // 縄張りもそこを中心に
+
+        EnemyManager::Instance().Register(enemys);
+        spawned_enemies.push_back(enemys);
+        GameObjectManager::Instance().AddObject(enemys);
+    }
+
+    // 死体処理
+    spawned_enemies.erase(
+        std::remove_if(
+            spawned_enemies.begin(),
+            spawned_enemies.end(),
+            [&](const std::shared_ptr<Enemy>& enemy)
+            {
+                return enemy->IsDestroyRequested();
+            }),
+        spawned_enemies.end()
+    );
+
+    // OBBの更新 (上で計算した s, c を再利用してセット)
+    obb->axis[0] = DirectX::XMFLOAT3(c, 0.0f, -s);      // X軸
+    obb->axis[1] = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f); // Y軸
+    obb->axis[2] = DirectX::XMFLOAT3(s, 0.0f, c);       // Z軸
+
+    // OBBサイズ設定
+    obb->half = DirectX::XMFLOAT3(48.0f * scale.x, 70.0f * scale.y, 70.0f * scale.z);
+
+    // OBB中心設定
+    obb->center = position;
+    obb->center.z += 0.5f; // ※モデルの原点ズレ補正があればそのまま
 }
 
 //デバッグ表示

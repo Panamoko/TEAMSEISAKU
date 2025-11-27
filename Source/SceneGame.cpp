@@ -158,10 +158,23 @@ void SceneGame::Update(float elapsedTime)
 
 		StageManager::Instance().Update(scaledElapsedTime);
 
-		// ★追加: 全プレイヤーにマップ情報を渡す
+		// 全プレイヤーにマップ情報を渡す
 		for (auto& up : players)
 		{
 			up->SetGridMap(&grid_map);
+		}
+
+		// エネミーにもマップ情報を渡す
+		EnemyManager& em = EnemyManager::Instance();
+		int enemyCount = em.GetEnemyCount();
+		for (int i = 0; i < enemyCount; ++i)
+		{
+			auto enemy = em.GetEnemy(i);
+			// EnemySlime型（またはその派生）であればキャストしてセット
+			if (auto slime = std::dynamic_pointer_cast<EnemySlime>(enemy))
+			{
+				slime->SetGridMap(&grid_map);
+			}
 		}
 
 		// 全プレイヤー更新（入力は Player 側で“アクティブのみ”にガード）

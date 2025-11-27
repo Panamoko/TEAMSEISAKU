@@ -4,6 +4,7 @@
 #include "ProjectileStraite.h"
 #include "Player.h"
 #include "Collision.h"
+#include "EnemyManager.h"
 #include <cfloat>
 
 // コンストラクタ
@@ -86,6 +87,12 @@ void EnemySlime::Update(float elapsedTime)
 
 	animator.Update(elapsedTime);
 
+	//分離行動
+	if (class_name != "EnemySlimeTurret")
+	{
+		ApplySeparationForce(elapsedTime);
+	}
+
 	//速力処理更新
 	UpdateVelocity(elapsedTime);
 
@@ -140,6 +147,28 @@ void EnemySlime::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* re
 	//基底クラスのデバッグプリミティブ描画
 	Enemy::RenderDebugPrimitive(rc, renderer);
 
+	// 経路の可視化
+	if (gridMap && !currentPath.empty())
+	{
+		for (size_t i = 0; i < currentPath.size() - 1; ++i)
+		{
+			auto nodeA = currentPath[i];
+			auto nodeB = currentPath[i + 1];
+
+			DirectX::XMFLOAT3 p1 = gridMap->GetWorldPosition(nodeA.first, nodeA.second);
+			DirectX::XMFLOAT3 p2 = gridMap->GetWorldPosition(nodeB.first, nodeB.second);
+
+			p1.y = position.y + 0.5f;
+			p2.y = position.y + 0.5f;
+
+			float dist = sqrtf(powf(p2.x - p1.x, 2) + powf(p2.z - p1.z, 2));
+			DirectX::XMFLOAT3 mid = { (p1.x + p2.x) * 0.5f, p1.y, (p1.z + p2.z) * 0.5f };
+
+			// 簡易的に点を打つだけでもOK
+			renderer->RenderSphere(rc, p1, 0.1f, { 0, 1, 0, 1 });
+		}
+	}
+
 	//縄張り範囲をデバッグ円柱描画
 	renderer->RenderCylinder(
 		rc,
@@ -189,16 +218,145 @@ void EnemySlime::SetRandomTargerPosition()
 //目標地点へ移動
 void EnemySlime::MoveToTarget(float elapsedTime, float moveSpeedRate, float turnSpeedRate)
 {
-	//ターゲット方向への進行ベクトルを算出
-	float vx = targetPosition.x - position.x;
-	float vz = targetPosition.z - position.z;
-	float dist = sqrtf(vx * vx + vz * vz);
-	vx /= dist;
-	vz /= dist;
+	// デフォルトは移動しない
+	float vx = 0.0f, vz = 0.0f;
+	bool shouldMove = false;
 
-	//移動処理
-	Move(elapsedTime, vx, vz, moveSpeed * moveSpeedRate);
-	Turn(elapsedTime, vx, vz, turnSpeed * turnSpeedRate);
+	// マップがあり、移動指示がある場合
+	if (gridMap && moveSpeedRate > 0.0f)
+	{
+		pathRecalcTimer -= elapsedTime;
+		if (pathRecalcTimer <= 0.0f)
+		{
+			pathRecalcTimer = 0.5f;
+
+			auto startCell = gridMap->WorldToCell(position.x, position.z);
+			auto goalCell = gridMap->WorldToCell(targetPosition.x, targetPosition.z);
+
+			// まず通常探索
+			std::vector<std::pair<int, int>> rawPath = aStar.FindPath(startCell.first, startCell.second, goalCell.first, goalCell.second, *gridMap);
+
+			// SmoothPathを通して経路を滑らかにする
+			if (!rawPath.empty())
+			{
+				currentPath = aStar.SmoothPath(rawPath, *gridMap);
+			}
+			else
+			{
+				currentPath.clear();
+			}
+
+			pathIndex = 0;
+		}
+
+		// 経路がある場合のみ移動ベクトルを計算
+		if (!currentPath.empty() && pathIndex < currentPath.size())
+		{
+			auto nextCell = currentPath[pathIndex];
+			DirectX::XMFLOAT3 nextPos = gridMap->GetWorldPosition(nextCell.first, nextCell.second);
+
+			float dx = nextPos.x - position.x;
+			float dz = nextPos.z - position.z;
+			float dist = sqrtf(dx * dx + dz * dz);
+
+			// ノードに到達したら次へ
+			if (dist < 0.5f)
+			{
+				pathIndex++;
+			}
+			else
+			{
+				// 移動方向設定
+				vx = dx / dist;
+				vz = dz / dist;
+				shouldMove = true;
+			}
+		}
+		else
+		{
+			// 経路が見つからない、または最後まで到達した場合はターゲットへ直進させる
+			// これにより、A*が失敗しても完全に止まることを防ぎます
+			float dx = targetPosition.x - position.x;
+			float dz = targetPosition.z - position.z;
+			float dist = sqrtf(dx * dx + dz * dz);
+			if (dist > 0.0001f)
+			{
+				vx = dx / dist;
+				vz = dz / dist;
+				shouldMove = true;
+			}
+		}
+	}
+	// マップがない場合の直進処理
+	else if (moveSpeedRate > 0.0f)
+	{
+		float dx = targetPosition.x - position.x;
+		float dz = targetPosition.z - position.z;
+		float dist = sqrtf(dx * dx + dz * dz);
+		if (dist > 0.0001f)
+		{
+			vx = dx / dist;
+			vz = dz / dist;
+			shouldMove = true;
+		}
+	}
+
+	// 移動実行
+	if (shouldMove)
+	{
+		Move(elapsedTime, vx, vz, moveSpeed * moveSpeedRate);
+		Turn(elapsedTime, vx, vz, turnSpeed * turnSpeedRate);
+	}
+}
+
+//分離行動
+void EnemySlime::ApplySeparationForce(float elapsedTime)
+{
+	DirectX::XMFLOAT3 separation = { 0, 0, 0 };
+	int neighborCount = 0;
+	float separationRadius = 1.5f; // この半径内の味方から離れる（スライムの大きさより少し大きめに）
+
+	EnemyManager& em = EnemyManager::Instance();
+	int count = em.GetEnemyCount();
+
+	for (int i = 0; i < count; ++i)
+	{
+		auto other = em.GetEnemy(i);
+		// 自分自身や削除予定の敵は無視
+		if (!other || other.get() == this || other->IsDestroyRequested()) continue;
+
+		// 距離チェック (XZ平面)
+		float dx = position.x - other->GetPosition().x;
+		float dz = position.z - other->GetPosition().z;
+		float distSq = dx * dx + dz * dz;
+
+		// 近くにいる場合
+		if (distSq < separationRadius * separationRadius && distSq > 0.0001f)
+		{
+			float dist = sqrtf(distSq);
+
+			// 近ければ近いほど強く反発させる重み付け
+			float strength = (separationRadius - dist) / dist;
+
+			separation.x += dx * strength;
+			separation.z += dz * strength;
+			neighborCount++;
+		}
+	}
+
+	// 力の適用
+	if (neighborCount > 0)
+	{
+		// 平均化
+		separation.x /= neighborCount;
+		separation.z /= neighborCount;
+
+		float forceStrength = 5.0f; // 反発力の強さ（調整パラメータ）
+
+		// 現在の速度ベクトルに直接加算して軌道をずらす
+		velocity.x += separation.x * forceStrength * elapsedTime;
+		velocity.z += separation.z * forceStrength * elapsedTime;
+	}
 }
 
 //徘徊ステートへ偏移

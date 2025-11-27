@@ -29,6 +29,8 @@ public:
 		int agent_cellX, int agent_cellZ
 	);
 
+	std::vector < std::pair<int, int>> SmoothPath(const std::vector<std::pair<int, int>>& path, const GridMap& gridMap)const;
+
 private:
 
 	float move_cost = 1.0f;//移動コスト
@@ -38,7 +40,7 @@ private:
 	{
 		enum State { UNVISITED, OPEN, CLOSED }; // 探索状態を追加
 
-		int node_x, node_z = 0.0f;//ノード座標
+		int node_x, node_z = 0; // 0.0f -> 0 に修正
 		float goal_cost = 0.0f;//スタートからこのノードまでの累計コスト
 		float h_cost = 0.0f;//このノードからゴールまでの推定コスト
 		float fCost() const { return goal_cost + h_cost; }//総コスト
@@ -75,8 +77,6 @@ private:
 		size_t next_free_index = 0;
 	};
 
-	/*メモリ効率のために、Nodeオブジェクトをあらかじめ確保し、
-	再利用するためのプール管理クラスのインスタンス*/
 	NodePool node_pool;
 
 	//ノード比較用（優先度付きキューでfCostが小さい順）
@@ -93,7 +93,7 @@ private:
 	//(x,z) の座標ペアを unordered_map で使うためのハッシュ関数
 	struct pair_hash
 	{
-		template<class T1,class T2>
+		template<class T1, class T2>
 		std::size_t operator()(const std::pair<T1, T2>& p)const
 		{
 			auto h1 = std::hash<T1>{}(p.first);
@@ -105,13 +105,11 @@ private:
 	//ヒューリスティック関数
 	float Heuristic(int current_cellX, int current_cellZ, int goal_cellX, int goal_cellZ)const;
 
-	//隣接セルを取得
-	size_t GetNeighbors(int cellX, int cellZ, const GridMap& grid_map, std::pair<int, int>* out_neighbors) const;
+	//隣接セルを取得（★変更: ゴール座標を受け取るように修正）
+	size_t GetNeighbors(int cellX, int cellZ, int goalX, int goalZ, const GridMap& grid_map, std::pair<int, int>* out_neighbors) const;
 
 	//座標を配列のインデックスに変換
 	size_t CoordinateToIndex(int cell_x, int cell_z)const;
-
-	std::vector < std::pair<int, int>> SmoothPath(const std::vector<std::pair<int, int>>& path, const GridMap& gridMap)const;
 
 	bool HasLineOfSight(int start_x, int start_z, int end_x, int end_z, const GridMap& gridMap)const;
 
@@ -126,4 +124,3 @@ private:
 
 	int max_search_nodes = 5000;//最大探索ノード数
 };
-
