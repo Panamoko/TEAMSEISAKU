@@ -85,6 +85,9 @@
     <Filter Include="Source\ChangeSceneSytem">
       <UniqueIdentifier>{18dfa992-025a-4fa2-8d41-3483bb0ab90f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\GameSprite">
+      <UniqueIdentifier>{99760d51-338a-41f7-ac67-efd147801415}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui-docking\imconfig.h">
@@ -322,6 +325,9 @@
     <ClInclude Include="Source\ChangeSceneSytem.h">
       <Filter>Source\ChangeSceneSytem</Filter>
     </ClInclude>
+    <ClInclude Include="Source\GameSprite.h">
+      <Filter>Source\GameSprite</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -536,6 +542,9 @@
     </ClCompile>
     <ClCompile Include="Source\ChangeSceneSytem.cpp">
       <Filter>Source\ChangeSceneSytem</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GameSprite.cpp">
+      <Filter>Source\GameSprite</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
