@@ -103,32 +103,31 @@ void AllySlime::AutoAttackUpdate(float elapsedTime)
     GimmicManager& gm = GimmicManager::Instance();
     auto& gimmicks = gm.GetAll();
     for (auto& gimmic : gimmicks) {
-        if (!gimmic) continue;
-        if (!gimmic->IsActive()) continue;
+        if (!gimmic || !gimmic->IsActive()) continue; // IsActive()で壊れた壁等は弾く
+        if (!gimmic->collider) continue;
 
-        bool isTarget = false;
         float targetHeight = 0.0f;
+        bool isTarget = false;
 
-        std::shared_ptr<GimmicBase> gimmicPtr = gimmic; // 参照を保持
-        if (!gimmicPtr) continue;
-
-        if (gimmicPtr->class_name == "Gimmic_BreakWall") {
-            Gimmic_BreakWall* breakWall = dynamic_cast<Gimmic_BreakWall*>(gimmicPtr.get());
-            if (breakWall && !breakWall->IsBroken()) {
-                isTarget = true;
-                targetHeight = gimmicPtr->scale.y * 2.0f;
-            }
+        // ★最適化: コライダーの型で壁かコアかを簡易判定（文字列比較・dynamic_castを回避）
+        if (gimmic->collider->type == ColliderType::OBB)
+        {
+            // OBB なら壁とみなす
+            OBB* box = static_cast<OBB*>(gimmic->collider.get());
+            targetHeight = box->half.y * 2.0f;
+            isTarget = true;
         }
-        else if (gimmicPtr->class_name == "Core") {
-            Core* core = dynamic_cast<Core*>(gimmicPtr.get());
-            if (core && core->GetHP() > 0.0f) {
-                isTarget = true;
-                targetHeight = 7.0f;
-            }
+        else if (gimmic->collider->type == ColliderType::Cylinder)
+        {
+            // Cylinder ならコアとみなす
+            CylinderCollider* cyl = static_cast<CylinderCollider*>(gimmic->collider.get());
+            targetHeight = cyl->height;
+            isTarget = true;
         }
 
         if (isTarget) {
-            const XMFLOAT3& gp = gimmicPtr->position;
+            const XMFLOAT3& gp = gimmic->position;
+            // ...（距離計算などはそのまま）
             float dx = gp.x - position.x;
             float dy = (gp.y + targetHeight * 0.5f) - (position.y + height * 0.5f);
             float dz = gp.z - position.z;
@@ -212,57 +211,53 @@ void AllySlime::CollisionProjectilesVsEnemies()
             break;
         }
 
-        // 2) BreakWall と Core との衝突判定
+        // 2) BreakWall と Core との衝突判定 (キャスト・文字列比較の排除)
         if (!projectile) continue;
 
         GimmicManager& gm = GimmicManager::Instance();
         auto& gimmicks = gm.GetAll();
         for (auto& gimmic : gimmicks) {
-            if (!gimmic) continue;
-            if (!gimmic->IsActive()) continue;
+            if (!gimmic || !gimmic->IsActive()) continue;
+            if (!gimmic->collider) continue;
+
+            bool hit = false;
 
             std::shared_ptr<GimmicBase> gimmicPtr = gimmic; // 共有ポインタを保持
             if (!gimmicPtr) continue;
 
-            if (gimmicPtr->class_name == "Gimmic_BreakWall") {
-                Gimmic_BreakWall* breakWall = dynamic_cast<Gimmic_BreakWall*>(gimmicPtr.get());
-                if (!breakWall || breakWall->IsBroken()) continue;
-
-                if (gimmicPtr->collider && gimmicPtr->collider->type == ColliderType::OBB) {
-                    OBB* obb = static_cast<OBB*>(gimmicPtr->collider.get());
-                    XMFLOAT3 outMTD;
-                    if (Collision::IntersectSphereVsOBB(
-                        projectile->GetPosition(),
-                        projectile->GetRadius(),
-                        *obb,
-                        &outMTD))
-                    {
-                        breakWall->OnCollision(projectile);
-                        projectile->Destroy();
-                        break;
-                    }
+            if (gimmic->collider->type == ColliderType::OBB) {
+                OBB* obb = static_cast<OBB*>(gimmic->collider.get());
+                XMFLOAT3 outMTD;
+                if (Collision::IntersectSphereVsOBB(
+                    projectile->GetPosition(),
+                    projectile->GetRadius(),
+                    *obb,
+                    &outMTD))
+                {
+                    hit = true;
                 }
             }
-            else if (gimmicPtr->class_name == "Core") {
-                Core* core = dynamic_cast<Core*>(gimmicPtr.get());
-                if (!core || core->GetHP() <= 0.0f) continue;
-
-                if (gimmicPtr->collider && gimmicPtr->collider->type == ColliderType::Cylinder) {
-                    CylinderCollider* cylinder = static_cast<CylinderCollider*>(gimmicPtr->collider.get());
-                    XMFLOAT3 outPos;
-                    if (Collision::IntersectSphereVsCylinder(
-                        projectile->GetPosition(),
-                        projectile->GetRadius(),
-                        cylinder->center,
-                        cylinder->radius,
-                        cylinder->height,
-                        outPos))
-                    {
-                        core->OnCollision(projectile);
-                        projectile->Destroy();
-                        break;
-                    }
+            else if (gimmic->collider->type == ColliderType::Cylinder) {
+                CylinderCollider* cylinder = static_cast<CylinderCollider*>(gimmic->collider.get());
+                XMFLOAT3 outPos;
+                if (Collision::IntersectSphereVsCylinder(
+                    projectile->GetPosition(),
+                    projectile->GetRadius(),
+                    cylinder->center,
+                    cylinder->radius,
+                    cylinder->height,
+                    outPos))
+                {
+                    hit = true;
                 }
+            }
+
+            if (hit)
+            {
+                // キャストせず基底クラスの仮想関数OnCollisionを呼ぶ
+                gimmic->OnCollision(projectile);
+                projectile->Destroy();
+                break; // 弾は1つにつき1回衝突
             }
         }
     }

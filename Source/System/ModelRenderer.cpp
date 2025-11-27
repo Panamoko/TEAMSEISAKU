@@ -31,45 +31,15 @@ void ModelRenderer::Render(const RenderContext& rc, const DirectX::XMFLOAT4X4& w
 {
 	ID3D11DeviceContext* dc = rc.deviceContext;
 
-	// シーン用定数バッファ更新
-	{
-		CbScene cbScene{};
-		DirectX::XMMATRIX V = DirectX::XMLoadFloat4x4(&rc.view);
-		DirectX::XMMATRIX P = DirectX::XMLoadFloat4x4(&rc.projection);
-		DirectX::XMStoreFloat4x4(&cbScene.viewProjection, V * P);
-		cbScene.lightDirection.x = rc.lightDirection.x;
-		cbScene.lightDirection.y = rc.lightDirection.y;
-		cbScene.lightDirection.z = rc.lightDirection.z;
-		dc->UpdateSubresource(sceneConstantBuffer.Get(), 0, 0, &cbScene, 0, 0);
-	}
+	// ★最適化: BeginFrameで共通設定は済ませているので、ここでは個別の設定のみ行う
 
-	// 定数バッファ設定
+	// 定数バッファ設定 (Slot 1: Skeleton)
+	// ※Slot 0 は BeginFrame で設定済み
 	ID3D11Buffer* vsConstantBuffers[] =
 	{
-		sceneConstantBuffer.Get(),
 		skeletonConstantBuffer.Get(),
 	};
-	dc->VSSetConstantBuffers(0, _countof(vsConstantBuffers), vsConstantBuffers);
-
-	ID3D11Buffer* psConstantBuffers[] =
-	{
-		sceneConstantBuffer.Get(),
-	};
-	dc->PSSetConstantBuffers(0, _countof(psConstantBuffers), psConstantBuffers);
-
-	// サンプラステート設定
-	ID3D11SamplerState* samplerStates[] =
-	{
-		rc.renderState->GetSamplerState(SamplerState::LinearWrap)
-	};
-	dc->PSSetSamplers(0, _countof(samplerStates), samplerStates);
-
-	// レンダーステート設定
-	dc->OMSetDepthStencilState(rc.renderState->GetDepthStencilState(DepthState::TestAndWrite), 0);
-	dc->RSSetState(rc.renderState->GetRasterizerState(RasterizerState::SolidCullBack));
-
-	// ブレンドステート設定
-	dc->OMSetBlendState(rc.renderState->GetBlendState(BlendState::Transparency), nullptr, 0xFFFFFFFF);
+	dc->VSSetConstantBuffers(1, _countof(vsConstantBuffers), vsConstantBuffers);
 
 	// 描画処理
 	Shader* shader = shaders[static_cast<int>(shaderId)].get();
@@ -122,12 +92,46 @@ void ModelRenderer::Render(const RenderContext& rc, const DirectX::XMFLOAT4X4& w
 	shader->End(rc);
 
 	// 定数バッファ設定解除
+	// ※Slot 0 は解除しない
 	for (ID3D11Buffer*& vsConstantBuffer : vsConstantBuffers) { vsConstantBuffer = nullptr; }
-	for (ID3D11Buffer*& psConstantBuffer : psConstantBuffers) { psConstantBuffer = nullptr; }
-	dc->VSSetConstantBuffers(0, _countof(vsConstantBuffers), vsConstantBuffers);
-	dc->PSSetConstantBuffers(0, _countof(psConstantBuffers), psConstantBuffers);
+	dc->VSSetConstantBuffers(1, _countof(vsConstantBuffers), vsConstantBuffers);
+}
 
-	// サンプラステート設定解除
-	for (ID3D11SamplerState*& samplerState : samplerStates) { samplerState = nullptr; }
+// フレーム開始処理
+void ModelRenderer::BeginFrame(const RenderContext& rc)
+{
+	ID3D11DeviceContext* dc = rc.deviceContext;
+
+	// シーン用定数バッファ更新
+	{
+		CbScene cbScene{};
+		DirectX::XMMATRIX V = DirectX::XMLoadFloat4x4(&rc.view);
+		DirectX::XMMATRIX P = DirectX::XMLoadFloat4x4(&rc.projection);
+		DirectX::XMStoreFloat4x4(&cbScene.viewProjection, V * P);
+		cbScene.lightDirection.x = rc.lightDirection.x;
+		cbScene.lightDirection.y = rc.lightDirection.y;
+		cbScene.lightDirection.z = rc.lightDirection.z;
+		dc->UpdateSubresource(sceneConstantBuffer.Get(), 0, 0, &cbScene, 0, 0);
+	}
+
+	// 定数バッファ設定 (Slot 0: Scene)
+	ID3D11Buffer* vsConstantBuffers[] = { sceneConstantBuffer.Get() };
+	dc->VSSetConstantBuffers(0, 1, vsConstantBuffers);
+
+	ID3D11Buffer* psConstantBuffers[] = { sceneConstantBuffer.Get() };
+	dc->PSSetConstantBuffers(0, 1, psConstantBuffers);
+
+	// サンプラステート設定
+	ID3D11SamplerState* samplerStates[] =
+	{
+		rc.renderState->GetSamplerState(SamplerState::LinearWrap)
+	};
 	dc->PSSetSamplers(0, _countof(samplerStates), samplerStates);
+
+	// レンダーステート設定
+	dc->OMSetDepthStencilState(rc.renderState->GetDepthStencilState(DepthState::TestAndWrite), 0);
+	dc->RSSetState(rc.renderState->GetRasterizerState(RasterizerState::SolidCullBack));
+
+	// ブレンドステート設定
+	dc->OMSetBlendState(rc.renderState->GetBlendState(BlendState::Transparency), nullptr, 0xFFFFFFFF);
 }
