@@ -70,3 +70,14 @@ std::shared_ptr<ModelResource> ModelManager::GetResource(const std::string& path
 
     return resource;
 }
+
+std::unique_ptr<Model> ModelManager::CreateUniqueInstance(const std::string& path)
+{
+    // リソースを取得（キャッシュにあればそれを使う）
+    auto resource = GetResource(path);
+    if (!resource) return nullptr;
+
+    // リソースを渡して新しいModelを作成
+    // models_.push_back(...) をしないのがポイントです
+    return std::make_unique<Model>(resource, path.c_str());
+}
