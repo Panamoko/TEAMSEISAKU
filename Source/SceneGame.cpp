@@ -294,7 +294,13 @@ void SceneGame::Render()
 
 	// 2Dスプライト描画
 	{
-
+		for (const auto& game_sprite : this->sprites2d)
+		{
+			if (game_sprite)
+			{
+				game_sprite->Render();
+			}
+		}
 	}
 }
 

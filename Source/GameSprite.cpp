@@ -25,7 +25,12 @@ void GameSprite::Render()
 	rc.deviceContext = dc;
 	rc.renderState = renderState;
 
-	sprite.Render(
+	if (!this->sprite_ptr)
+	{
+		return;
+	}
+
+	sprite_ptr->Render(
 		rc,
 		position.x, position.y, 0.0f,
 		size.x, size.y,
@@ -35,4 +40,11 @@ void GameSprite::Render()
 		color.x, color.y, color.z, color.w
 	);
 
+}
+
+void GameSprite::SetupSprite(const std::string& texture_path)
+{
+	this->texture_name = texture_path;
+
+	this->sprite_ptr = SpriteManager::Instance().CreateNewInstance(texture_path);
 }

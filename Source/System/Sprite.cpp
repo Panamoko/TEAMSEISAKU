@@ -8,6 +8,47 @@
 Sprite::Sprite()
 	: Sprite(nullptr)
 {
+	ID3D11Device* device = Graphics::Instance().GetDevice();
+
+	HRESULT hr = S_OK;
+
+	// 頂点バッファの生成
+	{
+		D3D11_BUFFER_DESC buffer_desc = {};
+		buffer_desc.ByteWidth = sizeof(Vertex) * 4;
+		buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+		buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		hr = device->CreateBuffer(&buffer_desc, nullptr, vertexBuffer.GetAddressOf());
+		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+	}
+
+	// 頂点シェーダー
+	{
+		D3D11_INPUT_ELEMENT_DESC inputElementDesc[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "COLOR",0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		};
+		hr = GpuResourceUtils::LoadVertexShader(
+			device,
+			"Data/Shader/SpriteVS.cso",
+			inputElementDesc,
+			ARRAYSIZE(inputElementDesc),
+			inputLayout.GetAddressOf(),
+			vertexShader.GetAddressOf());
+		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+	}
+
+	// ピクセルシェーダー
+	{
+		hr = GpuResourceUtils::LoadPixelShader(
+			device,
+			"Data/Shader/SpritePS.cso",
+			pixelShader.GetAddressOf());
+		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+	}
 }
 
 // コンストラクタ
@@ -96,6 +137,16 @@ void Sprite::Render(const RenderContext& rc,
 	float r, float g, float b, float a	// 色
 	) const
 {
+	if (!sprite_resource) // リソースがない場合は描画しない
+	{
+		return;
+	}
+
+	//共有リソースからテクスチャ情報を取得
+	ID3D11ShaderResourceView* srv = sprite_resource->shader_resource_view.Get();
+	float resource_width = sprite_resource->texture_width;
+	float resource_height = sprite_resource->texture_height;
+
 	ID3D11DeviceContext* dc = rc.deviceContext;
 
 	// 頂点座標
@@ -174,8 +225,8 @@ void Sprite::Render(const RenderContext& rc,
 		v[i].color.z = b;
 		v[i].color.w = a;
 
-		v[i].texcoord.x = texcoords[i].x / textureWidth;
-		v[i].texcoord.y = texcoords[i].y / textureHeight;
+		v[i].texcoord.x = texcoords[i].x / resource_width;
+		v[i].texcoord.y = texcoords[i].y / resource_height;
 	}
 
 	// 頂点バッファの内容の編集を終了する。
@@ -189,7 +240,8 @@ void Sprite::Render(const RenderContext& rc,
 	dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	dc->VSSetShader(vertexShader.Get(), nullptr, 0);
 	dc->PSSetShader(pixelShader.Get(), nullptr, 0);
-	dc->PSSetShaderResources(0, 1, shaderResourceView.GetAddressOf());
+	//dc->PSSetShaderResources(0, 1, shaderResourceView.GetAddressOf());
+	dc->PSSetShaderResources(0, 1, &srv);
 
 	// レンダーステート設定
 	dc->OMSetDepthStencilState(rc.renderState->GetDepthStencilState(DepthState::NoTestNoWrite), 0);
@@ -209,5 +261,8 @@ void Sprite::Render(const RenderContext& rc,
 	float r, float g, float b, float a	// 色
 	) const
 {
-	Render(rc, dx, dy, dz, dw, dh, 0, 0, textureWidth, textureHeight, angle, r, g, b, a);
+	float resource_width = sprite_resource ? sprite_resource->texture_width : 0.0f;
+	float resource_height = sprite_resource ? sprite_resource->texture_height : 0.0f;
+
+	Render(rc, dx, dy, dz, dw, dh, 0, 0, resource_width, resource_height, angle, r, g, b, a);
 }

@@ -34,11 +34,22 @@ public:
 	//すでにロード済みの Sprite インスタンスのリストを取得
 	const std::vector<std::unique_ptr<Sprite>>& GetSprite()const { return sprites_data; }
 
+	const std::vector<std::string> GetResourceNames() const;
+
+	//モデルロード
+	Sprite* Load(const std::string& path);
+
+	//SpriteManagerで管理せず、呼び出し元に所有権を渡す
+	std::unique_ptr<Sprite> CreateUniqueInstance(const std::string& path);
+
 private:
 	// ロードされた SpriteResource のキャッシュ
 	std::unordered_map<std::string, std::shared_ptr<SpriteResource>> resource_map_;
 
 	// 生成され、管理対象になっている Sprite インスタンスのリスト
 	std::vector<std::unique_ptr<Sprite>> sprites_data; 
+
+	//Load で生成された Sprite オブジェクトをキャッシュするためのマップ
+	std::unordered_map<std::string, Sprite*> sprite_map_;
 
 };

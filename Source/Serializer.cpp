@@ -27,7 +27,7 @@ void to_json(json& j, const GameSprite& sp)
 {
 	j = nlohmann::json{
 		 {"name", sp.name},
-		 {"texture", sp.texture},
+		 {"texture", sp.texture_name},
 		 {"position", {sp.position.x, sp.position.y}},
 		 {"size", {sp.size.x, sp.size.y}},
 		 {"rotation", sp.rotation},
@@ -68,7 +68,7 @@ void from_json(const json& j, GameObject& obj)
 void from_json(const json& j, GameSprite& sp)
 {
 	sp.name = j.at("name").get<std::string>();
-	sp.texture = j.at("texture").get<std::string>();
+	sp.texture_name = j.at("texture").get<std::string>();
 	auto pos = j.at("position");
 	sp.position = { pos[0], pos[1] };
 	auto size = j.at("size");
