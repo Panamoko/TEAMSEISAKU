@@ -149,4 +149,5 @@ private:
 	std::vector<std::pair<int, int>> currentPath;
 	int pathIndex = 0;
 	float pathRecalcTimer = 0.0f;
+	bool once = true;
 };

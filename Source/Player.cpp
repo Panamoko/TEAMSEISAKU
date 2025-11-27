@@ -172,7 +172,7 @@ void Player::UpdateMoveToCore(float elapsedTime)
 	if (!gridMap) return;
 
 	pathRecalcTimer -= elapsedTime;
-	if (pathRecalcTimer <= 0.0f)
+	if (pathRecalcTimer <= 0.0f && once)
 	{
 		pathRecalcTimer = 0.5f; // 0.5•b‚²‚Æ‚ÉŒo˜HXV
 
@@ -187,6 +187,7 @@ void Player::UpdateMoveToCore(float elapsedTime)
 			start.first, start.second);
 
 		pathIndex = 0;
+		once = false;
 	}
 
 	DirectX::XMFLOAT3 targetPos = core->position;
