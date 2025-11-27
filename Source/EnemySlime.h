@@ -108,7 +108,7 @@ protected:
 private:
 
 	editor game_editor;
-	std::vector<std::unique_ptr<SpriteObject>> sprites2d;
+	std::vector<std::unique_ptr<GameSprite>> sprites2d;
 
 	Model* slimeModel = nullptr;
 	CylinderCollider* cylinder;

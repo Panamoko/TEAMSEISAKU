@@ -23,7 +23,7 @@ void to_json(json& j, const GameObject& obj)
 	j["model_path"] = obj.model_path;
 }
 
-void to_json(json& j, const SpriteObject& sp)
+void to_json(json& j, const GameSprite& sp)
 {
 	j = nlohmann::json{
 		 {"name", sp.name},
@@ -65,7 +65,7 @@ void from_json(const json& j, GameObject& obj)
 	ApplyTransform(obj);
 }
 
-void from_json(const json& j, SpriteObject& sp)
+void from_json(const json& j, GameSprite& sp)
 {
 	sp.name = j.at("name").get<std::string>();
 	sp.texture = j.at("texture").get<std::string>();
@@ -109,7 +109,7 @@ void Serializer::GlobalGameManagersClear()
 //データをファイルに保存
 void Serializer::SaveScene(
 	const std::vector<std::shared_ptr<GameObject>>& objects,
-	const std::vector<std::unique_ptr<SpriteObject>>& sprites,
+	const std::vector<std::unique_ptr<GameSprite>>& sprites,
 	const std::string& filename)
 {
 	json j;
@@ -142,7 +142,7 @@ void Serializer::SaveScene(
 //ファイルからデータを復元
 bool Serializer::LoadScene(
 	std::vector<std::shared_ptr<GameObject>>& objects,
-	std::vector<std::unique_ptr<SpriteObject>>& sprites,
+	std::vector<std::unique_ptr<GameSprite>>& sprites,
 	const std::string& filename)
 {
 	GlobalGameManagersClear();
@@ -187,7 +187,7 @@ bool Serializer::LoadScene(
 		for (auto& item : j["sprites"])
 		{
 			// unique_ptr を使用し、from_json でコピーを避けて復元
-			auto sp = std::make_unique<SpriteObject>();
+			auto sp = std::make_unique<GameSprite>();
 			from_json(item, *sp);
 			sprites.push_back(std::move(sp));
 		}

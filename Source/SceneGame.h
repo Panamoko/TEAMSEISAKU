@@ -13,6 +13,7 @@
 #include "GridMap.h"
 #include "Picking_Ray.h"
 #include "AllySlimeMelee.h"
+#include "GameSprite.h"
 
 class Player;
 class AllySlime;         // Šù‘¶’¼ü’e
@@ -62,7 +63,7 @@ private:
 	std::vector<std::unique_ptr<AllySlime>>       alliesStraight;
 	std::vector<std::unique_ptr<AllySlimeHoming>> alliesHoming;
 	std::vector<std::shared_ptr<GameObject>> objects;
-	std::vector<std::unique_ptr<SpriteObject>> sprites2d;
+	std::vector<std::unique_ptr<GameSprite>> sprites2d;
 
 	Stage* stage = nullptr;
 	GridMap grid_map;

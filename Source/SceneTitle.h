@@ -30,5 +30,5 @@ private:
 	Sprite* sprite = nullptr;
 	editor game_editor;
 	std::vector<std::shared_ptr<GameObject>> objects;
-	std::vector<std::unique_ptr<SpriteObject>> sprites;
+	std::vector<std::unique_ptr<GameSprite>> sprites;
 };
