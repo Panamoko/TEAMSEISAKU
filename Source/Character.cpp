@@ -301,3 +301,18 @@ void Character::AddImpulse(const DirectX::XMFLOAT3& impulse)
 	velocity.z += impulse.z;
 
 }
+
+// 回復処理
+void Character::Heal(int amount)
+{
+	if (health <= 0) return; // 死んでいる場合は回復しない（蘇生が必要ならここを変える）
+
+	health += amount;
+	int maxHp = GetMaxHealth();
+	if (health > maxHp)
+	{
+		health = maxHp;
+	}
+
+	// ここで回復エフェクトや音を鳴らす処理を入れると良いでしょう
+}

@@ -7,7 +7,7 @@
 #include "EnemySlime.h"
 #include "Player.h"
 #include "AllySlime.h"         // 既存＝直線弾
-#include "AllySlimeHoming.h"   // 新規＝追尾弾
+#include "AllySlimeHeal.h"   // 新規＝追尾弾
 #include <cfloat>          // ★ FLT_MAX 用
 #include "System/Mouse.h"  // ★ Mouse::BTN_LEFT / GetX()/GetY() を使うなら明示的に
 #include "CollisionManager.h"
@@ -83,7 +83,7 @@ void SceneGame::Initialize()
 
 	Serializer::LoadScene(objects, sprites2d, scene_file_name);
 
-	grid_map.Initialize(101, 101, 1.1);
+	grid_map.Initialize(150, 150, 0.8f);
 }
 
 // 終了化
@@ -158,10 +158,23 @@ void SceneGame::Update(float elapsedTime)
 
 		StageManager::Instance().Update(scaledElapsedTime);
 
-		// ★追加: 全プレイヤーにマップ情報を渡す
+		// 全プレイヤーにマップ情報を渡す
 		for (auto& up : players)
 		{
 			up->SetGridMap(&grid_map);
+		}
+
+		// エネミーにもマップ情報を渡す
+		EnemyManager& em = EnemyManager::Instance();
+		int enemyCount = em.GetEnemyCount();
+		for (int i = 0; i < enemyCount; ++i)
+		{
+			auto enemy = em.GetEnemy(i);
+			// EnemySlime型（またはその派生）であればキャストしてセット
+			if (auto slime = std::dynamic_pointer_cast<EnemySlime>(enemy))
+			{
+				slime->SetGridMap(&grid_map);
+			}
 		}
 
 		// 全プレイヤー更新（入力は Player 側で“アクティブのみ”にガード）
@@ -225,6 +238,7 @@ void SceneGame::Render()
 #if 1
 	game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), modelRenderer);
 #endif
+	modelRenderer->BeginFrame(rc);
 	// 3Dモデル描画
 	{
 		StageManager::Instance().Render(rc, modelRenderer);
@@ -323,7 +337,7 @@ void SceneGame::AddAllyHomingFor(Player* leader)
 		return;
 	}
 	int slot = CountAlliesFor(leader);
-	auto p = std::make_unique<AllySlimeHoming>(slot); // 新規クラス＝追尾弾
+	auto p = std::make_unique<AllySlimeHeal>(slot); // 新規クラス＝追尾弾
 	p->SetLeader(leader);
 	alliesHoming.emplace_back(std::move(p));
 }

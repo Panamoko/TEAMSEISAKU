@@ -82,24 +82,32 @@ void AllySlimeMelee::SearchTarget()
         }
     }
 
-    // 2. ギミック（壁・コア）を探す（敵より近くにあれば優先）
+    // 2. ギミック（壁・コア）を探す
     GimmicManager& gm = GimmicManager::Instance();
     for (auto& g : gm.GetAll())
     {
         if (!g || !g->IsActive()) continue;
+        // IsActive()がfalseなら壊れているのでターゲットにしない
 
         bool isTarget = false;
-        if (g->class_name == "Gimmic_BreakWall") {
-            auto* wall = dynamic_cast<Gimmic_BreakWall*>(g.get());
-            if (wall && !wall->IsBroken()) isTarget = true;
-        }
-        else if (g->class_name == "Core") {
-            auto* core = dynamic_cast<Core*>(g.get());
-            if (core && core->GetHP() > 0) isTarget = true;
+
+        // ★最適化: コライダータイプで判断 (キャスト回避)
+        if (g->collider)
+        {
+            if (g->collider->type == ColliderType::OBB) // 壁
+            {
+                isTarget = true;
+            }
+            else if (g->collider->type == ColliderType::Cylinder) // コア
+            {
+                // コアのHPチェック等はOnCollisionやIsActiveに任せる、あるいは必要ならここだけキャスト
+                isTarget = true;
+            }
         }
 
         if (isTarget)
         {
+            // （距離計算...）
             float dx = g->position.x - center.x;
             float dz = g->position.z - center.z;
             float d2 = dx * dx + dz * dz;
@@ -273,8 +281,8 @@ void AllySlimeMelee::CheckAttackCollision()
             // エネミーにダメージ
             e->ApplyDamage(attackDamage, 0.5f);
             // ノックバック
-            DirectX::XMFLOAT3 impulse = { dx * 5.0f, 2.0f, dz * 5.0f };
-            e->AddImpulse(impulse);
+            //DirectX::XMFLOAT3 impulse = { dx * 5.0f, 2.0f, dz * 5.0f };
+            //e->AddImpulse(impulse);
         }
     }
     else if (auto g = targetGimmic.lock())

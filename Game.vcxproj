@@ -92,7 +92,7 @@
       <AdditionalIncludeDirectories>.\Source;.\External\imgui-docking;.\External\ImGuizmo;.\External\cereal\include;.\External\DirectXTex;.\json-develop\json-develop\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -120,7 +120,7 @@
     <ClInclude Include="External\imgui-docking\imstb_textedit.h" />
     <ClInclude Include="External\imgui-docking\imstb_truetype.h" />
     <ClInclude Include="Source\AllySlime.h" />
-    <ClInclude Include="Source\AllySlimeHoming.h" />
+    <ClInclude Include="Source\AllySlimeHeal.h" />
     <ClInclude Include="Source\AllySlimeMelee.h" />
     <ClInclude Include="Source\AllyTargeting.h" />
     <ClInclude Include="Source\Animator.h" />
@@ -204,7 +204,7 @@
     <ClCompile Include="External\imgui-docking\imgui_widgets.cpp" />
     <ClCompile Include="Factory.cpp" />
     <ClCompile Include="Source\AllySlime.cpp" />
-    <ClCompile Include="Source\AllySlimeHoming.cpp" />
+    <ClCompile Include="Source\AllySlimeHeal.cpp" />
     <ClCompile Include="Source\AllySlimeMelee.cpp" />
     <ClCompile Include="Source\AllyTargeting.cpp" />
     <ClCompile Include="Source\AStar.cpp" />

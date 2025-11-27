@@ -22,6 +22,9 @@ public:
 	ModelRenderer(ID3D11Device* device);
 	~ModelRenderer() {}
 
+	//フレーム開始処理（シーン定数バッファの更新など、フレームで1回やればいい処理）
+	void BeginFrame(const RenderContext& rc);
+
 	// 描画実行
 	void Render(const RenderContext& rc,
 		const DirectX::XMFLOAT4X4& worldTransform,

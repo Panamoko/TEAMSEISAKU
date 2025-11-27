@@ -82,12 +82,6 @@
     <Filter Include="Source\Utility">
       <UniqueIdentifier>{77b13ae7-805c-45f2-b249-b8eb9205affc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\ChangeSceneSytem">
-      <UniqueIdentifier>{18dfa992-025a-4fa2-8d41-3483bb0ab90f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source\GameSprite">
-      <UniqueIdentifier>{99760d51-338a-41f7-ac67-efd147801415}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui-docking\imconfig.h">
@@ -267,9 +261,6 @@
     <ClInclude Include="Source\StageManager.h">
       <Filter>Source\Stage</Filter>
     </ClInclude>
-    <ClInclude Include="Source\AllySlimeHoming.h">
-      <Filter>Source\Character\Player</Filter>
-    </ClInclude>
     <ClInclude Include="Source\AllyTargeting.h">
       <Filter>Source\Character\Player</Filter>
     </ClInclude>
@@ -322,11 +313,8 @@
     <ClInclude Include="Source\AllySlimeMelee.h">
       <Filter>Source\Character\Player</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ChangeSceneSytem.h">
-      <Filter>Source\ChangeSceneSytem</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\GameSprite.h">
-      <Filter>Source\GameSprite</Filter>
+    <ClInclude Include="Source\AllySlimeHeal.h">
+      <Filter>Source\Character\Player</Filter>
     </ClInclude>
     <ClInclude Include="Source\SpriteManager.h">
       <Filter>Source\GameSprite</Filter>
@@ -492,9 +480,6 @@
     <ClCompile Include="Source\StageManager.cpp">
       <Filter>Source\Stage</Filter>
     </ClCompile>
-    <ClCompile Include="Source\AllySlimeHoming.cpp">
-      <Filter>Source\Character\Player</Filter>
-    </ClCompile>
     <ClCompile Include="Source\AllyTargeting.cpp">
       <Filter>Source\Character\Player</Filter>
     </ClCompile>
@@ -546,11 +531,8 @@
     <ClCompile Include="Source\AllySlimeMelee.cpp">
       <Filter>Source\Character\Player</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ChangeSceneSytem.cpp">
-      <Filter>Source\ChangeSceneSytem</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\GameSprite.cpp">
-      <Filter>Source\GameSprite</Filter>
+    <ClCompile Include="Source\AllySlimeHeal.cpp">
+      <Filter>Source\Character\Player</Filter>
     </ClCompile>
     <ClCompile Include="Source\SpriteManager.cpp">
       <Filter>Source\GameSprite</Filter>

@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 #include "AllySlime.h"
-#include "AllySlimeHoming.h"
+#include "AllySlimeHeal.h"
 #include "System/ModelRenderer.h"
 #include <cfloat>   // © ’Ç‰ÁiFLT_MAX —pj
 #include "GridMap.h"
@@ -61,7 +61,7 @@ private:
 	std::vector<std::unique_ptr<Model>> models;
 	// ’¼ü^’Ç”ö‚Ì•ÊŠÇ—
 	std::vector<std::unique_ptr<AllySlime>>       alliesStraight;
-	std::vector<std::unique_ptr<AllySlimeHoming>> alliesHoming;
+	std::vector<std::unique_ptr<AllySlimeHeal>> alliesHoming;
 	std::vector<std::shared_ptr<GameObject>> objects;
 	std::vector<std::unique_ptr<GameSprite>> sprites2d;
 

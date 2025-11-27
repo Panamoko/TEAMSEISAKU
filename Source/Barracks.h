@@ -2,6 +2,7 @@
 #include "GimmicBase.h"
 #include "Collider.h"
 #include "EnemySlime.h"
+#include "EnemySlimeMelee.h"
 
 class Barracks :public GimmicBase
 {
