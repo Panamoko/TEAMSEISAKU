@@ -34,4 +34,11 @@ private:
 	std::vector<std::unique_ptr<GameSprite>> sprites;
 	DirectX::XMFLOAT3 position;
 	DirectX::XMFLOAT3 size;
+	float sprite_left;
+	float sprite_top;
+	float sprite_width;
+	float sprite_height;
+	float alpha_timer = 0.0f;     // α値計算用のタイマー
+	float blink_interval = 0.5f;  // 点滅間隔（例: 0.5秒ごとに切り替え）
+	DirectX::XMFLOAT4 render_color = { 1.0f, 1.0f, 1.0f, 1.0f }; // 描画色
 };
