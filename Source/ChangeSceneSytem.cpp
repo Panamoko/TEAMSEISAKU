@@ -7,9 +7,11 @@
 #include "SceneGame.h"
 #include "SceneFactory.h"
 
+int ChangeSceneSytem::stage_namber = 0;
+
+
 ChangeSceneSytem::ChangeSceneSytem()
 {
-
 
 
 }

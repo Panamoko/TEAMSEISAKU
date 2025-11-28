@@ -23,7 +23,7 @@ public:
 
 private:
 
-	
+	static int stage_namber;
 
 
 };
