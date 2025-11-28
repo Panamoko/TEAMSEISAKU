@@ -12,8 +12,14 @@ int ChangeSceneSytem::stage_namber = 0;
 
 ChangeSceneSytem::ChangeSceneSytem()
 {
-
-
+	sprite_ptr = SpriteManager::Instance().Load("Data/Sprite/Tutorial.png");
+	position.x = 100.0f;
+	position.y = 100.0f;
+	size = { 256.0f,128.0f };
+	sprite_width = size.x;
+	sprite_height = size.y;
+	float sprite_left = position.x;
+	float sprite_top = position.y;
 }
 
 ChangeSceneSytem::~ChangeSceneSytem()
@@ -24,7 +30,15 @@ void ChangeSceneSytem::Update(float elapsedTime)
 {
 	Mouse& mouse = Input::Instance().GetMouse();
 
-	if (mouse.GetButtonDown() && Mouse::BTN_LEFT)
+	mouse_position.x = static_cast<float>(mouse.GetPositionX());
+	mouse_position.y = static_cast<float>(mouse.GetPositionY());
+
+	bool is_x_inside = (mouse_position.x >= sprite_left) && (mouse_position.x < sprite_left + sprite_width);
+	bool is_y_inside = (mouse_position.y >= sprite_top) && (mouse_position.y < sprite_top + sprite_height);
+
+	bool is_mouse_over_sprite = is_x_inside && is_y_inside;
+
+	if (mouse.GetButtonDown() && Mouse::BTN_LEFT && is_mouse_over_sprite)
 	{
 		SceneManager::Instance().ChangeScene(new SceneLoading(new SceneGame));
 	}
@@ -48,10 +62,10 @@ void ChangeSceneSytem::Render()
 		float screenWidth = static_cast<float>(graphics.GetScreenWidth());
 		float screenHeight = static_cast<float>(graphics.GetScreenHeight());
 		sprite_ptr->Render(rc,				//&rc
-			0, 0, 0,					//dx , dy , dz
-			screenWidth, screenHeight,	//dw , dh
+			position.x, position.y, 0,					//dx , dy , dz
+			size.x, size.y,	//dw , dh
 			0,							//angle
-			1, 1, 1, 1);				//color
+			color.x, color.y, color.z, color.w);				//color
 	}
 }
 

@@ -24,6 +24,11 @@ public:
 private:
 
 	static int stage_namber;
+	DirectX::XMFLOAT2 mouse_position;
+	float sprite_width;
+	float sprite_height;
+	float sprite_left;
+	float sprite_top;
 
 
 };

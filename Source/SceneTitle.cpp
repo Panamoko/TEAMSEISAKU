@@ -13,7 +13,11 @@ void SceneTitle::Initialize()
 {
 	// スプライト初期化
 	sprite = SpriteManager::Instance().Load("Data/Sprite/Title.png");
+	sprite = SpriteManager::Instance().Load("Data/Sprite/GameStage.png");
+
 	scene_name = "scene_title";
+	position = { 640,360,0 };
+	size = { 100,100,0 };
 }
 
 // 終了化

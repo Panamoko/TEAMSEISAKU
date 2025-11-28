@@ -28,7 +28,10 @@ public:
 
 private:
 	Sprite* sprite = nullptr;
+	Sprite* sprite2 = nullptr;
 	editor game_editor;
 	std::vector<std::shared_ptr<GameObject>> objects;
 	std::vector<std::unique_ptr<GameSprite>> sprites;
+	DirectX::XMFLOAT3 position;
+	DirectX::XMFLOAT3 size;
 };
