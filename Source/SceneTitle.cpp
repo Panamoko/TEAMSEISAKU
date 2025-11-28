@@ -6,12 +6,13 @@
 #include "SceneManager.h"
 #include "SceneLoading.h"
 #include "SceneFactory.h"
+#include "SpriteManager.h"
 
 // 初期化
 void SceneTitle::Initialize()
 {
 	// スプライト初期化
-	sprite = new Sprite("Data/Sprite/Title.png");
+	sprite = SpriteManager::Instance().Load("Data/Sprite/Title.png");
 	scene_name = "scene_title";
 }
 
@@ -19,11 +20,11 @@ void SceneTitle::Initialize()
 void SceneTitle::Finalize()
 {
 	// スプライト終了化
-	if (sprite != nullptr)
-	{
-		delete sprite;
-		sprite = nullptr;
-	}
+	//if (sprite != nullptr)
+	//{
+	//	delete sprite;
+	//	sprite = nullptr;
+	//}
 }
 
 // 更新処理

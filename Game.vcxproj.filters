@@ -82,6 +82,12 @@
     <Filter Include="Source\Utility">
       <UniqueIdentifier>{77b13ae7-805c-45f2-b249-b8eb9205affc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Sprite">
+      <UniqueIdentifier>{4fd0afe6-077b-46c7-80fd-5c71f8a771e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\ChangeSceneSytem">
+      <UniqueIdentifier>{dc53eae1-adb5-4d34-a0f2-42c6aaebd19f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui-docking\imconfig.h">
@@ -316,11 +322,20 @@
     <ClInclude Include="Source\AllySlimeHeal.h">
       <Filter>Source\Character\Player</Filter>
     </ClInclude>
+    <ClInclude Include="Source\GameSprite.h">
+      <Filter>Source\Sprite</Filter>
+    </ClInclude>
     <ClInclude Include="Source\SpriteManager.h">
-      <Filter>Source\GameSprite</Filter>
+      <Filter>Source\Sprite</Filter>
     </ClInclude>
     <ClInclude Include="Source\SpriteResource.h">
-      <Filter>Source\GameSprite</Filter>
+      <Filter>Source\Sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ChangeSceneSytem.h">
+      <Filter>Source\ChangeSceneSytem</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\SceneSelect.h">
+      <Filter>Source\Scene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -534,11 +549,20 @@
     <ClCompile Include="Source\AllySlimeHeal.cpp">
       <Filter>Source\Character\Player</Filter>
     </ClCompile>
+    <ClCompile Include="Source\GameSprite.cpp">
+      <Filter>Source\Sprite</Filter>
+    </ClCompile>
     <ClCompile Include="Source\SpriteManager.cpp">
-      <Filter>Source\GameSprite</Filter>
+      <Filter>Source\Sprite</Filter>
     </ClCompile>
     <ClCompile Include="Source\SpriteResource.cpp">
-      <Filter>Source\GameSprite</Filter>
+      <Filter>Source\Sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ChangeSceneSytem.cpp">
+      <Filter>Source\ChangeSceneSytem</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\SceneSelect.cpp">
+      <Filter>Source\Scene</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

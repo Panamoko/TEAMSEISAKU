@@ -2,8 +2,9 @@
 #include <string>
 #include <System/Sprite.h>
 #include <System/Input.h>
+#include "GameSprite.h"
 
-class ChangeSceneSytem
+class ChangeSceneSytem :public GameSprite
 {
 public:
 
@@ -12,16 +13,17 @@ public:
 	~ChangeSceneSytem();
 
 	// XVˆ—
-	void Update(float elapsedTime);
+	void Update(float elapsedTime)override;
 
 	// •`‰æˆ—
-	void Render();
+	void Render()override;
 
 	// GUI•`‰æ
 	void DrawGUI();
 
 private:
-	Sprite* sprite = nullptr;
+
+	static int stage_namber;
 
 
 };

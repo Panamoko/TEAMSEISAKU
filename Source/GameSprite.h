@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "System/Sprite.h"
+#include "SpriteManager.h"
 
 class GameSprite
 {
@@ -15,11 +16,13 @@ public:
 
 	virtual void Update(float elapsedTime) {};
 
-	void Render();
+	virtual void Render();
+
+	void SetupSprite(const std::string& texture_path);
 
 public:
 	std::string name;
-	std::string texture;
+	std::string texture_name;
 	DirectX::XMFLOAT2 position;
 	DirectX::XMFLOAT2 size;
 	DirectX::XMFLOAT2 uv_min;
@@ -28,5 +31,5 @@ public:
 	DirectX::XMFLOAT4 color;
 	int sprite_index;
 
-	Sprite sprite = nullptr;
+	Sprite* sprite_ptr = nullptr;
 };

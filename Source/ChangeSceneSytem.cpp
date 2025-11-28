@@ -7,16 +7,17 @@
 #include "SceneGame.h"
 #include "SceneFactory.h"
 
+int ChangeSceneSytem::stage_namber = 0;
+
+
 ChangeSceneSytem::ChangeSceneSytem()
 {
-
 
 
 }
 
 ChangeSceneSytem::~ChangeSceneSytem()
 {
-	delete sprite;
 }
 
 void ChangeSceneSytem::Update(float elapsedTime)
@@ -46,7 +47,7 @@ void ChangeSceneSytem::Render()
 		// タイトル（スプライト）描画
 		float screenWidth = static_cast<float>(graphics.GetScreenWidth());
 		float screenHeight = static_cast<float>(graphics.GetScreenHeight());
-		sprite->Render(rc,				//&rc
+		sprite_ptr->Render(rc,				//&rc
 			0, 0, 0,					//dx , dy , dz
 			screenWidth, screenHeight,	//dw , dh
 			0,							//angle

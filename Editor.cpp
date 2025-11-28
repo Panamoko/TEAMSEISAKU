@@ -16,6 +16,7 @@
 #include "SceneManager.h"
 #include "SceneFactory.h"
 #include "FileUtility.h"
+#include <SpriteManager.h>
 
 using namespace DirectX;
 
@@ -253,8 +254,13 @@ void editor::AddSprite(
 	std::string name = MakeUniqueSpriteName(sprites, baseName);
 	auto sp = std::make_unique<GameSprite>();
 	sp->name = name;
-	sp->texture = baseName;
+	sp->texture_name = baseName;
 	sp->sprite_index = texture_index;
+	sp->SetupSprite(baseName);
+	if (!sp->sprite_ptr)
+	{
+		return;
+	}
 	sprites.push_back(std::move(sp));
 	select_index2D = static_cast<int>(sprites.size() - 1);
 }
@@ -524,26 +530,50 @@ void editor::Draw2DEditor(
 {
 	ImGui::Text("Add New 2DSprite");
 
-	std::vector<const char*> names;
-	//names.reserve(sprites_batchs.size());
+	//std::vector<const char*> names;
 
-	//for (auto& m : sprites_batchs) names.push_back(m->name.c_str());
+	static std::vector<std::string> texture_names;
+	static std::vector<const char*> texture_names_c;
 
-	if (!names.empty())
-		ImGui::Combo("Sprite", &sprite_index, names.data(), (int)names.size());
+	// ロード済みのテクスチャリストの更新 (必要に応じて)
+	if (texture_names.empty())
+	{
+		// ここで SpriteManager などから利用可能なテクスチャのリストを取得
+		texture_names = SpriteManager::Instance().GetResourceNames();
+
+		texture_names_c.clear();
+		for (const auto& name : texture_names)
+		{
+			texture_names_c.push_back(name.c_str());
+		}
+	}
+
+	// 選択インデックスを sprite_index (editor クラスのメンバー) で保持
+	if (!texture_names_c.empty())
+		ImGui::Combo("Texture", &sprite_index, texture_names_c.data(), (int)texture_names_c.size());
 	else
 		ImGui::TextDisabled("No sprites loaded.");
 
 
 	if (ImGui::Button("Add"))
 	{
-		std::string baseName = "Empty";
+		std::string base_name = "Empty";
 		int mesh_index = -1;
 
-		mesh_index = sprite_index;
-		//baseName = sprites_batchs[mesh_index]->name;
+		if (!texture_names.empty())
+		{
+			//選択されたテクスチャ名とインデックスを取得
+			mesh_index = sprite_index; // texture_names_c のインデックス
+			base_name = texture_names[mesh_index];
+		}
+		else {
+			// テクスチャがない場合の処理 (例: ダミーテクスチャ名)
+			base_name = "Default";
+			mesh_index = -1;
+		}
 
-		AddSprite(sprites, baseName, mesh_index);
+		// AddSprite は GameSprite* を作成し、管理リストに追加します
+		AddSprite(sprites, base_name, mesh_index);
 	}
 
 	ImGui::BeginChild("", ImVec2(250, 0), true);
@@ -552,6 +582,7 @@ void editor::Draw2DEditor(
 	for (size_t i = 0; i < sprites.size(); i++)
 	{
 		GameSprite* sp = sprites[i].get();
+		//GameSprite のメンバー変数名に合わせて修正
 		if (ImGui::Selectable(sp->name.c_str(), select_index2D == (int)i))
 		{
 			select_index2D = (int)i;
@@ -569,14 +600,13 @@ void editor::Draw2DEditor(
 	{
 		GameSprite* sp = sprites[select_index2D].get();
 		char buf[128];
+
 		strncpy_s(buf, sizeof(buf), sp->name.c_str(), _TRUNCATE);
 		if (ImGui::InputText("Name", buf, sizeof(buf)))
-			sp->name = buf;
+			sp->name = buf; // 【再修正】
 
 		// sprite_batch 選択コンボ
 		std::vector<const char*> spriteNames;
-		//for (auto& sb : sprites_batchs)
-			//spriteNames.push_back(sb->name.c_str());
 
 		if (!spriteNames.empty())
 			ImGui::Combo(
@@ -590,7 +620,9 @@ void editor::Draw2DEditor(
 			// update sprite transform if needed
 		}
 		ImGui::DragFloat2("Size", &sp->size.x, 1.0f, 1, 2048);
+
 		ImGui::DragFloat("Rotation", &sp->rotation, 1.0f);
+
 		ImGui::ColorEdit4("Color", &sp->color.x);
 
 		ImGui::DragFloat2("UV Min", &sp->uv_min.x, 0.01f, 0.0f, 1.0f);

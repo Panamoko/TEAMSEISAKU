@@ -5,6 +5,7 @@
 #include <DirectXMath.h>
 
 #include "RenderContext.h"
+#include "SpriteResource.h"
 
 // スプライト
 class Sprite
@@ -12,6 +13,10 @@ class Sprite
 public:
 	Sprite();
 	Sprite(const char* filename);
+	void SetResource(std::shared_ptr<SpriteResource> resource)
+	{
+		this->sprite_resource = resource;
+	}
 
 	// 頂点データ
 	struct Vertex
@@ -51,4 +56,6 @@ private:
 
 	float textureWidth = 0;
 	float textureHeight = 0;
+
+	std::shared_ptr<SpriteResource> sprite_resource;
 };
