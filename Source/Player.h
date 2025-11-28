@@ -60,8 +60,11 @@ public:
 	// マウス入力によるスポーン処理
 	static void UpdateSpawn(std::vector<std::unique_ptr<Player>>& players, const Picking_Ray& pickingRay);
 
-	// ★追加: GridMapをセット
+	//GridMapをセット
 	void SetGridMap(const GridMap* map) { gridMap = map; }
+
+	//外部から経路再計算を要求するための関数
+	void RequestPathRecalculation();
 
 protected:
 	//着地したときに呼ばれる

@@ -474,7 +474,7 @@ void Player::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* render
 		);
 	}
 
-	// ★追加: 経路のデバッグ表示
+	// 経路のデバッグ表示
 	if (!currentPath.empty())
 	{
 		for (const auto& cell : currentPath)
@@ -831,11 +831,6 @@ bool Player::UpdateActiveByKeyboard(const std::vector<std::unique_ptr<Player>>& 
 	return false;
 }
 
-// ... (前略)
-#include "Core.h" // Coreクラスを使うために必要（既にインクルードされているはずですが確認）
-
-// ... (中略)
-
 void Player::UpdateSpawn(std::vector<std::unique_ptr<Player>>& players, const Picking_Ray& pickingRay)
 {
 	// 左クリック判定
@@ -866,17 +861,16 @@ void Player::UpdateSpawn(std::vector<std::unique_ptr<Player>>& players, const Pi
 					Core* core = Core::Instance();
 					if (core)
 					{
-						// クリック地点とコアの距離の二乗を計算
-						float dx = hitX - core->position.x;
-						float dz = hitZ - core->position.z;
-						float distSq = dx * dx + dz * dz;
+						// クリック地点とコアの差分を計算
+						float dx = std::abs(hitX - core->position.x);
+						float dz = std::abs(hitZ - core->position.z);
 
-						// 壁の内側とみなす「禁止エリアの半径」
-						// ※画面上の壁の配置に合わせて数値を調整してください（例: 20.0f ～ 30.0f くらい）
-						float forbiddenRadius = 30.0f;
+						// 禁止エリアのサイズ (正方形の一辺の半分)
+						// 例: 30.0f なら 60m x 60m の正方形が禁止エリア
+						float forbiddenHalfSize = 30.0f;
 
-						// 指定半径より内側なら、何もせずリターン（生成しない）
-						if (distSq < forbiddenRadius * forbiddenRadius)
+						// X, Z 共に範囲内なら禁止エリア（生成しない）
+						if (dx < forbiddenHalfSize && dz < forbiddenHalfSize)
 						{
 							return;
 						}
@@ -900,4 +894,16 @@ void Player::UpdateSpawn(std::vector<std::unique_ptr<Player>>& players, const Pi
 			}
 		}
 	}
+}
+
+//経路再計算リクエストの実装
+void Player::RequestPathRecalculation()
+{
+	// タイマーを0以下にすることで、次のUpdateMoveToCoreで即座に再計算が走るようにする
+	pathRecalcTimer = 0.0f;
+
+	// 現在の経路をクリアして、一時的に止める（新しい経路が出るまで変な動きをさせないため）
+	// ※必須ではありませんが、挙動が安定します
+	currentPath.clear();
+	pathIndex = 0;
 }

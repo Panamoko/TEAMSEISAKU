@@ -16,6 +16,9 @@ public:
 
 	void CopyUniqueMembers(const GameObject* source) override;
 
+	//HPæ“¾—pŠÖ”
+	float GetHP() const { return hp; }
+
 private:
 	OBB* obb;
 	DirectX::XMFLOAT3 spawn_positon;		//oŒ»êŠ

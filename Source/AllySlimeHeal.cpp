@@ -26,7 +26,7 @@ AllySlimeHeal::AllySlimeHeal(int formationIndex)
     : index(formationIndex)
 {
     // ヒーラーっぽい色（例えば赤やピンク、緑など）のモデルがあれば差し替えると分かりやすいです
-    slimeModel = ModelManager::Instance().Load("Data/Model/Slime/Slime_R.mdl");
+    slimeModel = ModelManager::Instance().Load("Data/Model/Slime/Slime_G.mdl");
 
     scale = { 0.002f, 0.002f, 0.002f };
     radius = 0.5f;

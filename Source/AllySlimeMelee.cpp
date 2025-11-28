@@ -8,6 +8,8 @@
 #include "ModelManager.h"
 #include <cmath>
 #include <algorithm>
+#include "Yagura.h"
+#include "Barracks.h"
 
 using namespace DirectX;
 
@@ -20,7 +22,7 @@ AllySlimeMelee::AllySlimeMelee(int formationIndex) : index(formationIndex)
 {
     // 近接型は少し色を変えたいので、リソース共有しつつ後で色設定(もしあれば)
     // ここでは通常のAllySlimeと同じモデルを使用
-    slimeModel = ModelManager::Instance().Load("Data/Model/Slime/Slime_G.mdl");
+    slimeModel = ModelManager::Instance().Load("Data/Model/Slime/Slime_R.mdl");
 
     // 少し大きくして近接タイプっぽくする
     scale = { 0.002f, 0.002f, 0.002f };
@@ -82,32 +84,47 @@ void AllySlimeMelee::SearchTarget()
         }
     }
 
-    // 2. ギミック（壁・コア）を探す
+    // 2. ギミック（壁・コア・櫓・兵舎）を探す
     GimmicManager& gm = GimmicManager::Instance();
     for (auto& g : gm.GetAll())
     {
         if (!g || !g->IsActive()) continue;
-        // IsActive()がfalseなら壊れているのでターゲットにしない
 
         bool isTarget = false;
 
-        // ★最適化: コライダータイプで判断 (キャスト回避)
-        if (g->collider)
+        // --- クラス名でターゲット判定 ---
+
+        // 壊せる壁
+        if (g->class_name == "Gimmic_BreakWall")
         {
-            if (g->collider->type == ColliderType::OBB) // 壁
-            {
-                isTarget = true;
-            }
-            else if (g->collider->type == ColliderType::Cylinder) // コア
-            {
-                // コアのHPチェック等はOnCollisionやIsActiveに任せる、あるいは必要ならここだけキャスト
-                isTarget = true;
-            }
+            auto wall = std::dynamic_pointer_cast<Gimmic_BreakWall>(g);
+            // 壊れていない壁だけ狙う
+            if (wall && !wall->IsBroken()) isTarget = true;
+        }
+        // コア
+        else if (g->class_name == "Core")
+        {
+            auto core = std::dynamic_pointer_cast<Core>(g);
+            if (core && core->GetHP() > 0.0f) isTarget = true;
+        }
+        // ★追加: Yagura (櫓)
+        else if (g->class_name == "Yagura")
+        {
+            auto yagura = std::dynamic_pointer_cast<Yagura>(g);
+            // Yagura.h では GetHp() (pが小文字) なので注意
+            if (yagura && yagura->GetHp() > 0.0f) isTarget = true;
+        }
+        // ★追加: Barracks (兵舎)
+        else if (g->class_name == "Barracks")
+        {
+            auto barracks = std::dynamic_pointer_cast<Barracks>(g);
+            // 先ほど追加した GetHP() を使用
+            if (barracks && barracks->GetHP() > 0.0f) isTarget = true;
         }
 
+        // ターゲット対象なら距離チェックして一番近いものを保存
         if (isTarget)
         {
-            // （距離計算...）
             float dx = g->position.x - center.x;
             float dz = g->position.z - center.z;
             float d2 = dx * dx + dz * dz;
@@ -116,7 +133,7 @@ void AllySlimeMelee::SearchTarget()
             {
                 minStartDistSq = d2;
                 targetGimmic = g;
-                targetEnemy.reset();
+                targetEnemy.reset(); // 敵ターゲットは解除
             }
         }
     }
@@ -144,31 +161,45 @@ void AllySlimeMelee::UpdateState(float elapsedTime)
     {
         if (g->IsActive())
         {
-            targetPos = g->position;
-            // 壁などは大きめなので半径を仮設定
-            targetRadius = 1.0f;
-            // 壊れた壁の判定
-            if (g->class_name == "Gimmic_BreakWall")
+            if (g->IsActive())
             {
-                if (dynamic_cast<Gimmic_BreakWall*>(g.get())->IsBroken())
+                targetPos = g->position;
+                targetRadius = 1.0f; // 仮の半径
+
+                // --- 状態ごとの生存チェック ---
+                if (g->class_name == "Gimmic_BreakWall")
                 {
-                    hasTarget = false;
-                    targetGimmic.reset(); // ★修正: 壊れていたらターゲット情報を破棄する
+                    if (dynamic_cast<Gimmic_BreakWall*>(g.get())->IsBroken()) hasTarget = false;
+                    else hasTarget = true;
                 }
-                else hasTarget = true;
+                else if (g->class_name == "Core")
+                {
+                    if (dynamic_cast<Core*>(g.get())->GetHP() <= 0) hasTarget = false;
+                    else hasTarget = true;
+                }
+                else if (g->class_name == "Yagura")
+                {
+                    if (dynamic_cast<Yagura*>(g.get())->GetHp() <= 0) hasTarget = false;
+                    else hasTarget = true;
+                }
+                else if (g->class_name == "Barracks")
+                {
+                    if (dynamic_cast<Barracks*>(g.get())->GetHP() <= 0) hasTarget = false;
+                    else hasTarget = true;
+                }
+                else
+                {
+                    // その他のギミックならActiveな限りターゲットとする
+                    hasTarget = true;
+                }
+
+                if (!hasTarget) targetGimmic.reset();
             }
-            // コアのHP判定
-            else if (g->class_name == "Core")
+            else
             {
-                if (dynamic_cast<Core*>(g.get())->GetHP() <= 0)
-                {
-                    hasTarget = false;
-                    targetGimmic.reset(); // ★修正: 破壊されていたらターゲット情報を破棄する
-                }
-                else hasTarget = true;
+                targetGimmic.reset();
             }
         }
-        else targetGimmic.reset();
     }
 
     // ステートマシン
