@@ -12,7 +12,8 @@ int ChangeSceneSytem::stage_namber = 0;
 
 ChangeSceneSytem::ChangeSceneSytem()
 {
-	sprite_ptr = SpriteManager::Instance().Load("Data/Sprite/Tutorial.png");
+	sprite_vector[0] = SpriteManager::Instance().Load("Data/Sprite/Tutorial.png");
+	sprite_vector[1] = SpriteManager::Instance().Load("Data/Sprite/Stage01.png");
 	position.x = 100.0f;
 	position.y = 100.0f;
 	size = { 256.0f,128.0f };
@@ -61,7 +62,7 @@ void ChangeSceneSytem::Render()
 		// タイトル（スプライト）描画
 		float screenWidth = static_cast<float>(graphics.GetScreenWidth());
 		float screenHeight = static_cast<float>(graphics.GetScreenHeight());
-		sprite_ptr->Render(rc,				//&rc
+		sprite_vector[0]->Render(rc,				//&rc
 			position.x, position.y, 0,					//dx , dy , dz
 			size.x, size.y,	//dw , dh
 			0,							//angle

@@ -26,7 +26,7 @@ void Stage::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
    // DirectX::XMStoreFloat4x4(&transform, DirectX::XMMatrixIdentity());
 
-    renderer->Render(rc, transform, model, ShaderId::Lambert);
+    renderer->Render(rc, transform, model, ShaderId::Lambert, { 0,1,0,1 });
 }
 
 REGISTER_GAMEOBJECT(Stage);

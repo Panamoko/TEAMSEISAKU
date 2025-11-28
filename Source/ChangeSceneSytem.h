@@ -30,5 +30,6 @@ private:
 	float sprite_left;
 	float sprite_top;
 
-
+	std::vector<Sprite*> sprite_vector;
+	std::vector<Sprite*> sprite_stage;
 };
