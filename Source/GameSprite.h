@@ -16,7 +16,7 @@ public:
 
 	virtual void Update(float elapsedTime) {};
 
-	void Render();
+	virtual void Render();
 
 	void SetupSprite(const std::string& texture_path);
 

@@ -334,6 +334,9 @@
     <ClInclude Include="Source\ChangeSceneSytem.h">
       <Filter>Source\ChangeSceneSytem</Filter>
     </ClInclude>
+    <ClInclude Include="Source\SceneSelect.h">
+      <Filter>Source\Scene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -557,6 +560,9 @@
     </ClCompile>
     <ClCompile Include="Source\ChangeSceneSytem.cpp">
       <Filter>Source\ChangeSceneSytem</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\SceneSelect.cpp">
+      <Filter>Source\Scene</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
