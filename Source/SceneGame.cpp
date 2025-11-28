@@ -6,6 +6,7 @@
 #include "EnemyManager.h"
 #include "EnemySlime.h"
 #include "Player.h"
+#include "Core.h"
 #include "AllySlime.h"         // 既存＝直線弾
 #include "AllySlimeHeal.h"   // 新規＝追尾弾
 #include <cfloat>          // ★ FLT_MAX 用
@@ -290,6 +291,38 @@ void SceneGame::Render()
 		}
 		//BuildingManager::Instance().DebugDraw(rc, shapeRenderer);
 		//grid_map.RenderDebugPrimitive(rc, shapeRenderer);
+		//プレイヤー生成禁止エリアの可視化
+		Core* core = Core::Instance();
+		if (core)
+		{
+			float forbiddenHalfSize = 30.0f; // Player.cpp と同じ値にする
+
+			// 赤色で枠線を表示
+			// 高さ(Y)は少し浮かせて見やすくする (0.1f)
+			// サイズは "一辺の半分" ではなく "全体のサイズ" を渡す必要があるため 2倍 する
+			// ShapeRenderer::RenderBox は中心からのサイズ(Scale)で描画するため、
+			// 引数のsizeは {幅, 高さ, 奥行き} のスケーリング値
+
+			// RenderBox の仕様に合わせてサイズを設定
+			// RenderBox内部では S = XMMatrixScaling(size.x, size.y, size.z) しているため、
+			// 1x1x1 の箱をこのサイズに拡大する。
+			// つまり、forbiddenHalfSize * 2.0f を渡せば、その大きさの箱になる。
+
+			DirectX::XMFLOAT3 boxSize = { forbiddenHalfSize, 0.5f, forbiddenHalfSize };
+			DirectX::XMFLOAT3 boxPos = core->position;
+			boxPos.y += 0.25f; // 地面に埋まらないように少し上げる
+
+			// ワイヤーフレームで描画 (色: 赤, アルファ: 0.5)
+			// ShapeRenderer::RenderBox はソリッド描画ですが、RenderStateでワイヤーフレーム指定も可能。
+			// ここでは簡易的に半透明の赤ボックスとして描画します。
+			shapeRenderer->RenderBox(
+				rc,
+				boxPos,
+				{ 0, 0, 0 }, // 回転なし
+				boxSize,
+				DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.3f) // 赤色・半透明
+			);
+		}
 	}
 
 	// 2Dスプライト描画

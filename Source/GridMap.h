@@ -2,6 +2,7 @@
 #include <vector>
 #include <memory>
 #include "GameObject.h"
+#include "Gimmic_BreakWall.h"
 class GridMap
 {
 public:

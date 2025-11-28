@@ -37,6 +37,14 @@ Gimmic_BreakWall::Gimmic_BreakWall()
 
 }
 
+#include "Gimmic_BreakWall.h"
+#include "Factory.h"
+#include "Player.h" // ★Playerクラスを使うので必須
+#include "Core.h"
+// ... (その他インクルード) ...
+
+// ... (中略) ...
+
 //衝突結果
 void Gimmic_BreakWall::OnCollision(GameObject* objects)
 {
@@ -44,9 +52,21 @@ void Gimmic_BreakWall::OnCollision(GameObject* objects)
 
     if (objects->type == Type::PlayerAttack)
         hp--;
+
     if (hp <= 0.0f)
     {
-        is_active = false;
+        // ★修正ポイント: 壁が壊れたら、全プレイヤーに経路再計算を命令する
+        const auto& players = Player::GetAllPlayers();
+        for (auto* player : players)
+        {
+            if (player)
+            {
+                player->RequestPathRecalculation();
+            }
+        }
+
+        // --- 既存の破壊処理 ---
+        // is_active = false; // 前回のアドバイス通り、ここは削除またはコメントアウト
         isBroken = true;
         isRespawning = false;
         respawnTimer = respawnTime;

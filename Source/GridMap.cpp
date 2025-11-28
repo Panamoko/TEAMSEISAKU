@@ -48,6 +48,16 @@ void GridMap::Build(const std::vector<std::shared_ptr<GameObject>>& objects)
         if (obj->class_name == "Core")
             continue;
 
+        if (obj->class_name == "Gimmic_BreakWall")
+        {
+            // Gimmic_BreakWall型にキャストして状態を確認
+            auto wall = std::dynamic_pointer_cast<Gimmic_BreakWall>(obj);
+            if (wall && wall->IsBroken())
+            {
+                // 壊れているなら、このオブジェクトは無視して次のループへ
+                continue;
+            }
+        }
         Collider* col = obj->collider.get();
 
         switch (col->type)
