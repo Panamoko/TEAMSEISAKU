@@ -68,7 +68,7 @@ void SceneTitle::Update(float elapsedTime)
 	}
 
 	Mouse& mouse = Input::Instance().GetMouse();
-	DirectX::XMFLOAT2 mouse_position;
+	DirectX::XMFLOAT2 mouse_position = { 0.0f,0.0f };
 
 	mouse_position.x = static_cast<float>(mouse.GetPositionX());
 	mouse_position.y = static_cast<float>(mouse.GetPositionY());
