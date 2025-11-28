@@ -56,6 +56,8 @@ EnemySlime::EnemySlime(const char* modelPath)
 		model->UpdateTransform();
 	}
 
+	UpdateTransform();
+
 	//徘徊ステートへ偏移
 	SetWanderState();
 }

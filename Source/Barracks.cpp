@@ -71,7 +71,7 @@ void Barracks::Update(float elapsedTime)
         enemys = std::make_shared<EnemySlimeMelee>();
 
         enemys->SetPosition(spawn_positon);         // ずらした位置に配置
-        enemys->SetTerritory(spawn_positon, 10.0f); // 縄張りもそこを中心に
+        enemys->SetTerritory(spawn_positon, 20.0f); // 縄張りもそこを中心に
 
         EnemyManager::Instance().Register(enemys);
         spawned_enemies.push_back(enemys);

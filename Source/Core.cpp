@@ -183,13 +183,13 @@ void Core::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer
 	if (hp <= 0.0f || !cylinder) return;
 
 	// コアの当たり判定（円柱）を赤色で表示
-	renderer->RenderCylinder(
-		rc,
-		cylinder->center,    // 中心（地面に置く座標）
-		cylinder->radius,      // 半径
-		cylinder->height,      // 高さ
-		XMFLOAT4(1, 0, 0, 1)
-	);
+	//renderer->RenderCylinder(
+	//	rc,
+	//	cylinder->center,    // 中心（地面に置く座標）
+	//	cylinder->radius,      // 半径
+	//	cylinder->height,      // 高さ
+	//	XMFLOAT4(1, 0, 0, 1)
+	//);
 }
 
 void Core::OnCollision(GameObject* object)
