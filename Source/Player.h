@@ -42,6 +42,11 @@ public:
 	// 描画処理
 	void Render(const RenderContext& rc, ModelRenderer* renderer);
 
+	// UI描画処理 (2D)
+	// GameSpriteを使わず、Player自身がSpriteを描画します
+	// 表示位置 (x, y) を指定できるように引数を追加
+	void RenderUI(const RenderContext& rc, float x, float y, float size = 128.0f);
+
 	//デバッグ用GUI描画
 	void DrawDebugGUI();
 
@@ -153,4 +158,8 @@ private:
 	int pathIndex = 0;
 	float pathRecalcTimer = 0.0f;
 	bool once = true;
+
+	//UI表示用スプライトのポインタ
+	Sprite* playerIcon = nullptr;
+
 };

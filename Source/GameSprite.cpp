@@ -5,7 +5,7 @@ GameSprite::GameSprite()
 {
 	name = "Enpty";
 	position = { 0.0f,0.0f };
-	size = { 0.0f,0.0f };
+	size = { 500.0f,500.0f };
 	uv_max = { 0.0f,0.0f };
 	uv_min = { 0.0f,0.0f };
 	rotation = 0.0f;

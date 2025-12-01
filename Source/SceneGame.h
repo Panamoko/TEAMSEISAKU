@@ -14,6 +14,7 @@
 #include "Picking_Ray.h"
 #include "AllySlimeMelee.h"
 #include "GameSprite.h"
+#include "System/RenderTarget.h"
 
 class Player;
 class AllySlime;         // 既存＝直線弾
@@ -83,4 +84,9 @@ private:
 	// スロー管理用
 	static float s_timeScale;    // 現在の時間倍率 (1.0f が通常)
 	static float s_slowTimer;    // スロー解除までの実時間（秒）
+
+	// ★追加: PiP用変数
+	RenderTarget* pipRenderTarget = nullptr; // ワイプ画面の描画先
+	bool isPipExpanded = false;              // 拡大表示中かどうか
+	Sprite* pipFrameSprite = nullptr;        // 枠線などを表示したい場合用（今回は空のSpriteで代用）
 };
