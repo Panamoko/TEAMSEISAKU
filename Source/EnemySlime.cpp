@@ -4,6 +4,7 @@
 #include "ProjectileStraite.h"
 #include "Player.h"
 #include "AllySlime.h"
+#include "Core.h"
 #include "Collision.h"
 #include "EnemyManager.h"
 #include <cfloat>
@@ -207,7 +208,7 @@ void EnemySlime::SetTerritory(const DirectX::XMFLOAT3& origin, float range)
 
 	if (state == State::Wander)
 	{
-		SetRandomTargerPosition();
+		targetPosition = GetStrategicTargetPosition(); 
 	}
 }
 
@@ -365,13 +366,155 @@ void EnemySlime::ApplySeparationForce(float elapsedTime)
 	}
 }
 
+// 戦略的な徘徊地点の計算
+DirectX::XMFLOAT3 EnemySlime::GetStrategicTargetPosition()
+{
+	Core* core = Core::Instance();
+
+	// ランダム移動用のラムダ式（選抜漏れやコア無し時用）
+	auto GetRandomPos = [&]() -> DirectX::XMFLOAT3 {
+		float theta = MathUtils::RandomRenge(-DirectX::XM_PI, DirectX::XM_PI);
+		float range = MathUtils::RandomRenge(0.0f, territoryRange);
+		return {
+			territoryOrigin.x + sinf(theta) * range,
+			territoryOrigin.y,
+			territoryOrigin.z + cosf(theta) * range
+		};
+		};
+
+	// コアが無い、または壊れている場合はランダム移動
+	if (!core || core->GetHP() <= 0.0f)
+	{
+		return GetRandomPos();
+	}
+
+	// 1. 8分割エリアのカウンター (0～7: 45度刻み)
+	int sectorCounts[8] = { 0 };
+	DirectX::XMFLOAT3 corePos = core->position;
+
+	// カウント用ラムダ式 (8分割)
+	auto CountUnit = [&](const DirectX::XMFLOAT3& pos)
+		{
+			float dx = pos.x - corePos.x;
+			float dz = pos.z - corePos.z;
+			// atan2 で角度(-PI ~ PI)を計算
+			float angle = atan2f(dx, dz); // (x, z) の順で入れると 0時方向=0, 時計回り
+			// 負の値を正に補正 (0 ~ 2PI)
+			if (angle < 0.0f) angle += DirectX::XM_2PI;
+
+			// 45度(PI/4)ごとに分割
+			int sector = static_cast<int>(angle / (DirectX::XM_PI / 4.0f));
+			// 念のため範囲制限
+			sector = std::clamp(sector, 0, 7);
+
+			sectorCounts[sector]++;
+		};
+
+	// 全プレイヤーと全味方をカウント
+	const auto& players = Player::GetAllPlayers();
+	for (const auto* p : players) { if (p && p->GetHealth() > 0) CountUnit(p->GetPosition()); }
+	const auto& allies = AllySlime::GetAllAllies();
+	for (const auto* a : allies) { if (a && a->GetHealth() > 0) CountUnit(a->GetPosition()); }
+
+	// 最も数が多いセクターを探す
+	int maxSector = 0;
+	int maxCount = -1;
+	for (int i = 0; i < 8; ++i)
+	{
+		if (sectorCounts[i] > maxCount)
+		{
+			maxCount = sectorCounts[i];
+			maxSector = i;
+		}
+	}
+
+	// 誰もいない場合はランダム
+	if (maxCount <= 0)
+	{
+		return GetRandomPos();
+	}
+
+	// 2. ターゲット地点（激戦区の中心）を決定
+	// セクターの中心角度
+	float targetAngle = maxSector * (DirectX::XM_PI / 4.0f) + (DirectX::XM_PI / 8.0f);
+	float distFromCore = 15.0f; // コアから少し離れた位置（調整可）
+
+	DirectX::XMFLOAT3 strategicPos;
+	strategicPos.x = corePos.x + sinf(targetAngle) * distFromCore;
+	strategicPos.y = position.y;
+	strategicPos.z = corePos.z + cosf(targetAngle) * distFromCore;
+
+	// 3. 自分はこの地点に近い「選抜4体」に含まれるか？
+
+	// 比較用の構造体
+	struct Candidate {
+		Enemy* enemy;
+		float distSq;
+	};
+	std::vector<Candidate> candidates;
+
+	EnemyManager& em = EnemyManager::Instance();
+	int enemyCount = em.GetEnemyCount();
+
+	// 全エネミーとの距離をリスト化
+	for (int i = 0; i < enemyCount; ++i)
+	{
+		auto enemy = em.GetEnemy(i);
+		// 自分と同じ種類（スライム系）で、生きているやつだけ候補にする
+		if (!enemy || enemy->IsDestroyRequested()) continue;
+
+		// 激戦区までの距離
+		float dx = enemy->GetPosition().x - strategicPos.x;
+		float dz = enemy->GetPosition().z - strategicPos.z;
+		float d2 = dx * dx + dz * dz;
+
+		candidates.push_back({ enemy.get(), d2 });
+	}
+
+	// 距離が近い順にソート
+	std::sort(candidates.begin(), candidates.end(),
+		[](const Candidate& a, const Candidate& b) {
+			return a.distSq < b.distSq;
+		});
+
+	// 上位4体に入っているかチェック
+	bool isElite = false;
+	int limit = 4;
+	for (int i = 0; i < (int)candidates.size(); ++i)
+	{
+		if (i >= limit) break; // 4位以降はループ終了
+
+		// 自分がリストの中にいたら当選
+		if (candidates[i].enemy == this)
+		{
+			isElite = true;
+			break;
+		}
+	}
+
+	// 選抜されたエリートなら激戦区へ、そうでなければランダム移動
+	if (isElite)
+	{
+		// 密集しすぎないよう、目的地を少し散らす
+		float rX = MathUtils::RandomRenge(-2.0f, 2.0f);
+		float rZ = MathUtils::RandomRenge(-2.0f, 2.0f);
+		strategicPos.x += rX;
+		strategicPos.z += rZ;
+		return strategicPos;
+	}
+	else
+	{
+		return GetRandomPos();
+	}
+}
+
 //徘徊ステートへ偏移
 void EnemySlime::SetWanderState()
 {
 	state = State::Wander;
 
 	//目標地点設定
-	SetRandomTargerPosition();
+	targetPosition = GetStrategicTargetPosition();
 
 	animator.Play("NIC_Fwd_Run", true);
 }

@@ -40,5 +40,5 @@ private:
     const float minPitchDeg = 5.0f;
     const float maxPitchDeg = 85.0f;
     const float minDistance = 15.0f; // ‹ß‚·‚¬‚È‚¢‚æ‚¤‚É
-    const float maxDistance = 75.0f;
+    const float maxDistance = 85.0f;
 };

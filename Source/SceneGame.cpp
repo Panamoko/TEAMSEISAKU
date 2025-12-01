@@ -147,8 +147,9 @@ void SceneGame::Update(float elapsedTime)
 		DirectX::XMFLOAT3 target = Player::Instance().GetPosition();
 		target.y += 0.5f;
 		cameraController->SetTarget(target);
-		cameraController->Update(elapsedTime);
 	}
+
+	cameraController->Update(elapsedTime);
 
 	Player::UpdateActiveByKeyboard(players);
 
