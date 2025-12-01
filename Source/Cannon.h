@@ -34,6 +34,7 @@ private:
 	float attac_timer;			//ÄUŒ‚ŠÔ
 	float attac_territory;		//UŒ‚”ÍˆÍ
 	float speed;				//‰ñ“]‘¬“x
+	DirectX::XMVECTOR player_pos;
 	Player* player;
 	ProjectileManager projectileManager;
 	CylinderCollider* cylinder;

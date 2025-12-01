@@ -39,41 +39,52 @@ void Cannon::Update(float elapsedTime)
     if (attac_timer >= attac_interval)attac_timer = attac_interval;
 
     DirectX::XMVECTOR cannon_pos = DirectX::XMLoadFloat3(&position);
-    DirectX::XMVECTOR player_pos = DirectX::XMLoadFloat3(&player->GetPosition());
-
-    //距離ベクトルを計算
-    DirectX::XMVECTOR distance_vec = DirectX::XMVectorSubtract(player_pos, cannon_pos);
-
-    //ベクトルの長さを計算
-    float distance = DirectX::XMVectorGetX(DirectX::XMVector3Length(distance_vec));
-
-    if (distance <= attac_territory)
+    // 味方がいなければ Player を検索
+    const auto& allPlayers = Player::GetAllPlayers();
+    for (const auto* current_player : allPlayers)
     {
-        Turn(elapsedTime, player->GetPosition());
+        if (!current_player || current_player->GetHealth() <= 0) continue;
 
-        if (attac_timer >= attac_interval)
+        player_pos = DirectX::XMLoadFloat3(&current_player->GetPosition());
+
+        //距離ベクトルを計算
+        DirectX::XMVECTOR distance_vec = DirectX::XMVectorSubtract(player_pos, cannon_pos);
+
+        //ベクトルの長さを計算
+        float distance = DirectX::XMVectorGetX(DirectX::XMVector3Length(distance_vec));
+
+        DirectX::XMFLOAT3 player_position;
+        DirectX::XMStoreFloat3(&player_position, player_pos);
+
+        if (distance <= attac_territory)
         {
-            //大砲の現在の向き（発射方向）を計算
+            Turn(elapsedTime, player_position);
 
-            //角度を XMVECTOR にロード
-            DirectX::XMVECTOR rotation_quaternion = DirectX::XMQuaternionRotationRollPitchYaw(angle.x, angle.y, angle.z);
-            
-            //順方向 (Z軸) の単位ベクトル
-            DirectX::XMVECTOR forward_vector = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+            if (attac_timer >= attac_interval)
+            {
+                //大砲の現在の向き（発射方向）を計算
 
-            //順方向ベクトルを回転させる
-            DirectX::XMVECTOR launch_direction_vec = DirectX::XMVector3Rotate(forward_vector, rotation_quaternion);
+                //角度を XMVECTOR にロード
+                DirectX::XMVECTOR rotation_quaternion = DirectX::XMQuaternionRotationRollPitchYaw(angle.x, angle.y, angle.z);
 
-            //XMFLOAT3 に格納
-            DirectX::XMFLOAT3 launch_direction;
-            DirectX::XMStoreFloat3(&launch_direction, launch_direction_vec);
+                //順方向 (Z軸) の単位ベクトル
+                DirectX::XMVECTOR forward_vector = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
 
-            //ProjectileStraiteのインスタンスを生成
-            ProjectileStraite* stratite = new ProjectileStraite(&projectileManager);
+                //順方向ベクトルを回転させる
+                DirectX::XMVECTOR launch_direction_vec = DirectX::XMVector3Rotate(forward_vector, rotation_quaternion);
 
-            stratite->Launch(launch_direction, position);
+                //XMFLOAT3 に格納
+                DirectX::XMFLOAT3 launch_direction;
+                DirectX::XMStoreFloat3(&launch_direction, launch_direction_vec);
 
-            attac_timer = 0.0f;
+                //ProjectileStraiteのインスタンスを生成
+                ProjectileStraite* stratite = new ProjectileStraite(&projectileManager);
+
+                stratite->Launch(launch_direction, position);
+
+                attac_timer = 0.0f;
+            }
+            break;
         }
     }
 
@@ -94,7 +105,7 @@ void Cannon::Turn(float elapsedTime, DirectX::XMFLOAT3 player_position)
 {
 	//大砲の位置とプレイヤーの位置を取得
 	DirectX::XMVECTOR cannon_pos = DirectX::XMLoadFloat3(&position);
-	DirectX::XMVECTOR player_pos = DirectX::XMLoadFloat3(&player->GetPosition());
+	DirectX::XMVECTOR player_pos = DirectX::XMLoadFloat3(&player_position);
 
 	//プレイヤーへの方向ベクトルを計算
 	DirectX::XMVECTOR direction_to_player = DirectX::XMVectorSubtract(player_pos, cannon_pos);
