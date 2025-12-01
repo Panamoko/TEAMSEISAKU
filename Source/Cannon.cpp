@@ -5,6 +5,8 @@
 
 Cannon::Cannon()
 {
+    class_name = "Cannon";
+
     //Šî‘bÝ’è
 	hp = 50.0f;
 	attac_interval = 3.0f;
@@ -25,13 +27,14 @@ Cannon::Cannon()
 
 void Cannon::Update(float elapsedTime)
 {
-    cylinder->center = position;
     if (hp <= 0.0f)
     {
         GimmicManager::Instance().Remove(this);
         CollisionManager::Instance().Remove(this);
+        return;
     }
 
+    cylinder->center = position;
 	attac_timer += elapsedTime;
     if (attac_timer >= attac_interval)attac_timer = attac_interval;
 
