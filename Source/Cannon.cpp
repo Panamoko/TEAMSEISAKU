@@ -39,7 +39,7 @@ void Cannon::Update(float elapsedTime)
     if (attac_timer >= attac_interval)attac_timer = attac_interval;
 
     DirectX::XMVECTOR cannon_pos = DirectX::XMLoadFloat3(&position);
-    DirectX::XMVECTOR player_pos = DirectX::XMLoadFloat3(&player.GetPosition());
+    DirectX::XMVECTOR player_pos = DirectX::XMLoadFloat3(&player->GetPosition());
 
     //距離ベクトルを計算
     DirectX::XMVECTOR distance_vec = DirectX::XMVectorSubtract(player_pos, cannon_pos);
@@ -49,7 +49,7 @@ void Cannon::Update(float elapsedTime)
 
     if (distance <= attac_territory)
     {
-        Turn(elapsedTime, player.GetPosition());
+        Turn(elapsedTime, player->GetPosition());
 
         if (attac_timer >= attac_interval)
         {
@@ -94,7 +94,7 @@ void Cannon::Turn(float elapsedTime, DirectX::XMFLOAT3 player_position)
 {
 	//大砲の位置とプレイヤーの位置を取得
 	DirectX::XMVECTOR cannon_pos = DirectX::XMLoadFloat3(&position);
-	DirectX::XMVECTOR player_pos = DirectX::XMLoadFloat3(&player.GetPosition());
+	DirectX::XMVECTOR player_pos = DirectX::XMLoadFloat3(&player->GetPosition());
 
 	//プレイヤーへの方向ベクトルを計算
 	DirectX::XMVECTOR direction_to_player = DirectX::XMVectorSubtract(player_pos, cannon_pos);

@@ -34,7 +34,7 @@ private:
 	float attac_timer;			//ÄUŒ‚ŠÔ
 	float attac_territory;		//UŒ‚”ÍˆÍ
 	float speed;				//‰ñ“]‘¬“x
-	Player player;
+	Player* player;
 	ProjectileManager projectileManager;
 	CylinderCollider* cylinder;
 };
