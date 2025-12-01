@@ -11,7 +11,7 @@ class AllySlimeMelee : public Character
 {
 public:
     AllySlimeMelee(int formationIndex);
-    ~AllySlimeMelee() override {}
+    ~AllySlimeMelee() override;
 
     // 基本更新・描画
     void Update(float elapsedTime) override;

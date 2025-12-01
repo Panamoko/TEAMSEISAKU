@@ -1,12 +1,13 @@
 #include "Projectile.h"
 #include "ProjectileManager.h"
 #include "CollisionManager.h"
+#include "Character.h"
 
 Projectile::Projectile(ProjectileManager* manager):manager(manager)//生成時にマネージャに登録する
 {
 	manager->Register(this);
 
-	//CollisionManager::Instance().AddObject(this);
+	CollisionManager::Instance().AddObject(this);
 }
 
 // デバッグプリミティブ描画
@@ -18,8 +19,35 @@ void Projectile::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* re
 
 void Projectile::OnCollision(GameObject* object)
 {
-	// 相手がギミックなら、自分自身を破棄する
-	Destroy();
+	// 弾の種類に応じた消滅判定
+
+	// 敵の攻撃 (EnemyAttack)
+	if (type == Type::EnemyAttack)
+	{
+		// 「敵」以外、かつ「敵の攻撃(同士)」以外なら消滅
+		if (object->type != Type::Enemy && object->type != Type::EnemyAttack)
+		{
+			Destroy();
+		}
+	}
+	// プレイヤー/味方の攻撃 (PlayerAttack)
+	else if (type == Type::PlayerAttack)
+	{
+		// 「プレイヤー」以外、かつ「味方(PlayerAttack属性のもの)」以外なら消滅
+		if (object->type != Type::Player && object->type != Type::PlayerAttack)
+		{
+			Destroy();
+		}
+	}
+	// その他（デフォルト動作）
+	else
+	{
+		// ギミックやステージに当たったら消える
+		if (object->type == Type::Gimmic || object->type == Type::Stage)
+		{
+			Destroy();
+		}
+	}
 }
 
 // 行列更新処理
@@ -98,5 +126,5 @@ void Projectile::Destroy()
 {
 	manager->Remove(this);
 
-	//CollisionManager::Instance().Remove(this);
+	CollisionManager::Instance().Remove(this);
 }

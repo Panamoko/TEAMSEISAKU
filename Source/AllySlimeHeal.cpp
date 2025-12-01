@@ -2,6 +2,7 @@
 // AllySlimeHoming.cpp
 // =============================================
 #include "AllySlimeHeal.h"
+#include "AllySlime.h"
 #include "Player.h"
 #include "ProjectileHoming.h"
 #include "ModelManager.h"
@@ -35,6 +36,13 @@ AllySlimeHeal::AllySlimeHeal(int formationIndex)
     const Player& ref = (leader ? *leader : Player::Instance());
     position = ref.GetPosition();
     UpdateTransform();
+
+    AllySlime::RegisterAlly(this); // ìoò^
+}
+
+AllySlimeHeal::~AllySlimeHeal()
+{
+    AllySlime::UnregisterAlly(this); // âèú
 }
 
 void AllySlimeHeal::UpdateAnchor()

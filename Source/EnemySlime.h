@@ -61,10 +61,10 @@ protected:
 	virtual void UpdateIdleState(float elapsedTime);
 
 	//プレイヤー索敵
-	Player* SearchPlayer();
+	Character* SearchTarget();
 
 	//攻撃ステートへ偏移
-	virtual void SetAttackState(Player* target);
+	virtual void SetAttackState(Character* target);
 
 	//攻撃ステート更新処理
 	virtual void UpdateAttackState(float elapsedTime);
@@ -107,7 +107,7 @@ protected:
 	bool isAttackFired = false; // 攻撃判定済みフラグ
 
 	// ターゲット中のプレイヤー
-	Player* targetPlayer = nullptr;
+	Character* targetCharacter= nullptr;
 
 	ProjectileManager	projectileManager;
 
@@ -118,6 +118,9 @@ protected:
 	int pathIndex = 0; // 次に向かうノードのインデックス
 	float pathRecalcTimer = 0.0f; // 再計算用タイマー
 	const GridMap* gridMap = nullptr; // マップへの参照
+
+	// ターゲット検索の更新タイマー
+	float targetUpdateTimer = 0.0f;
 private:
 
 	editor game_editor;

@@ -52,6 +52,9 @@ public:
 	// 最大HP取得（現在は初期値5で固定のようなので、適宜定数か変数を返します）
 	int GetMaxHealth() const { return 5; }
 
+	// 衝突処理
+	void OnCollision(GameObject* object) override;
+
 	// ダメージを与える
 	bool ApplyDamage(int damage, float invincibleTime);
 

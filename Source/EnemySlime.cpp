@@ -3,6 +3,7 @@
 #include "EnemySlime.h"
 #include "ProjectileStraite.h"
 #include "Player.h"
+#include "AllySlime.h"
 #include "Collision.h"
 #include "EnemyManager.h"
 #include <cfloat>
@@ -71,6 +72,9 @@ EnemySlime::~EnemySlime()
 // 更新処理
 void EnemySlime::Update(float elapsedTime)
 {
+	// タイマーを減算
+	targetUpdateTimer -= elapsedTime;
+
 	cylinder->center = position;
 
 	//ステート毎の更新処理
@@ -388,11 +392,15 @@ void EnemySlime::UpdateWanderState(float elapsedTime)
 	//目標地点へ移動
 	MoveToTarget(elapsedTime, 1.0f, 1.0f);
 
-	//プレイヤー索敵
-	if (Player* target = SearchPlayer()) // 戻り値でターゲットを受け取る
+	//  0.5秒ごとにターゲット索敵
+	if (targetUpdateTimer <= 0.0f)
 	{
-		//見つかったら攻撃ステートへ偏移
-		SetAttackState(target); // ターゲットを渡す
+		targetUpdateTimer = 0.5f;
+
+		if (Character* target = SearchTarget())
+		{
+			SetAttackState(target);
+		}
 	}
 }
 
@@ -418,71 +426,117 @@ void EnemySlime::UpdateIdleState(float elapsedTime)
 		SetWanderState();
 	}
 
-	//プレイヤー索敵
-	if (Player* target = SearchPlayer()) // 戻り値でターゲットを受け取る
+	// 0.5秒ごとにターゲット索敵
+	if (targetUpdateTimer <= 0.0f)
 	{
-		//見つかったら攻撃ステートへ偏移
-		SetAttackState(target); // ターゲットを渡す
+		targetUpdateTimer = 0.5f;
+
+		if (Character* target = SearchTarget())
+		{
+			SetAttackState(target);
+		}
 	}
 }
 
-//プレイヤー索敵
-Player* EnemySlime::SearchPlayer()
+//ターゲット索敵
+Character* EnemySlime::SearchTarget()
 {
-	const auto& allPlayers = Player::GetAllPlayers();
-	Player* foundTarget = nullptr;
-	float closestDistSq = FLT_MAX; // 3D距離の2乗
+	float rangeSq = searchRange * searchRange;
 
-	for (const auto* player : allPlayers)
+	Character* bestTarget = nullptr;
+	float closestDistSq = FLT_MAX;
+	bool foundAlly = false; // 味方が見つかったかフラグ
+
+	// AllySlime (味方) を検索
+	// 味方が範囲内にいれば、プレイヤーとの距離に関係なく味方を優先する
+	const auto& allies = AllySlime::GetAllAllies();
+	for (Character* ally : allies)
 	{
-		if (!player) continue;
+		if (!ally || ally->GetHealth() <= 0) continue;
 
-		const DirectX::XMFLOAT3& playerPositon = player->GetPosition();
-		float vx = playerPositon.x - position.x;
-		float vy = playerPositon.y - position.y;
-		float vz = playerPositon.z - position.z;
+		const DirectX::XMFLOAT3& pos = ally->GetPosition();
+		float vx = pos.x - position.x;
+		float vy = pos.y - position.y;
+		float vz = pos.z - position.z;
 		float distSq = (vx * vx + vy * vy + vz * vz);
 
-		// 範囲内か (2乗で比較)
-		if (distSq < searchRange * searchRange)
+		if (distSq < rangeSq)
 		{
-			// 一番近いプレイヤーを記憶
+			// 味方を発見。味方同士の中で一番近いやつを選ぶ
 			if (distSq < closestDistSq)
 			{
 				closestDistSq = distSq;
-				foundTarget = const_cast<Player*>(player);
+				bestTarget = ally;
+			}
+			foundAlly = true; // 味方発見フラグを立てる
+		}
+	}
+
+	// 味方が見つかっているなら、プレイヤー探索はスキップしてその味方を返す
+	if (foundAlly) return bestTarget;
+
+
+	// 味方がいなければ Player を検索
+	const auto& allPlayers = Player::GetAllPlayers();
+	for (const auto* player : allPlayers)
+	{
+		if (!player || player->GetHealth() <= 0) continue;
+
+		const DirectX::XMFLOAT3& playerPos = player->GetPosition();
+		float vx = playerPos.x - position.x;
+		float vy = playerPos.y - position.y;
+		float vz = playerPos.z - position.z;
+		float distSq = (vx * vx + vy * vy + vz * vz);
+
+		if (distSq < rangeSq)
+		{
+			if (distSq < closestDistSq)
+			{
+				closestDistSq = distSq;
+				bestTarget = const_cast<Player*>(player);
 			}
 		}
 	}
-	return foundTarget;
+
+	return bestTarget;
 }
 
 //攻撃ステートへ偏移
-void EnemySlime::SetAttackState(Player* target)
+void EnemySlime::SetAttackState(Character* target)
 {
 	state = State::Attack;
 	stateTimer = 0.0f;
-	targetPlayer = target; // ターゲットを記憶
+	targetCharacter = target; // ★ targetPlayer から targetCharacter に変更
 
-	// アニメーション再生開始
 	animator.Play("NIC_Attack", true);
-
-	// フラグをリセット（まだ撃っていない）
 	isAttackFired = false;
 }
 
 //攻撃ステート更新処理
 void EnemySlime::UpdateAttackState(float elapsedTime)
 {
+	// 攻撃中も0.5秒ごとにターゲットを再評価して、より優先度の高い相手がいれば切り替える
+	if (targetUpdateTimer <= 0.0f)
+	{
+		targetUpdateTimer = 0.5f;
+
+		Character* newTarget = SearchTarget();
+		// 新しいターゲットが見つかったら切り替え (現在のターゲットより優先度が高い/近い可能性があるため)
+		if (newTarget)
+		{
+			targetCharacter = newTarget;
+		}
+	}
+
 	// ターゲットが有効かチェック (デストラクタで解除されるため)
-	if (!targetPlayer)
+	if (!targetCharacter)
 	{
 		SetIdleState();
 		return;
 	}
 
 	//目標地点を "記憶したターゲットの" 位置に設定
-	targetPosition = targetPlayer->GetPosition();
+	targetPosition = targetCharacter->GetPosition();
 
 	//目標地点へ移動 (旋回のみ)
 	MoveToTarget(elapsedTime, 0.0f, 1.0f);
@@ -524,7 +578,7 @@ void EnemySlime::UpdateAttackState(float elapsedTime)
 
 	// ターゲットがまだ範囲内にいるか再チェック
 	bool targetLost = true;
-	const DirectX::XMFLOAT3& playerPositon = targetPlayer->GetPosition();
+	const DirectX::XMFLOAT3& playerPositon = targetCharacter->GetPosition();
 	float vx = playerPositon.x - position.x;
 	float vy = playerPositon.y - position.y;
 	float vz = playerPositon.z - position.z;
@@ -551,7 +605,7 @@ void EnemySlime::UpdateAttackState(float elapsedTime)
 	{
 		//待機ステートへ偏移
 		SetIdleState();
-		targetPlayer = nullptr; // ★ ターゲットクリア
+		targetCharacter = nullptr; // ★ ターゲットクリア
 	}
 }
 

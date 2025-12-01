@@ -13,7 +13,7 @@ protected:
 	// ★ 基底クラスの攻撃ロジックを上書き (オーバーライド)
 
 	//攻撃ステートへ偏移
-	void SetAttackState(Player* target) override;
+	void SetAttackState(Character* target) override;
 
 	//攻撃ステート更新処理
 	void UpdateAttackState(float elapsedTime) override;

@@ -20,6 +20,29 @@ using namespace DirectX;
 static inline XMFLOAT3 operator+(const XMFLOAT3& a, const XMFLOAT3& b) { return { a.x + b.x, a.y + b.y, a.z + b.z }; }
 static inline XMFLOAT3 operator-(const XMFLOAT3& a, const XMFLOAT3& b) { return { a.x - b.x, a.y - b.y, a.z - b.z }; }
 static inline XMFLOAT3 operator*(const XMFLOAT3& a, float s) { return { a.x * s, a.y * s, a.z * s }; }
+
+// 静的メンバの実装
+std::vector<Character*> AllySlime::s_allies;
+
+void AllySlime::RegisterAlly(Character* ally)
+{
+    // 重複チェックして追加
+    auto it = std::find(s_allies.begin(), s_allies.end(), ally);
+    if (it == s_allies.end()) {
+        s_allies.push_back(ally);
+    }
+}
+
+void AllySlime::UnregisterAlly(Character* ally)
+{
+    auto it = std::remove(s_allies.begin(), s_allies.end(), ally);
+    s_allies.erase(it, s_allies.end());
+}
+
+const std::vector<Character*>& AllySlime::GetAllAllies()
+{
+    return s_allies;
+}
 // --- コンストラクタ（必要な初期化をまとめて実施） ---
 AllySlime::AllySlime(int formationIndex)
     : index(formationIndex)
@@ -36,6 +59,8 @@ AllySlime::AllySlime(int formationIndex)
         position = ref.GetPosition();
     }
     UpdateTransform();
+
+    RegisterAlly(this); // 自分をリストに登録
 }
 
 void AllySlime::UpdateAnchor()
@@ -106,6 +131,13 @@ void AllySlime::AutoAttackUpdate(float elapsedTime)
         if (!gimmic || !gimmic->IsActive()) continue; // IsActive()で壊れた壁等は弾く
         if (!gimmic->collider) continue;
 
+        //  壊れた壁はターゲットにしない
+        if (gimmic->class_name == "Gimmic_BreakWall")
+        {
+            auto wall = std::dynamic_pointer_cast<Gimmic_BreakWall>(gimmic);
+            if (wall && wall->IsBroken()) continue; // 壊れていたら無視
+        }
+
         float targetHeight = 0.0f;
         bool isTarget = false;
 
@@ -161,6 +193,13 @@ void AllySlime::AutoAttackUpdate(float elapsedTime)
     autoAttackTimer = autoAttackInterval;
 }
 
+// 衝突処理の実装
+void AllySlime::OnCollision(GameObject* object)
+{
+    // 基底クラス(Character/GameObject)の処理があれば呼ぶ（MTD押し出し等）
+    Character::OnCollision(object);
+}
+
 void AllySlime::CollisionProjectilesVsEnemies()
 {
     // 味方の弾 vs 敵の衝突判定
@@ -191,19 +230,7 @@ void AllySlime::CollisionProjectilesVsEnemies()
 
             // ヒット時にダメージ（無敵 0.5s は Player と合わせる）
             if (enemy->ApplyDamage(1, 0.5f)) {
-                // ノックバック（XZ 平面中心）を付与
-                XMFLOAT3 impulse{};
-                const float power = 10.0f;
-                const XMFLOAT3& e = enemy->GetPosition();
-                const XMFLOAT3& p = projectile->GetPosition();
-                float vx = e.x - p.x;
-                float vz = e.z - p.z;
-                const float lenXZ = std::sqrt(vx * vx + vz * vz);
-                if (lenXZ > 0.0001f) { vx /= lenXZ; vz /= lenXZ; }
-                impulse.x = vx * power;
-                impulse.y = power * 0.5f; // 上方向にも少し付与
-                impulse.z = vz * power;
-                enemy->AddImpulse(impulse);
+                
             }
 
             // 弾は一度当たったら破棄

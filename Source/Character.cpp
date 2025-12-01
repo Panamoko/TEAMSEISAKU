@@ -1,4 +1,5 @@
 #include "Character.h"
+#include "Projectile.h"
 
 //行列更新処理
 void Character::UpdateTransform()
@@ -289,6 +290,35 @@ void Character::UpdateHorizontalMove(float elapsedTime)
 	{
 		obj->position.x += velocity.x * elapsedTime;
 		obj->position.z += velocity.z * elapsedTime;
+	}
+}
+
+// 共通の衝突処理
+void Character::OnCollision(GameObject* object)
+{
+	// 1. 基底クラス(GameObject)の処理を呼び出す（位置補正/MTD押し出しなど）
+	GameObject::OnCollision(object);
+
+	// 2. 「敵の攻撃」に当たった場合の共通ダメージ処理
+	// 条件: 自分自身が「敵」ではなく、かつ相手が「敵の攻撃」である場合
+	if (this->type != Type::Enemy && object->type == Type::EnemyAttack)
+	{
+		// 相手をProjectileにキャストして攻撃力などを取得
+		Projectile* proj = dynamic_cast<Projectile*>(object);
+		int damage = 1; // デフォルトダメージ
+		if (proj)
+		{
+			damage = proj->GetDamage();
+		}
+
+		// ダメージを適用（無敵時間 0.5秒）
+		if (ApplyDamage(damage, 0.5f))
+		{
+			if (proj)
+			{
+				proj->Destroy();
+			}
+		}
 	}
 }
 

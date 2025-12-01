@@ -32,6 +32,14 @@ public:
     void SetLeader(Player* p) { leader = p; }
     Player* GetLeader() const { return leader; }
 
+    // 衝突処理のオーバーライド
+    void OnCollision(GameObject* object) override;
+
+    // 全味方スライムのリスト管理用
+    static void RegisterAlly(Character* ally);
+    static void UnregisterAlly(Character* ally);
+    static const std::vector<Character*>& GetAllAllies();
+
 private:
     // 内部処理: 隊列アンカーや自動攻撃、衝突判定を更新
     void UpdateAnchor();
@@ -62,4 +70,6 @@ private:
 
     // 追従対象のプレイヤー（null の場合は Player::Instance() を利用）
     Player* leader = nullptr;
+
+    static std::vector<Character*> s_allies;
 };

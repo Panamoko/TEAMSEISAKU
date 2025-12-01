@@ -7,9 +7,12 @@
 #include <DirectXTex.h>
 #include <DDS.h>
 #include <algorithm> // これが必要です
+#include "Gimmic_BreakWall.h"
+#include "Factory.h"
+#include "Player.h" // ★Playerクラスを使うので必須
+#include "Core.h"
 
 using namespace std;
-//a
 
 Gimmic_BreakWall::Gimmic_BreakWall()
 {
@@ -37,14 +40,6 @@ Gimmic_BreakWall::Gimmic_BreakWall()
 
 }
 
-#include "Gimmic_BreakWall.h"
-#include "Factory.h"
-#include "Player.h" // ★Playerクラスを使うので必須
-#include "Core.h"
-// ... (その他インクルード) ...
-
-// ... (中略) ...
-
 //衝突結果
 void Gimmic_BreakWall::OnCollision(GameObject* objects)
 {
@@ -70,7 +65,6 @@ void Gimmic_BreakWall::OnCollision(GameObject* objects)
         isBroken = true;
         isRespawning = false;
         respawnTimer = respawnTime;
-        CollisionManager::Instance().Remove(this);
     }
 }
 
@@ -93,9 +87,6 @@ void Gimmic_BreakWall::Update(float elapsedTime)
             isRespawning = false;
             fadeInTimer = 0.0f;
             color.w = 1.0f; // 完全に不透明に
-
-            // ここで当たり判定を有効化する
-            CollisionManager::Instance().AddObject(this);
             is_active = true;
         }
     }
@@ -169,39 +160,50 @@ void Gimmic_BreakWall::Update(float elapsedTime)
         }
     }
 
-    DirectX::XMFLOAT3 center;
-    DirectX::XMFLOAT3 half;
-    DirectX::XMFLOAT3 axis[3];
-
-    DirectX::XMFLOAT3 rotation = {
-        DirectX::XMConvertToRadians(angle.x),
-        DirectX::XMConvertToRadians(angle.y),
-        DirectX::XMConvertToRadians(angle.z)
-    };
-
-    // モデルの OBB を取得
-    if (model->GetModelOBB(
-        model,
-        position,
-        rotation,
-        scale,
-        center,
-        half,
-        axis))
+    if (isBroken || isRespawning)
     {
-        box->center = center;
-        box->half = half;
+        // 壊れている、または復活中は、当たり判定を無効化する
+        // OBBのサイズを0にし、場所を地下深くに飛ばすことで物理的に当たらないようにする
+        box->half = { 0.0f, 0.0f, 0.0f };
+        box->center = { 0.0f, -1000.0f, 0.0f };
+    }
+    else
+    {
+        // 通常時：モデルに合わせてOBBを更新
+        DirectX::XMFLOAT3 center;
+        DirectX::XMFLOAT3 half;
+        DirectX::XMFLOAT3 axis[3];
 
-        box->axis[0] = axis[0];
-        box->axis[1] = axis[1];
-        box->axis[2] = axis[2];
+        DirectX::XMFLOAT3 rotation = {
+            DirectX::XMConvertToRadians(angle.x),
+            DirectX::XMConvertToRadians(angle.y),
+            DirectX::XMConvertToRadians(angle.z)
+        };
 
-        if (model) {
-            printf("OBB center = (%f,%f,%f)\n", center.x, center.y, center.z);
-            printf("OBB half   = (%f,%f,%f)\n", half.x, half.y, half.z);
-            printf("axis0 = (%f,%f,%f)\n", axis[0].x, axis[0].y, axis[0].z);
-            printf("axis1 = (%f,%f,%f)\n", axis[1].x, axis[1].y, axis[1].z);
-            printf("axis2 = (%f,%f,%f)\n", axis[2].x, axis[2].y, axis[2].z);
+        // モデルの OBB を取得
+        if (model->GetModelOBB(
+            model,
+            position,
+            rotation,
+            scale,
+            center,
+            half,
+            axis))
+        {
+            box->center = center;
+            box->half = half;
+
+            box->axis[0] = axis[0];
+            box->axis[1] = axis[1];
+            box->axis[2] = axis[2];
+
+            if (model) {
+                printf("OBB center = (%f,%f,%f)\n", center.x, center.y, center.z);
+                printf("OBB half   = (%f,%f,%f)\n", half.x, half.y, half.z);
+                printf("axis0 = (%f,%f,%f)\n", axis[0].x, axis[0].y, axis[0].z);
+                printf("axis1 = (%f,%f,%f)\n", axis[1].x, axis[1].y, axis[1].z);
+                printf("axis2 = (%f,%f,%f)\n", axis[2].x, axis[2].y, axis[2].z);
+            }
         }
     }
 }

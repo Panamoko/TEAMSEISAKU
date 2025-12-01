@@ -20,7 +20,7 @@ class AllySlimeHeal : public Character
 {
 public:
     AllySlimeHeal(int formationIndex);
-    ~AllySlimeHeal() override {}
+    ~AllySlimeHeal() override;
 
     // ŒöŠJ API
     void SetIndex(int idx) { index = idx; }

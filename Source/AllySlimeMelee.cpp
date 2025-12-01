@@ -10,6 +10,7 @@
 #include <algorithm>
 #include "Yagura.h"
 #include "Barracks.h"
+#include "AllySlime.h"
 
 using namespace DirectX;
 
@@ -35,6 +36,13 @@ AllySlimeMelee::AllySlimeMelee(int formationIndex) : index(formationIndex)
     const Player& ref = (leader ? *leader : Player::Instance());
     position = ref.GetPosition();
     UpdateTransform();
+
+    AllySlime::RegisterAlly(this); // ìoò^
+}
+
+AllySlimeMelee::~AllySlimeMelee()
+{
+    AllySlime::UnregisterAlly(this); // âèú
 }
 
 void AllySlimeMelee::UpdateAnchor()
