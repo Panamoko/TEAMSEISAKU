@@ -286,9 +286,6 @@
     <ClInclude Include="Source\Editor.h">
       <Filter>Source\Editor</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Barracks.h">
-      <Filter>Source\Gimmic</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Yagura.h">
       <Filter>Source\Gimmic</Filter>
     </ClInclude>
@@ -322,6 +319,9 @@
     <ClInclude Include="Source\AllySlimeHeal.h">
       <Filter>Source\Character\Player</Filter>
     </ClInclude>
+    <ClInclude Include="Source\GameSprite.h">
+      <Filter>Source\Sprite</Filter>
+    </ClInclude>
     <ClInclude Include="Source\SpriteManager.h">
       <Filter>Source\Sprite</Filter>
     </ClInclude>
@@ -334,11 +334,11 @@
     <ClInclude Include="Source\SceneSelect.h">
       <Filter>Source\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GameSprite.h">
-      <Filter>Source\Sprite</Filter>
+    <ClInclude Include="Source\Barracks.h">
+      <Filter>Source\Gimmic</Filter>
     </ClInclude>
-    <ClInclude Include="Source\System\RenderTarget.h">
-      <Filter>Source\System</Filter>
+    <ClInclude Include="Source\Cannon.h">
+      <Filter>Source\Gimmic</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -552,6 +552,9 @@
     <ClCompile Include="Source\AllySlimeHeal.cpp">
       <Filter>Source\Character\Player</Filter>
     </ClCompile>
+    <ClCompile Include="Source\GameSprite.cpp">
+      <Filter>Source\Sprite</Filter>
+    </ClCompile>
     <ClCompile Include="Source\SpriteManager.cpp">
       <Filter>Source\Sprite</Filter>
     </ClCompile>
@@ -564,11 +567,8 @@
     <ClCompile Include="Source\SceneSelect.cpp">
       <Filter>Source\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="Source\GameSprite.cpp">
-      <Filter>Source\Sprite</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\System\RenderTarget.cpp">
-      <Filter>Source\System</Filter>
+    <ClCompile Include="Source\Cannon.cpp">
+      <Filter>Source\Gimmic</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

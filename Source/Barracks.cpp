@@ -8,6 +8,8 @@
 
 Barracks::Barracks()
 {
+    model = ModelManager::Instance().Load("Data/Model/bilud/ie.mdl");
+    model = ModelManager::Instance().Load("Data/Model/bilud/ie2.mdl");
 	//Šî‘bİ’è
 	hp = 10.0f;
 	spawn_interval = 5.0f;

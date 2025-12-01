@@ -42,6 +42,9 @@ protected:
 	//ターゲット位置をランダム設定
 	void SetRandomTargerPosition();
 
+	// プレイヤーと味方が多いエリアを計算して目標地点を返す
+	DirectX::XMFLOAT3 GetStrategicTargetPosition();
+
 	//目標地点へ移動
 	void MoveToTarget(float elapsedTime, float moveSpeedRate, float turnSpeedRate);
 

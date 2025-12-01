@@ -60,7 +60,7 @@ void CameraController::Update(float elapsedTime)
 
     // 1. ズーム入力 (慣性に加算)
     if (wheel != 0) {
-        zoomVel += -(float)wheel * 2.0f;
+        zoomVel += -(float)wheel * 1.0f;
     }
 
     // 2. パン入力 (慣性に加算)
@@ -72,7 +72,7 @@ void CameraController::Update(float elapsedTime)
         dy = curve(dy);
 
         // 距離に応じた移動量補正
-        float panSens = distance * 0.00025f;
+        float panSens = distance * 0.0001f;
 
         // カメラの向きに合わせて移動ベクトルを作成
         XMFLOAT3 r = camera.GetRight();
