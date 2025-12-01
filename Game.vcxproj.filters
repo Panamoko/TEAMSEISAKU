@@ -286,9 +286,6 @@
     <ClInclude Include="Source\Editor.h">
       <Filter>Source\Editor</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Barracks.h">
-      <Filter>Source\Gimmic</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Yagura.h">
       <Filter>Source\Gimmic</Filter>
     </ClInclude>
@@ -336,6 +333,12 @@
     </ClInclude>
     <ClInclude Include="Source\SceneSelect.h">
       <Filter>Source\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Barracks.h">
+      <Filter>Source\Gimmic</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Cannon.h">
+      <Filter>Source\Gimmic</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -563,6 +566,9 @@
     </ClCompile>
     <ClCompile Include="Source\SceneSelect.cpp">
       <Filter>Source\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Cannon.cpp">
+      <Filter>Source\Gimmic</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

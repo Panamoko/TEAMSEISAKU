@@ -128,6 +128,7 @@
     <ClInclude Include="Source\Barracks.h" />
     <ClInclude Include="Source\Camera.h" />
     <ClInclude Include="Source\CameraController.h" />
+    <ClInclude Include="Source\Cannon.h" />
     <ClInclude Include="Source\ChangeSceneSytem.h" />
     <ClInclude Include="Source\Character.h" />
     <ClInclude Include="Source\Collider.h" />
@@ -212,6 +213,7 @@
     <ClCompile Include="Source\Barracks.cpp" />
     <ClCompile Include="Source\Camera.cpp" />
     <ClCompile Include="Source\CameraController.cpp" />
+    <ClCompile Include="Source\Cannon.cpp" />
     <ClCompile Include="Source\ChangeSceneSytem.cpp" />
     <ClCompile Include="Source\Character.cpp" />
     <ClCompile Include="Source\Collider.cpp" />
