@@ -322,7 +322,7 @@ void AllySlime::Update(float elapsedTime)
 void AllySlime::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
     // メインモデルの描画（Lambert シェーダを使用）
-    renderer->Render(rc, transform, slimeModel, ShaderId::Lambert);
+    renderer->Render(rc, transform, slimeModel, ShaderId::Lambert, GetDamageColor());
 
     // 弾の描画
     projectileManager.Render(rc, renderer);

@@ -142,7 +142,7 @@ void EnemySlime::Render(const RenderContext& rc, ModelRenderer* renderer)
 	//}
 	
 
-	renderer->Render(rc, transform, model, ShaderId::Lambert);
+	renderer->Render(rc, transform, model, ShaderId::Lambert, GetDamageColor());
 
 	//弾丸描画処理
 	projectileManager.Render(rc, renderer);
@@ -729,18 +729,7 @@ void EnemySlime::UpdateAttackState(float elapsedTime)
 
 	if (distSq < searchRange * searchRange) // 範囲内
 	{
-		float distXZ = sqrtf(vx * vx + vz * vz);
-		if (distXZ > 1e-6f) {
-			float fvx = vx / distXZ;
-			float fvz = vz / distXZ;
-			float frontX = sinf(angle.y);
-			float frontZ = cosf(angle.y);
-			float dot = (frontX * fvx) + (frontZ * fvz);
-			if (dot > 0.0f) // 前方
-			{
-				targetLost = false; // ★ 見失っていない
-			}
-		}
+		targetLost = false; // ★距離内ならOKとする（背後でも追いかける）
 	}
 
 	//プレイヤーを見失ったら

@@ -197,7 +197,7 @@ void AllySlimeHeal::Update(float elapsedTime)
 
 void AllySlimeHeal::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
-    renderer->Render(rc, transform, slimeModel, ShaderId::Lambert);
+    renderer->Render(rc, transform, slimeModel, ShaderId::Lambert, GetDamageColor());
     projectileManager.Render(rc, renderer);
 }
 

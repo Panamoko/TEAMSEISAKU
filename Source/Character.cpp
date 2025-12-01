@@ -346,3 +346,30 @@ void Character::Heal(int amount)
 
 	// ここで回復エフェクトや音を鳴らす処理を入れると良いでしょう
 }
+
+// 無敵時間中の点滅色計算
+DirectX::XMFLOAT4 Character::GetDamageColor(const DirectX::XMFLOAT4& baseColor) const
+{
+	// 無敵時間中でないなら、元の色をそのまま返す
+	if (invincibleTimer <= 0.0f)
+	{
+		return baseColor;
+	}
+
+	// 点滅の速度（20.0f を大きくすると速くなる）
+	// sin波を使って滑らかにするか、剰余を使ってパカパカさせるか選べます。
+	// ここでは「当たった感」を出すために激しく明滅させます。
+	int blinkFrame = static_cast<int>(invincibleTimer * 20.0f);
+
+	if (blinkFrame % 2 == 0)
+	{
+		// 偶数フレーム: 強烈な赤色 (RGBを1.0以上にすることで発光表現)
+		// ※LambertShaderは受け取った色を乗算するので、値を大きくすると明るくなります
+		return { 5.0f, 0.5f, 0.5f, 1.0f };
+	}
+	else
+	{
+		// 奇数フレーム: 本来の色（または少し暗くして点滅を強調）
+		return baseColor;
+	}
+}

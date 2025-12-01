@@ -134,6 +134,9 @@ void Player::Update(float elapsedTime)
    //‘¬—ÍXVˆ—
 	UpdateVelocity(elapsedTime);
 
+	// –³“GŠÔ‚ÌXV
+	UpdateInvincibleTimer(elapsedTime);
+
 	//’eŠÛXVˆ—
 	projectileManager.Update(elapsedTime);
 
@@ -270,7 +273,7 @@ void Player::UpdateMoveToCore(float elapsedTime)
 
 void Player::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
-	renderer->Render(rc, transform, model, ShaderId::Lambert);
+	renderer->Render(rc, transform, model, ShaderId::Lambert, GetDamageColor());
 
 	//’eŠÛ•`‰æˆ—
 	projectileManager.Render(rc, renderer);
