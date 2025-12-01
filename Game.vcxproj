@@ -190,6 +190,7 @@
     <ClInclude Include="Source\System\Mouse.h" />
     <ClInclude Include="Source\System\RenderContext.h" />
     <ClInclude Include="Source\System\RenderState.h" />
+    <ClInclude Include="Source\System\RenderTarget.h" />
     <ClInclude Include="Source\System\Shader.h" />
     <ClInclude Include="Source\System\ShapeRenderer.h" />
     <ClInclude Include="Source\System\Sprite.h" />
@@ -268,6 +269,7 @@
     <ClCompile Include="Source\System\ModelResource.cpp" />
     <ClCompile Include="Source\System\Mouse.cpp" />
     <ClCompile Include="Source\System\RenderState.cpp" />
+    <ClCompile Include="Source\System\RenderTarget.cpp" />
     <ClCompile Include="Source\System\ShapeRenderer.cpp" />
     <ClCompile Include="Source\System\Sprite.cpp" />
     <ClCompile Include="Source\Yagura.cpp" />

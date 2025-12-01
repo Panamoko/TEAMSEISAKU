@@ -266,3 +266,103 @@ void Sprite::Render(const RenderContext& rc,
 
 	Render(rc, dx, dy, dz, dw, dh, 0, 0, resource_width, resource_height, angle, r, g, b, a);
 }
+
+// 外部テクスチャ(SRV)を指定して描画
+void Sprite::RenderTexture(const RenderContext& rc,
+	ID3D11ShaderResourceView* texture,
+	float dx, float dy,
+	float dw, float dh,
+	float angle,
+	float r, float g, float b, float a
+) const
+{
+	if (!texture) return;
+
+	// テクスチャサイズを取得（UV計算のため）
+	Microsoft::WRL::ComPtr<ID3D11Resource> resource;
+	texture->GetResource(resource.GetAddressOf());
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> tex2D;
+	resource.As(&tex2D);
+	D3D11_TEXTURE2D_DESC desc;
+	tex2D->GetDesc(&desc);
+	float w = static_cast<float>(desc.Width);
+	float h = static_cast<float>(desc.Height);
+
+	// 既存のRender関数（詳細指定版）を呼び出す処理をコピーまたは共通化したいところですが、
+	// ここでは実装を埋め込みます（Renderのロジックと同じです）
+
+	// ★Sprite::Renderの内部ロジックを流用（SRVだけ差し替え）
+	ID3D11DeviceContext* dc = rc.deviceContext;
+
+	// 頂点座標
+	DirectX::XMFLOAT2 positions[] = {
+		DirectX::XMFLOAT2(dx,      dy),
+		DirectX::XMFLOAT2(dx + dw, dy),
+		DirectX::XMFLOAT2(dx,      dy + dh),
+		DirectX::XMFLOAT2(dx + dw, dy + dh),
+	};
+
+	// テクスチャ座標 (0.0~1.0 全体)
+	DirectX::XMFLOAT2 texcoords[] = {
+		DirectX::XMFLOAT2(0.0f, 0.0f),
+		DirectX::XMFLOAT2(1.0f, 0.0f),
+		DirectX::XMFLOAT2(0.0f, 1.0f),
+		DirectX::XMFLOAT2(1.0f, 1.0f),
+	};
+
+	// --- 回転処理 (既存Renderと同じ) ---
+	float mx = dx + dw * 0.5f;
+	float my = dy + dh * 0.5f;
+	for (auto& p : positions) { p.x -= mx; p.y -= my; }
+	float theta = DirectX::XMConvertToRadians(angle);
+	float c = cosf(theta);
+	float s = sinf(theta);
+	for (auto& p : positions) {
+		DirectX::XMFLOAT2 rot = p;
+		p.x = c * rot.x + -s * rot.y;
+		p.y = s * rot.x + c * rot.y;
+	}
+	for (auto& p : positions) { p.x += mx; p.y += my; }
+
+	// --- NDC変換 (既存Renderと同じ) ---
+	D3D11_VIEWPORT viewport;
+	UINT numViewports = 1;
+	dc->RSGetViewports(&numViewports, &viewport);
+	float screenWidth = viewport.Width;
+	float screenHeight = viewport.Height;
+	for (DirectX::XMFLOAT2& p : positions) {
+		p.x = 2.0f * p.x / screenWidth - 1.0f;
+		p.y = 1.0f - 2.0f * p.y / screenHeight;
+	}
+
+	// --- 定数バッファ更新 ---
+	D3D11_MAPPED_SUBRESOURCE mapped;
+	dc->Map(vertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	Vertex* v = static_cast<Vertex*>(mapped.pData);
+	for (int i = 0; i < 4; ++i) {
+		v[i].position.x = positions[i].x;
+		v[i].position.y = positions[i].y;
+		v[i].position.z = 0.0f;
+		v[i].color = { r, g, b, a };
+		v[i].texcoord = texcoords[i];
+	}
+	dc->Unmap(vertexBuffer.Get(), 0);
+
+	// --- 描画設定 ---
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	dc->IASetVertexBuffers(0, 1, vertexBuffer.GetAddressOf(), &stride, &offset);
+	dc->IASetInputLayout(inputLayout.Get());
+	dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	dc->VSSetShader(vertexShader.Get(), nullptr, 0);
+	dc->PSSetShader(pixelShader.Get(), nullptr, 0);
+
+	// ★ここで引数の texture をセット
+	dc->PSSetShaderResources(0, 1, &texture);
+
+	dc->OMSetDepthStencilState(rc.renderState->GetDepthStencilState(DepthState::NoTestNoWrite), 0);
+	dc->RSSetState(rc.renderState->GetRasterizerState(RasterizerState::SolidCullNone));
+	dc->OMSetBlendState(rc.renderState->GetBlendState(BlendState::Transparency), nullptr, 0xFFFFFFFF);
+
+	dc->Draw(4, 0);
+}

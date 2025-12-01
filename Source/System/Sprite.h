@@ -45,7 +45,14 @@ public:
 		float angle,						// 角度
 		float r, float g, float b, float a	// 色
 	) const;
-
+	// 外部テクスチャ(SRV)を指定して描画する関数
+	void RenderTexture(const RenderContext& rc,
+		ID3D11ShaderResourceView* texture,
+		float dx, float dy,
+		float dw, float dh,
+		float angle = 0.0f,
+		float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f
+	) const;
 private:
 	Microsoft::WRL::ComPtr<ID3D11VertexShader>			vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader>			pixelShader;

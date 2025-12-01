@@ -84,6 +84,13 @@ void SceneGame::Initialize()
 
 	Serializer::LoadScene(objects, sprites2d, scene_file_name);
 
+	// ★追加: レンダーターゲット作成 (解像度はメイン画面と同じか、少し落としても良い)
+	pipRenderTarget = new RenderTarget(1280, 720);
+
+	// PiP表示用の枠やダミーSpriteを用意（Render関数でRenderTargetのテクスチャを使って描画するため、中身は適当でOK）
+	// ここではSpriteの機能だけ借りたいのでダミーロード
+	pipFrameSprite = SpriteManager::Instance().Load("Data/Sprite/Window.png");
+
 	grid_map.Initialize(150, 150, 0.8f);
 }
 
@@ -118,6 +125,8 @@ void SceneGame::Finalize()
 		delete stage;
 		stage = nullptr;
 	}
+
+	if (pipRenderTarget) delete pipRenderTarget;
 }
 
 // 更新処理
@@ -213,7 +222,39 @@ void SceneGame::Update(float elapsedTime)
 			AddAllyMeleeFor(active);
 		}
 	}
-	// === 直線・追尾をそれぞれ更新 ===
+	// ★変更: PiPのクリック判定 (左端配置 & スライド式)
+	Mouse& mouse = Input::Instance().GetMouse();
+	if (mouse.GetButtonDown() & Mouse::BTN_LEFT)
+	{
+		float mx = (float)mouse.GetPositionX();
+		float my = (float)mouse.GetPositionY();
+
+		// PiPのサイズ設定
+		// 常に一定サイズで表示し、出し入れだけを行う形にします
+		float pipW = 400.0f; // ウィンドウ全体の幅
+		float pipH = 225.0f; // 高さ
+		float tabW = 60.0f;  // 矢印（タブ）部分の幅（クリック判定用）
+
+		// 表示位置（X座標）の計算
+		// Expanded(開): 0.0f (左端にピッタリ)
+		// Collapsed(閉): -pipW + tabW (タブだけ残して画面外へ)
+		float currentPipX = isPipExpanded ? 0.0f : (-pipW + tabW);
+		float currentPipY = 100.0f; // 上から少し下げた位置
+
+		// クリック判定エリア
+		// 画像の「右端のタブ部分」をクリックしたらトグルする
+		// 判定エリア： (ウィンドウ右端 - タブ幅) ～ ウィンドウ右端
+		float clickAreaLeft = currentPipX + pipW - tabW;
+		float clickAreaRight = currentPipX + pipW;
+		float clickAreaTop = currentPipY;
+		float clickAreaBottom = currentPipY + pipH;
+
+		if (mx >= clickAreaLeft && mx < clickAreaRight &&
+			my >= clickAreaTop && my < clickAreaBottom)
+		{
+			isPipExpanded = !isPipExpanded;
+		}
+	}
 
 
 }
@@ -225,119 +266,128 @@ void SceneGame::Render()
 	ID3D11DeviceContext* dc = graphics.GetDeviceContext();
 	ShapeRenderer* shapeRenderer = graphics.GetShapeRenderer();
 	ModelRenderer* modelRenderer = graphics.GetModelRenderer();
+	Camera& camera = Camera::Instance();
+
+	// ---------------------------------------------------
+	// 1. PiP画面（UIのみ）の描画
+	// ---------------------------------------------------
+	if (pipRenderTarget)
+	{
+		// レンダーターゲット有効化
+			pipRenderTarget->Clear(dc, 0.2f, 0.2f, 0.2f, 1.0f);
+		pipRenderTarget->Activate(dc);
+
+		RenderContext rc;
+		rc.deviceContext = dc;
+		rc.lightDirection = { 0.0f, -1.0f, 0.0f };
+		rc.renderState = graphics.GetRenderState();
+
+		// ★変更: 縦並び & 大きく表示
+		// PiPのテクスチャ自体は1280x720あり、それを小さなウィンドウに縮小表示しています。
+		// そのため、ここで「128.0f」など大きく描かないと、Window内では豆粒みたいになってしまいます。
+
+		float iconSize = 128.0f; // かなり大きく設定
+		float padding = 12.0f;   // アイコン同士の間隔
+		float startX = 20.0f;    // 左端の余白
+		float startY = 20.0f;    // 上端の余白
+
+		// ※もし人数が増えてはみ出す場合は、自動計算するロジックに変えると安全です
+		// if (players.size() > 0) iconSize = (720.0f - startY * 2) / players.size() - padding;
+
+		for (size_t i = 0; i < players.size(); ++i) {
+			if (players[i]) {
+				float currentY = startY + static_cast<float>(i) * (iconSize + padding);
+
+				// 第4引数にサイズを渡す
+				players[i]->RenderUI(rc, startX, currentY, iconSize);
+			}
+		}
+
+		// レンダーターゲット解除
+		pipRenderTarget->Deactivate(dc);
+	}
+
+	// ---------------------------------------------------
+	// 2. メイン画面の描画
+	// ---------------------------------------------------
+
 	// 描画準備
 	RenderContext rc;
 	rc.deviceContext = dc;
-	rc.lightDirection = { 0.0f, -1.0f, 0.0f };	// ライト方向（下方向）
+	rc.lightDirection = { 0.0f, -1.0f, 0.0f };
 	rc.renderState = graphics.GetRenderState();
-
-	// カメラパラメータ設定
-	Camera& camera = Camera::Instance();
 	rc.view = camera.GetView();
 	rc.projection = camera.GetProjection();
 
-#if 1
-	game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), modelRenderer);
-#endif
 	modelRenderer->BeginFrame(rc);
+
 	// 3Dモデル描画
 	{
 		StageManager::Instance().Render(rc, modelRenderer);
-
-		//ステージ描画
-		//stage->Render(rc, modelRenderer);
-
-		// 全プレイヤー描画
 		for (auto& up : players) up->Render(rc, modelRenderer);
-
-		// 味方スライム
-
-
 		for (auto& a : alliesStraight) a->Render(rc, modelRenderer);
 		for (auto& a : alliesHoming)  a->Render(rc, modelRenderer);
 		for (auto& a : alliesMelee)   a->Render(rc, modelRenderer);
-		// エネミー描画
 		EnemyManager::Instance().Render(rc, modelRenderer);
-
-		//BuildingManager::Instance().Render(rc, modelRenderer);
-
-		//ギミック描画
 		GimmicManager::Instance().Render(rc, modelRenderer);
-
 	}
 
 	// 3Dデバッグ描画
 	{
-		// 全プレイヤーのデバッグ描画（選択リングは Player 側でアクティブ時のみ表示）
 		for (auto& up : players) up->RenderDebugPrimitive(rc, shapeRenderer);
-
-		//エネミーデバッグプリミティブ描画
 		EnemyManager::Instance().RenderDebugPrimitive(rc, shapeRenderer);
-		for (auto& a : allies)
-		{
-			a->RenderDebugPrimitive(rc, shapeRenderer);
-		}
-
-		for (auto& obj : objects)
-		{
-			obj->RenderDebugPrimitive(rc, shapeRenderer);
-		}
-		for (auto& up : players) {
-			up->RenderDebugPrimitive(rc, shapeRenderer); // 既存
-			// ★ 追加：簡易にここでも描ける
-			auto* p = up.get();
-			shapeRenderer->RenderCylinder(
-				rc, p->GetPosition(), 1.2f, 0.05f, DirectX::XMFLOAT4(1, 1, 0, 0.5f));
-		}
-		//BuildingManager::Instance().DebugDraw(rc, shapeRenderer);
-		//grid_map.RenderDebugPrimitive(rc, shapeRenderer);
-		//プレイヤー生成禁止エリアの可視化
-		Core* core = Core::Instance();
-		if (core)
-		{
-			float forbiddenHalfSize = 30.0f; // Player.cpp と同じ値にする
-
-			// 赤色で枠線を表示
-			// 高さ(Y)は少し浮かせて見やすくする (0.1f)
-			// サイズは "一辺の半分" ではなく "全体のサイズ" を渡す必要があるため 2倍 する
-			// ShapeRenderer::RenderBox は中心からのサイズ(Scale)で描画するため、
-			// 引数のsizeは {幅, 高さ, 奥行き} のスケーリング値
-
-			// RenderBox の仕様に合わせてサイズを設定
-			// RenderBox内部では S = XMMatrixScaling(size.x, size.y, size.z) しているため、
-			// 1x1x1 の箱をこのサイズに拡大する。
-			// つまり、forbiddenHalfSize * 2.0f を渡せば、その大きさの箱になる。
-
-			DirectX::XMFLOAT3 boxSize = { forbiddenHalfSize, 0.5f, forbiddenHalfSize };
-			DirectX::XMFLOAT3 boxPos = core->position;
-			boxPos.y += 0.25f; // 地面に埋まらないように少し上げる
-
-			// ワイヤーフレームで描画 (色: 赤, アルファ: 0.5)
-			// ShapeRenderer::RenderBox はソリッド描画ですが、RenderStateでワイヤーフレーム指定も可能。
-			// ここでは簡易的に半透明の赤ボックスとして描画します。
-			shapeRenderer->RenderBox(
-				rc,
-				boxPos,
-				{ 0, 0, 0 }, // 回転なし
-				boxSize,
-				DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.3f) // 赤色・半透明
-			);
-		}
+		// 必要に応じて他のデバッグ描画を追加
 	}
 
 	// 2Dスプライト描画
 	{
 		for (const auto& game_sprite : this->sprites2d)
 		{
-			if (game_sprite)
-			{
-				game_sprite->Render();
-			}
+			if (game_sprite) game_sprite->Render();
+		}
+
+		// PiPウィンドウ（左側・スライド式）の描画
+		if (pipFrameSprite && pipRenderTarget)
+		{
+			float pipW = 400.0f;
+			float pipH = 225.0f;
+			float tabW = 60.0f; // 画像の矢印部分の幅に合わせて調整
+
+			// 閉じてるときは左に隠す（X座標をマイナスに）
+			// isPipExpanded が true なら 0.0f (表示)、false なら隠れる位置
+			float pipX = isPipExpanded ? 0.0f : (-pipW + tabW);
+			float pipY = 100.0f;
+
+			// 1. 枠（Window.png）を描画
+			pipFrameSprite->Render(
+				rc,
+				pipX, pipY, 0.0f,
+				pipW, pipH,
+				0.0f,
+				1.0f, 1.0f, 1.0f, 1.0f
+			);
+
+			// 2. 中身（RenderTarget映像）を描画
+			// 枠線と矢印（右側）を避けて描画エリアを計算
+			float margin = 10.0f;
+			// 画像の右側にある矢印タブの上に映像が被らないように、右余白を大きく取る
+			float marginRight = tabW + margin;
+
+			float contentX = pipX + margin;
+			float contentY = pipY + margin;
+			float contentW = pipW - (margin + marginRight);
+			float contentH = pipH - (margin * 2.0f);
+
+			// RenderTextureを使って描画（関数名の競合回避版）
+			pipFrameSprite->RenderTexture(
+				rc,
+				pipRenderTarget->GetSRV(),
+				contentX, contentY,
+				contentW, contentH
+			);
 		}
 	}
 }
-
-
 
 // GUI描画
 void SceneGame::DrawGUI()

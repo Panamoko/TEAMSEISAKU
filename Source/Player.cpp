@@ -15,6 +15,8 @@
 #include "Core.h" 
 #include "GridMap.h"
 #include "MathUtils.h"
+#include "System/Sprite.h"
+#include "SpriteManager.h"
 
 using namespace DirectX;
 
@@ -99,6 +101,10 @@ void Player::Initialize()
 	animator.Play("Take 001", true);
 
 	pathRecalcTimer = MathUtils::RandomRenge(0.0f, 0.5f);
+
+	// SpriteManagerを使って画像をロード
+	// GameSpriteは使わず、直接Spriteポインタを取得して保持します
+	playerIcon = SpriteManager::Instance().Load("Data/Sprite/Player.png");
 }
 
 //終了化
@@ -903,4 +909,23 @@ void Player::RequestPathRecalculation()
 	// ※必須ではありませんが、挙動が安定します
 	currentPath.clear();
 	pathIndex = 0;
+}
+
+// UI描画の実装
+void Player::RenderUI(const RenderContext& rc, float x, float y, float size)
+{
+	if (playerIcon)
+	{
+		// 画像サイズを小さく設定 (例: 64x64)
+		float size = 128.0f;
+
+		// 引数で受け取った座標 (x, y) に表示
+		playerIcon->Render(
+			rc,
+			x, y, 0.0f,             // x, y, z (左上座標)
+			size, size,             // w, h (表示サイズ)
+			0.0f,                   // angle
+			1.0f, 1.0f, 1.0f, 1.0f  // color (R, G, B, A)
+		);
+	}
 }
