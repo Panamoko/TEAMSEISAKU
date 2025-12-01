@@ -2,6 +2,7 @@
 #include "Factory.h"
 #include "CollisionManager.h"
 #include "ProjectileStraite.h"
+#include <imgui.h>
 
 Cannon::Cannon()
 {
@@ -45,20 +46,25 @@ void Cannon::Update(float elapsedTime)
     {
         if (!current_player || current_player->GetHealth() <= 0) continue;
 
-        player_pos = DirectX::XMLoadFloat3(&current_player->GetPosition());
+        player_pos = current_player->GetPosition();
+
 
         //‹——£ƒxƒNƒgƒ‹‚ðŒvŽZ
-        DirectX::XMVECTOR distance_vec = DirectX::XMVectorSubtract(player_pos, cannon_pos);
+        DirectX::XMFLOAT3 distance_vec = {
+            player_pos.x - position.x,
+            player_pos.y - position.y,
+            player_pos.z - position.z
+        };
 
         //ƒxƒNƒgƒ‹‚Ì’·‚³‚ðŒvŽZ
-        float distance = DirectX::XMVectorGetX(DirectX::XMVector3Length(distance_vec));
+        float distance = (
+            (distance_vec.x * distance_vec.x) +
+            (distance_vec.y * distance_vec.y) +
+            (distance_vec.z * distance_vec.z));
 
-        DirectX::XMFLOAT3 player_position;
-        DirectX::XMStoreFloat3(&player_position, player_pos);
-
-        if (distance <= attac_territory)
+        if (distance <= (attac_territory * attac_territory))
         {
-            Turn(elapsedTime, player_position);
+            Turn(elapsedTime, player_pos);
 
             if (attac_timer >= attac_interval)
             {
@@ -80,7 +86,7 @@ void Cannon::Update(float elapsedTime)
                 //ProjectileStraite‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ð¶¬
                 ProjectileStraite* stratite = new ProjectileStraite(&projectileManager);
 
-                stratite->Launch(launch_direction, position);
+                stratite->Launch(launch_direction, { position.x + 3.0f,position.y,position.z + 3.0f });
 
                 attac_timer = 0.0f;
             }
@@ -133,44 +139,45 @@ void Cannon::Turn(float elapsedTime, DirectX::XMFLOAT3 player_position)
     //‰ñ“]ˆ— (XŽ²‚ÆZŽ²‚Ì‚Ý)
     float max_rotation = speed * elapsedTime;
 
-    //ZŽ²‰ñ“] (angle.z - …•½•ûŒü) ‚Ì‰ñ“]ˆ—
+    //YŽ²‰ñ“] (angle.y - …•½•ûŒü Yaw) ‚Ì‰ñ“]ˆ—
 
-    float current_yaw_z = angle.z;
-    float yaw_z_difference = target_yaw_z - current_yaw_z;
+    float current_yaw_y = angle.y;
+    float yaw_y_difference = target_yaw_z - current_yaw_y;
 
-    //Šp“x·‚ð -PI ‚©‚ç PI ‚ÌŠÔ‚ÉŽû‚ß‚é (Å’ZŒo˜H‚Å‰ñ“])
-    while (yaw_z_difference > DirectX::XM_PI)
+    //Šp“x·‚ð -PI ‚©‚ç PI ‚ÌŠÔ‚ÉŽû‚ß‚é
+    while (yaw_y_difference > XM_PI)
     {
-        yaw_z_difference -= DirectX::XM_2PI;
+        yaw_y_difference -= XM_2PI;
     }
-    while (yaw_z_difference < -DirectX::XM_PI)
+    while (yaw_y_difference < -XM_PI)
     {
-        yaw_z_difference += DirectX::XM_2PI;
+        yaw_y_difference += XM_2PI;
     }
 
-    //ŽÀÛ‚É‰ñ“]‚³‚¹‚éŠp“x‚ðŒˆ’è (‰ñ“]—Ê)
-    float yaw_z_rotation_amount;
-    if (std::abs(yaw_z_difference) > max_rotation)
+    //ŽÀÛ‚É‰ñ“]‚³‚¹‚éŠp“x‚ðŒˆ’è
+    float yaw_y_rotation_amount;
+    if (std::abs(yaw_y_difference) > max_rotation)
     {
-        yaw_z_rotation_amount = (yaw_z_difference > 0) ? max_rotation : -max_rotation;
+        yaw_y_rotation_amount = (yaw_y_difference > 0) ? max_rotation : -max_rotation;
     }
     else
     {
-        yaw_z_rotation_amount = yaw_z_difference;
+        yaw_y_rotation_amount = yaw_y_difference;
     }
 
-    //ZŽ²‚ÌŠp“x‚ðXV
-    angle.z += yaw_z_rotation_amount;
+    //YŽ²‚ÌŠp“x‚ðXV
+    angle.y += yaw_y_rotation_amount;
 
-    //ZŽ²‚ÌŠp“x‚ð -PI ‚©‚ç PI ‚ÌŠÔ‚ÉƒNƒ‰ƒ“ƒv
-    while (angle.z > DirectX::XM_PI)
+    //YŽ²‚ÌŠp“x‚ð -PI ‚©‚ç PI ‚ÌŠÔ‚ÉƒNƒ‰ƒ“ƒv
+    while (angle.y > XM_PI)
     {
-        angle.z -= DirectX::XM_2PI;
+        angle.y -= XM_2PI;
     }
-    while (angle.z < -DirectX::XM_PI)
+    while (angle.y < -XM_PI)
     {
-        angle.z += DirectX::XM_2PI;
+        angle.y += XM_2PI;
     }
+
 
     //X Ž²‰ñ“] (angle.x - ‚’¼•ûŒü) ‚Ì‰ñ“]ˆ—
 
@@ -214,6 +221,21 @@ void Cannon::Turn(float elapsedTime, DirectX::XMFLOAT3 player_position)
 
 void Cannon::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer)
 {
+    //“ê’£‚è”ÍˆÍ‚ðƒfƒoƒbƒO‰~’Œ•`‰æ
+    renderer->RenderCylinder(
+        rc,
+        position,
+        attac_territory,
+        1.0f,
+        DirectX::XMFLOAT4(0, 1, 0, 1));
+
+    renderer->RenderCylinder(
+        rc, position,
+        cylinder->radius,
+        cylinder->height,
+        DirectX::XMFLOAT4(1, 0, 0, 1)
+    );
+
 }
 
 void Cannon::OnCollision(GameObject* object)
@@ -226,7 +248,17 @@ void Cannon::OnCollision(GameObject* object)
 
 bool Cannon::OnImGui()
 {
-	return false;
+    bool changed = false;
+
+    if (ImGui::CollapsingHeader("Cannon"))
+    {
+        changed |= ImGui::DragFloat("HP", &hp, 0.1f, 0.0f, 1500.0f, "%.1f");
+        changed |= ImGui::DragFloat("Power", &power, 0.1f, 0.0f, 1500.0f, "%.1f");
+        changed |= ImGui::DragFloat("Attac_interval", &attac_interval, 0.1f, 0.1f, 60.0f, "%.1f sec");
+        changed |= ImGui::DragFloat("Attac_timer", &attac_timer, 0.1f, 0.0f, attac_interval * 2.0f, "%.1f sec");
+    }
+    return changed;
+
 }
 
 void Cannon::CopyUniqueMembers(const GameObject* source)
