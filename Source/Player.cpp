@@ -17,7 +17,9 @@
 #include "MathUtils.h"
 #include "System/Sprite.h"
 #include "SpriteManager.h"
-
+#include "AllySlime.h"
+#include "AllySlimeMelee.h"
+#include "AllySlimeHeal.h"
 using namespace DirectX;
 
 
@@ -135,7 +137,6 @@ void Player::Initialize()
 	model = ModelManager::Instance().CreateNewInstance("Data/Model/Slime/Player_Slime.mdl");
 	// モデルが大きいのでスケーリング
 	scale.x = scale.y = scale.z = 0.005f;
-
 	// 3. アニメーターには、この「自分専用のコピー」をセットする
 	animator.SetModel(model);
 	//頭のボーン(joint4)と王冠(pTorus1)の番号を探して記憶する
@@ -173,15 +174,25 @@ void Player::Initialize()
 
 	pathRecalcTimer = MathUtils::RandomRenge(0.0f, 0.5f);
 
+	maxHealth = 100;
+	health = maxHealth;
+
 	// SpriteManagerを使って画像をロード
 	// GameSpriteは使わず、直接Spriteポインタを取得して保持します
 	playerIcon = SpriteManager::Instance().Load("Data/Sprite/Player.png");
+	hpBarSprite = new Sprite(nullptr);
 }
 
 //終了化
 void Player::Finalize()
 {
-		model = nullptr;
+	model = nullptr;
+
+	if (hpBarSprite)
+	{
+		delete hpBarSprite;
+		hpBarSprite = nullptr;
+	}
 }
 
 void Player::Update(float elapsedTime)
@@ -189,7 +200,7 @@ void Player::Update(float elapsedTime)
 	animator.Update(elapsedTime);
 	cylinder->center = position;
 
-	const bool isActive = (this == GetActivePtr());
+	const bool isActive = IsPlayerActive(); // 変更後の名前を使う
 	if (isActive) {
 		// 入力は“選択された個体のみ”
 		InputToggleAttackPriority();
@@ -813,7 +824,7 @@ void Player::AutoAttackUpdate(float elapsedTime)
 }
 
 
-bool Player::IsActive() const
+bool Player::IsPlayerActive() const
 {
 	return sActive == this;
 }
@@ -963,16 +974,75 @@ void Player::RenderUI(const RenderContext& rc, float x, float y, float size)
 {
 	if (playerIcon)
 	{
-		// 画像サイズを小さく設定 (例: 64x64)
-		float size = 128.0f;
-
-		// 引数で受け取った座標 (x, y) に表示
+		// 1. アイコン描画
 		playerIcon->Render(
 			rc,
-			x, y, 0.0f,             // x, y, z (左上座標)
-			size, size,             // w, h (表示サイズ)
-			0.0f,                   // angle
-			1.0f, 1.0f, 1.0f, 1.0f  // color (R, G, B, A)
+			x, y, 0.0f,
+			size, size,
+			0.0f,
+			1.0f, 1.0f, 1.0f, 1.0f
 		);
+
+		// 2. HPバー描画
+		if (hpBarSprite)
+		{
+			// バーの設定
+			float barW = size;          // 幅はアイコンと同じ
+			float barH = 10.0f;         // 高さ
+			float barX = x;
+			float barY = y - barH - 5.0f; // アイコンの少し上に表示
+
+			// HP割合計算
+			float hpRatio = (float)health / (float)maxHealth;
+			if (hpRatio < 0.0f) hpRatio = 0.0f;
+			if (hpRatio > 1.0f) hpRatio = 1.0f;
+
+			// (A) 背景（グレー）
+			hpBarSprite->Render(
+				rc,
+				barX, barY, 0.0f,
+				barW, barH,
+				0.0f,
+				0.2f, 0.2f, 0.2f, 1.0f
+			);
+
+			// (B) 現在HP（緑）
+			// HPが減ったら赤くするなどの演出も可能
+			float r = (hpRatio < 0.3f) ? 1.0f : 0.0f;
+			float g = (hpRatio < 0.3f) ? 0.0f : 1.0f;
+
+			hpBarSprite->Render(
+				rc,
+				barX, barY, 0.0f,
+				barW * hpRatio, barH, // 幅をHP残量に合わせる
+				0.0f,
+				r, g, 0.0f, 1.0f
+			);
+		}
 	}
+}
+
+void Player::OnDead()
+{
+	// ★修正: 味方スライムへの攻撃ループ処理は削除しました。
+	// (スライム側でリーダーの死を検知して自滅するようにしたため)
+
+	// 1. 全プレイヤー管理リストから自分を削除
+	UnregisterPlayer(this);
+
+	// 2. 操作キャラの引継ぎ
+	if (GetActivePtr() == this)
+	{
+		if (!sAllPlayers.empty())
+		{
+			SetActive(sAllPlayers.front());
+		}
+		else
+		{
+			SetActive(nullptr);
+		}
+	}
+
+	// 3. 自分を非アクティブ化（これでSceneGameにより削除される）
+	GameObject::SetActive(false);
 }

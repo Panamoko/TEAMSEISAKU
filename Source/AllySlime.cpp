@@ -52,15 +52,36 @@ AllySlime::AllySlime(int formationIndex)
     scale = { 0.002f, 0.002f, 0.002f }; // モデルの縮尺を調整
     radius = 0.5f;                      // 当たり判定半径（敵と共通）
     height = 1.0f;                      // 当たり判定の高さ
+    maxHealth = 20;
+    health = maxHealth;
     icon = SpriteManager::Instance().Load("Data/Sprite/SLime_B.png");
-    // 初期位置はプレイヤー付近（正確な配置は UpdateAnchor で決定）
+    hpBarSprite = new Sprite(nullptr);
+
+    if (leader || Player::GetActivePtr())
     {
-        const Player& ref = (leader ? *leader : Player::Instance());
-        position = ref.GetPosition();
+        UpdateAnchor();     // anchor 座標を計算
+        position = anchor;  // その位置にワープ
+    }
+    else
+    {
+        // リーダーがいない場合はとりあえず原点など（通常ありえないが安全策）
+        position = { 0, 0, 0 };
     }
     UpdateTransform();
 
     RegisterAlly(this); // 自分をリストに登録
+
+    // コライダーの設定
+    collider = std::make_unique<CylinderCollider>();
+    collider->type = ColliderType::Cylinder;
+    collider->owner = this;
+    // コライダーのサイズ設定 (モデルに合わせて調整)
+    auto* cyl = static_cast<CylinderCollider*>(collider.get());
+    cyl->radius = radius;
+    cyl->height = height;
+    cyl->center = position; // 初期位置
+    CollisionManager::Instance().AddObject(this);
+
 }
 
 void AllySlime::UpdateAnchor()
@@ -177,7 +198,7 @@ void AllySlime::AutoAttackUpdate(float elapsedTime)
     if (!hasTarget) return; // 射程内にターゲットがいない
 
     // 発射位置（スライムの頭上付近）
-    
+
 
     // 敵との方向ベクトルを計算
     XMFLOAT3 dir = { bestTarget.x - pos.x, bestTarget.y - pos.y, bestTarget.z - pos.z };
@@ -230,7 +251,7 @@ void AllySlime::CollisionProjectilesVsEnemies()
 
             // ヒット時にダメージ（無敵 0.5s は Player と合わせる）
             if (enemy->ApplyDamage(1, 0.5f)) {
-                
+
             }
 
             // 弾は一度当たったら破棄
@@ -292,6 +313,11 @@ void AllySlime::CollisionProjectilesVsEnemies()
 
 void AllySlime::Update(float elapsedTime)
 {
+    if (leader && (!leader->IsActive() || leader->GetHealth() <= 0))
+    {
+        OnDead(); // 死亡処理を実行
+        return;   // 更新をここで打ち切る
+    }
     // 1) 隊列アンカー（プレイヤー周辺の基準位置）を更新
     UpdateAnchor();
 
@@ -350,12 +376,33 @@ void AllySlime::RenderUI(const RenderContext& rc, float x, float y, float size)
 {
     if (icon)
     {
-        icon->Render(
-            rc,
-            x, y, 0.0f,             // 座標
-            size, size,             // サイズ
-            0.0f,                   // 回転
-            1.0f, 1.0f, 1.0f, 1.0f  // 色
-        );
+        icon->Render(rc, x, y, 0.0f, size, size, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+
+        // ★追加: HPバー描画
+        if (hpBarSprite)
+        {
+            float barW = size;
+            float barH = 8.0f; // 少し細めに
+            float barX = x;
+            float barY = y - barH - 3.0f;
+
+            float hpRatio = (float)health / (float)maxHealth;
+            hpRatio = std::clamp(hpRatio, 0.0f, 1.0f);
+
+            // 背景
+            hpBarSprite->Render(rc, barX, barY, 0.0f, barW, barH, 0.0f, 0.2f, 0.2f, 0.2f, 1.0f);
+
+            // HPバー（味方は青緑っぽくしてみる例、もちろん緑でもOK）
+            hpBarSprite->Render(rc, barX, barY, 0.0f, barW * hpRatio, barH, 0.0f, 0.0f, 1.0f, 0.5f, 1.0f);
+        }
     }
+}
+
+void AllySlime::OnDead()
+{
+    // リストから登録解除
+    UnregisterAlly(this);
+
+    // 非アクティブ化 -> SceneGameで削除される
+    GameObject::SetActive(false);
 }

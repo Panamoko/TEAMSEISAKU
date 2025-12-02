@@ -57,7 +57,7 @@ public:
 	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) override;
 
 	// 自分がアクティブか判定
-	bool IsActive() const;
+	bool IsPlayerActive() const;
 
 	// 数字キーで操作プレイヤーを切り替える
 	static bool UpdateActiveByKeyboard(const std::vector<std::unique_ptr<Player>>& players);
@@ -72,8 +72,11 @@ public:
 	void RequestPathRecalculation();
 
 protected:
-	//着地したときに呼ばれる
+	// 着地したときに呼ばれる
 	void OnLanding() override;
+
+	// 死亡時に呼ばれる
+	void OnDead() override;
 
 private:
 	// スティック入力値から移動ベクトルを取得
@@ -161,5 +164,5 @@ private:
 
 	//UI表示用スプライトのポインタ
 	Sprite* playerIcon = nullptr;
-
+	Sprite* hpBarSprite = nullptr; // ★追加: HPバー描画用（白地）
 };

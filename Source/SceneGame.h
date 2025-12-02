@@ -54,7 +54,7 @@ public:
 private:
 
 	void RenderPiP(ID3D11DeviceContext* dc);
-
+	bool UpdatePiP();
 	// Šù‘¶‚Ì”z—ñ‚É‰Á‚¦‚Ä’Ç‰Á
 	std::vector<std::unique_ptr<AllySlimeMelee>> alliesMelee;
 
