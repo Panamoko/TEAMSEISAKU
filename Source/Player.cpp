@@ -211,14 +211,17 @@ void Player::Update(float elapsedTime)
    //速力更新処理
 	UpdateVelocity(elapsedTime);
 
+	// 無敵時間の更新
+	UpdateInvincibleTimer(elapsedTime);
+
 	//弾丸更新処理
 	projectileManager.Update(elapsedTime);
 
 	//プレイヤーと敵との衝突処理
-	CollisionPlayerVsEnemies();
+	//CollisionPlayerVsEnemies();
 
 	//プレイヤーと柵との衝突処理
-	CollisionPlayerVsFences();
+	//CollisionPlayerVsFences();
 
 	// オブジェクト行列を更新
 	UpdateTransform();
@@ -369,7 +372,7 @@ void Player::UpdateMoveToCore(float elapsedTime)
 
 void Player::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
-	renderer->Render(rc, transform, model, ShaderId::Lambert);
+	renderer->Render(rc, transform, model, ShaderId::Lambert, GetDamageColor());
 
 	//弾丸描画処理
 	projectileManager.Render(rc, renderer);
