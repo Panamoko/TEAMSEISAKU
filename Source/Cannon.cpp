@@ -66,7 +66,7 @@ void Cannon::Update(float elapsedTime)
 
         if (distance <= (attac_territory * attac_territory))
         {
-            Turn(elapsedTime, player_pos);
+            //Turn(elapsedTime, player_pos);
 
             if (attac_timer >= attac_interval)
             {
