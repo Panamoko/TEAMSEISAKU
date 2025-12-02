@@ -269,6 +269,8 @@ void SceneGame::Render()
 	Camera& camera = Camera::Instance();
 	ShapeRenderer* shapeRenderer = graphics.GetShapeRenderer(); // デバッグ描画用
 
+	game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), modelRenderer);
+
 	// ---------------------------------------------------
 	// 1. PiP画面（UIのみ）の描画
 	// ---------------------------------------------------

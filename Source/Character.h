@@ -64,6 +64,9 @@ public:
 	// ÕŒ‚‚ğ—^‚¦‚é
 	void AddImpulse(const DirectX::XMFLOAT3& impulse);
 
+	// –³“GŠÔ’†‚Ì“_–ÅF‚ğæ“¾‚·‚éŠÖ”
+	DirectX::XMFLOAT4 GetDamageColor(const DirectX::XMFLOAT4& baseColor = { 1.0f, 1.0f, 1.0f, 1.0f }) const;
+
 protected:
 	// ˆÚ“®ˆ—
 	void Move(float elapsedTime, float vx, float vz, float speed);
@@ -126,7 +129,7 @@ protected:
 	bool isGround = false;
 	float					height = 2.0f;
 	int						health = 5;
-	float					invincibleTimer = 1.0f;
+	float					invincibleTimer = 0.0f;
 	float					friction = 15.0f;
 	float					acceleration = 50.0f;
 	float					maxMoveSpeed = 5.0f;

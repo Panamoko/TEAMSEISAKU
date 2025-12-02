@@ -350,7 +350,8 @@ void AllySlimeMelee::Update(float elapsedTime)
 void AllySlimeMelee::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
     // ’ÊíF‚æ‚è­‚µÔ‚Á‚Û‚­‚µ‚Ä‹æ•Ê‚·‚é
-    renderer->Render(rc, transform, slimeModel, ShaderId::Lambert, { 1.0f, 0.6f, 0.6f, 1.0f });
+    DirectX::XMFLOAT4 baseColor = { 1.0f, 0.6f, 0.6f, 1.0f };
+    renderer->Render(rc, transform, slimeModel, ShaderId::Lambert, GetDamageColor(baseColor));
 }
 
 void AllySlimeMelee::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer)

@@ -61,39 +61,39 @@ void EnemyManager::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* 
 
 void EnemyManager::CollisionEnemyVsEnemies()
 {
-	size_t enemyCount = enemies.size();
-	for (int i = 0; i < enemyCount; ++i)
-	{
-		auto enemyA = enemies.at(i);
-		for (int j = i + 1; j < enemyCount; ++j)
-		{
-			auto enemyB = enemies.at(j);
+	//size_t enemyCount = enemies.size();
+	//for (int i = 0; i < enemyCount; ++i)
+	//{
+	//	auto enemyA = enemies.at(i);
+	//	for (int j = i + 1; j < enemyCount; ++j)
+	//	{
+	//		auto enemyB = enemies.at(j);
 
-			DirectX::XMFLOAT3 outPosition;
-			//if (Collision::IntersectSphereVsSphere(
-			//	enemyA->GetPosition(),
-			//	enemyA->GetRadius(),
-			//	enemyB->GetPosition(),
-			//	enemyB->GetRadius(),
-			//	outPosition))
-			//{
-			//	enemyB->SetPosition(outPosition);
-			//}
+	//		DirectX::XMFLOAT3 outPosition;
+	//		//if (Collision::IntersectSphereVsSphere(
+	//		//	enemyA->GetPosition(),
+	//		//	enemyA->GetRadius(),
+	//		//	enemyB->GetPosition(),
+	//		//	enemyB->GetRadius(),
+	//		//	outPosition))
+	//		//{
+	//		//	enemyB->SetPosition(outPosition);
+	//		//}
 
-			if (Collision::IntersectCylinderVsCylinder(
-				enemyA->GetPosition(),
-				enemyA->GetRadius(),
-				enemyA->GetHeight(),
-				enemyB->GetPosition(),
-				enemyB->GetRadius(),
-				enemyB->GetHeight(),
-				outPosition))
-			{
-				enemyB->SetPosition(outPosition);
-			}
+	//		if (Collision::IntersectCylinderVsCylinder(
+	//			enemyA->GetPosition(),
+	//			enemyA->GetRadius(),
+	//			enemyA->GetHeight(),
+	//			enemyB->GetPosition(),
+	//			enemyB->GetRadius(),
+	//			enemyB->GetHeight(),
+	//			outPosition))
+	//		{
+	//			enemyB->SetPosition(outPosition);
+	//		}
 
-		}
-	}
+	//	}
+	//}
 }
 
 void EnemyManager::Remove(Enemy* enemy)
