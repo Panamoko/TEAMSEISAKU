@@ -1,6 +1,7 @@
 #pragma once
 #include "GimmicBase.h"
 #include "Collider.h"
+#include "EnemySlimeTurret.h"
 
 class Yagura : public GimmicBase
 {
@@ -16,5 +17,9 @@ public:
 private:
 	float hp;			//耐久度
 	OBB* obb;
+	
+	// --- タレット管理用 ---
+	std::shared_ptr<EnemySlimeTurret> turret = nullptr; // 生成したタレットのポインタ
+	bool isTurretSpawned = false; // 生成済みフラグ
 };
 

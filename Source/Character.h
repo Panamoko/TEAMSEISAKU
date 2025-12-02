@@ -34,6 +34,9 @@ public:
 	// スケール取得
 	void SetScale(const DirectX::XMFLOAT3& scale) { this->scale = scale; }
 
+	//重力取得
+	void SetVelocity(const DirectX::XMFLOAT3& velocity) { this->velocity = velocity; }
+
 	//半径取得
 	float GetRadius() const { return radius; }
 

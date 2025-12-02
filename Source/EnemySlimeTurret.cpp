@@ -63,23 +63,45 @@ void EnemySlimeTurret::UpdateAttackState(float elapsedTime)
         return;
     }
 
-    // 以下、攻撃ロジック
+    // --- 攻撃ロジック ---
     targetPosition = targetCharacter->GetPosition();
 
-    // 旋回
-    MoveToTarget(elapsedTime, 0.0f, 2.0f);
+    // ★修正1: 敵の方向を向く処理
+    // MoveToTargetを使わず、直接ターゲットへの方向を計算してTurnを呼ぶ
+    float dx = targetPosition.x - position.x;
+    float dz = targetPosition.z - position.z;
+    // 距離の2乗
+    float distSq = dx * dx + dz * dz;
+
+    if (distSq > 0.0001f)
+    {
+        // 旋回のみ実行 (turnSpeedは親クラスで定義されているものを使用)
+        // 必要に応じて倍率(2.0fなど)を調整して旋回速度を変えてください
+        Turn(elapsedTime, dx, dz, turnSpeed * 2.0f);
+    }
 
     float currentAnimTime = animator.GetCurrentSeconds();
     float fireTimingSeconds = 12.0f / 30.0f;
 
     if (!isAttackFired && currentAnimTime >= fireTimingSeconds)
     {
+        // ★修正2: 発射位置の調整
+        // 現在の向き(angle.y)に基づいて、少し前方にオフセットさせる
+        float forwardOffset = 1.5f; // 前にずらす量（モデルに合わせて調整してください）
+        float heightOffset = height * 0.6f; // 高さの調整
+
         DirectX::XMFLOAT3 startPos = position;
-        startPos.y += height * 0.5f;
 
+        // 向いている方向(sin, cos)を使って座標をずらす
+        startPos.x += sinf(angle.y) * forwardOffset;
+        startPos.y += heightOffset;
+        startPos.z += cosf(angle.y) * forwardOffset;
+
+        // ターゲット位置（少し上を狙う）
         DirectX::XMFLOAT3 targetPos = targetPosition;
-        targetPos.y += 1.0f;
+        targetPos.y += 0.5f;
 
+        // 発射ベクトル計算
         float vx = targetPos.x - startPos.x;
         float vy = targetPos.y - startPos.y;
         float vz = targetPos.z - startPos.z;
@@ -94,6 +116,8 @@ void EnemySlimeTurret::UpdateAttackState(float elapsedTime)
 
         ProjectileStraite* projectile = new ProjectileStraite(&projectileManager, "Data/Model/Sword/RedSword.mdl");
         projectile->type = Type::EnemyAttack;
+        // 弾を大きくしたい場合はここでスケール設定
+        // projectile->SetScale({2.0f, 2.0f, 2.0f}); 
         projectile->Launch(dir, startPos);
 
         isAttackFired = true;
@@ -105,11 +129,6 @@ void EnemySlimeTurret::UpdateAttackState(float elapsedTime)
     }
 
     // 範囲外チェック
-    float dx = targetPosition.x - position.x;
-    float dy = targetPosition.y - position.y;
-    float dz = targetPosition.z - position.z;
-    float distSq = dx * dx + dy * dy + dz * dz;
-
     if (distSq > searchRange * searchRange)
     {
         SetIdleState();

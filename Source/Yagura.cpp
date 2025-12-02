@@ -2,6 +2,8 @@
 #include "GimmicManager.h"
 #include "Player.h"
 #include "Factory.h"
+#include "EnemyManager.h"
+#include "GameObjectManager.h"
 
 Yagura::Yagura()
 {
@@ -16,6 +18,9 @@ Yagura::Yagura()
 	class_name = "Yagura";
 	hp = 100.0f;
 	scale = { 0.1,0.1,0.1 };
+
+	// 生成フラグ初期化
+	isTurretSpawned = false;
 }
 
 Yagura::~Yagura()
@@ -30,6 +35,13 @@ void Yagura::Update(float elapsedTime)
 		is_active = false;
 		GimmicManager::Instance().Remove(this);
 		CollisionManager::Instance().Remove(this);
+
+		// タレットも破壊
+		if (turret)
+		{
+			turret->Destroy(); // または、地面に落とす処理を入れても良い
+			turret = nullptr;
+		}
 		return;
 	}
 
@@ -50,13 +62,57 @@ void Yagura::Update(float elapsedTime)
 	// ---- OBBサイズ設定 ----
 	// モデルサイズに合わせたハーフサイズを設定
 	// (モデル単位を1とした場合の半分の大きさ)
-	obb->half = DirectX::XMFLOAT3(20.0f * scale.x, 50.0f * scale.y, 20.0f * scale.z);
+	float halfHeight = 50.0f * scale.y;
+	obb->half = DirectX::XMFLOAT3(20.0f * scale.x, halfHeight, 20.0f * scale.z);
 
 	//OBB設定
 	obb->center = position;
 	obb->center.x -= 0.1f;
 
+	// タレットのスポーン処理
+	if (!isTurretSpawned)
+	{
+		// 櫓のてっぺんの座標を計算
+		// 櫓のY座標(中心) + OBBの高さ半分 + タレットの足元の補正(少し浮かせる等)
+		DirectX::XMFLOAT3 spawnPos = position;
+		spawnPos.y += halfHeight + 2.0f; // +1.0fはタレットの高さ半分など微調整用
 
+		// タレット生成
+		turret = std::make_shared<EnemySlimeTurret>();
+		turret->SetPosition(spawnPos);
+
+		// 櫓の回転に合わせてタレットも向きを合わせるなら
+		turret->SetAngle({ 0, angle.y, 0 });
+
+		// 縄張りを設定（固定砲台なので、自分の位置を中心に索敵）
+		turret->SetTerritory(spawnPos, 15.0f);
+
+		// マネージャーに登録 (Barracksの実装に合わせる)
+		EnemyManager::Instance().Register(turret);
+		GameObjectManager::Instance().AddObject(turret);
+
+		isTurretSpawned = true;
+	}
+
+	if (turret && !turret->IsDestroyRequested())
+	{
+		DirectX::XMFLOAT3 currentTop = position;
+		// 櫓のY座標(中心) + 高さ半分 + タレット足元補正
+		currentTop.y += halfHeight + 2.0f;
+
+		// 位置を更新（X, Zは櫓と同じ、Yは計算した高さ）
+		turret->SetPosition(currentTop);
+
+		// ついでに重力による落下速度もリセットしておくと安心
+		// (Characterクラスに SetVelocity のような関数があれば使う)
+		turret->SetVelocity({ 0.0f, 0.0f, 0.0f });
+	}
+
+	// タレットが倒された場合のポインタクリア処理
+	if (turret && turret->IsDestroyRequested())
+	{
+		turret = nullptr;
+	}
 }
 
 //衝突処理
