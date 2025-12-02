@@ -32,5 +32,7 @@ public:
 protected:
 	bool isActive = true;//ギミックの状態
 	bool isTriggered = false;//ギミックの発動状態
+	float invincible_interval;
+	float invincibility_in
 };
 
