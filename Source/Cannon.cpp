@@ -35,6 +35,8 @@ void Cannon::Update(float elapsedTime)
         return;
     }
 
+    UpdateInvicible(elapsedTime);
+
     cylinder->center = position;
 	attac_timer += elapsedTime;
     if (attac_timer >= attac_interval)attac_timer = attac_interval;
@@ -123,7 +125,14 @@ void Cannon::Update(float elapsedTime)
 
 void Cannon::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
-    renderer->Render(rc, transform, model, ShaderId::Lambert);
+    if (invincible_timer <= 0.0f)
+    {
+        renderer->Render(rc, transform, model, ShaderId::Lambert);
+    }
+    else
+    {
+        renderer->Render(rc, transform, model, ShaderId::Lambert, { 1.0f,0.0f,0.0f,1.0f });
+    }
 
     //’eŠÛ•`‰æˆ—
     projectileManager.Render(rc, renderer);
@@ -262,9 +271,10 @@ void Cannon::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* render
 
 void Cannon::OnCollision(GameObject* object)
 {
-    if (object->type == Type::PlayerAttack)
+    if (object->type == Type::PlayerAttack && invincible_timer <= 0.0f)
     {
         hp -= 20.0f;
+        invincible_timer = 0.1f;
     }
 }
 

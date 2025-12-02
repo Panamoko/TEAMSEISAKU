@@ -9,6 +9,7 @@ class Barracks :public GimmicBase
 public:
 	Barracks();
 	void Update(float elapsedTime)override;//ギミック更新処理
+	void Render(const RenderContext& rc, ModelRenderer* renderer)override;
 	//デバッグ描画
 	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) override;
 	void OnCollision(GameObject* object)override;//衝突処理

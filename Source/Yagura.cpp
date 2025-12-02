@@ -33,6 +33,8 @@ void Yagura::Update(float elapsedTime)
 		return;
 	}
 
+	UpdateInvicible(elapsedTime);
+
 	// 各軸の向きを更新（Y軸回転のみと仮定）
 	DirectX::XMFLOAT3 rotation = {
 	DirectX::XMConvertToRadians(angle.x),
@@ -60,9 +62,22 @@ void Yagura::Update(float elapsedTime)
 //衝突処理
 void Yagura::OnCollision(GameObject* object)
 {
-	if (object->type == Type::PlayerAttack)
+	if (object->type == Type::PlayerAttack && invincible_timer <= 0.0f)
 	{
 		hp -= 10.0f;
+		invincible_timer = 0.1f;
+	}
+}
+
+void Yagura::Render(const RenderContext& rc, ModelRenderer* renderer)
+{
+	if (invincible_timer <= 0.0f)
+	{
+		GameObject::Render(rc, renderer);
+	}
+	else
+	{
+		renderer->Render(rc, transform, model, ShaderId::Lambert, { 1.0f,0.0f,0.0f,1.0f });
 	}
 }
 
