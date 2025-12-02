@@ -14,6 +14,8 @@
 #include <cmath>
 #include <cfloat>
 #include "SpriteManager.h"
+#include "Collider.h"
+#include "CollisionManager.h"
 using namespace DirectX;
 
 // 以降で使いやすいように XMFLOAT3 の演算子を簡単に定義
@@ -68,6 +70,8 @@ AllySlime::AllySlime(int formationIndex)
         position = { 0, 0, 0 };
     }
     UpdateTransform();
+
+    type = Type::Player;
 
     RegisterAlly(this); // 自分をリストに登録
 
@@ -339,6 +343,11 @@ void AllySlime::Update(float elapsedTime)
     UpdateVelocity(elapsedTime);
     UpdateInvincibleTimer(elapsedTime);
     UpdateTransform();
+
+    if (collider)
+    {
+        static_cast<CylinderCollider*>(collider.get())->center = position;
+    }
 
     // 6) 弾の更新と敵・ギミックとの衝突判定
     projectileManager.Update(elapsedTime);

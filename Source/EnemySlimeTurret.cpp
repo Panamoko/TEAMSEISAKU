@@ -1,5 +1,6 @@
 #include "EnemySlimeTurret.h"
 #include "ProjectileStraite.h" 
+#include "ProjectileTurret.h"
 #include "MathUtils.h"    
 #include "Player.h"
 
@@ -85,40 +86,26 @@ void EnemySlimeTurret::UpdateAttackState(float elapsedTime)
 
     if (!isAttackFired && currentAnimTime >= fireTimingSeconds)
     {
-        // ★修正2: 発射位置の調整
-        // 現在の向き(angle.y)に基づいて、少し前方にオフセットさせる
-        float forwardOffset = 1.5f; // 前にずらす量（モデルに合わせて調整してください）
-        float heightOffset = height * 0.6f; // 高さの調整
-
+        // 発射位置の計算
+        float forwardOffset = 1.5f;
+        float heightOffset = height * 0.6f;
         DirectX::XMFLOAT3 startPos = position;
-
-        // 向いている方向(sin, cos)を使って座標をずらす
         startPos.x += sinf(angle.y) * forwardOffset;
         startPos.y += heightOffset;
         startPos.z += cosf(angle.y) * forwardOffset;
 
-        // ターゲット位置（少し上を狙う）
-        DirectX::XMFLOAT3 targetPos = targetPosition;
-        targetPos.y += 0.5f;
+        // 初期発射ベクトル（向いている方向）
+        DirectX::XMFLOAT3 dir = { sinf(angle.y), 0.0f, cosf(angle.y) };
+        // 少し上向きに撃ち出すと放物線っぽく見えて良いかも（任意）
+        // dir.y = 0.2f; 
+        // Normalize(dir);
 
-        // 発射ベクトル計算
-        float vx = targetPos.x - startPos.x;
-        float vy = targetPos.y - startPos.y;
-        float vz = targetPos.z - startPos.z;
+        // ★変更: ProjectileTurret を生成
+        ProjectileTurret* projectile = new ProjectileTurret(&projectileManager);
+        // projectile->type = Type::EnemyAttack; // コンストラクタで設定済みなら不要
 
-        float dist = sqrtf(vx * vx + vy * vy + vz * vz);
-        if (dist > 0.0001f)
-        {
-            vx /= dist; vy /= dist; vz /= dist;
-        }
-
-        DirectX::XMFLOAT3 dir = { vx, vy, vz };
-
-        ProjectileStraite* projectile = new ProjectileStraite(&projectileManager, "Data/Model/Sword/RedSword.mdl");
-        projectile->type = Type::EnemyAttack;
-        // 弾を大きくしたい場合はここでスケール設定
-        // projectile->SetScale({2.0f, 2.0f, 2.0f}); 
-        projectile->Launch(dir, startPos);
+        // Launchにターゲットを渡す
+        projectile->Launch(dir, startPos, targetCharacter);
 
         isAttackFired = true;
     }

@@ -338,6 +338,9 @@
       <Filter>Source\Gimmic</Filter>
     </ClInclude>
     <ClInclude Include="Source\System\RenderTarget.h" />
+    <ClInclude Include="Source\ProjectileTurret.h">
+      <Filter>Source\Projectile</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -567,6 +570,9 @@
     </ClCompile>
     <ClCompile Include="Source\System\RenderTarget.cpp">
       <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ProjectileTurret.cpp">
+      <Filter>Source\Projectile</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

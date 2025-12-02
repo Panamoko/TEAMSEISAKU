@@ -159,6 +159,7 @@
     <ClInclude Include="Source\ProjectileHoming.h" />
     <ClInclude Include="Source\ProjectileManager.h" />
     <ClInclude Include="Source\ProjectileStraite.h" />
+    <ClInclude Include="Source\ProjectileTurret.h" />
     <ClInclude Include="Source\RayCast.h" />
     <ClInclude Include="Source\Scene.h" />
     <ClInclude Include="Source\SceneFactory.h" />
@@ -242,6 +243,7 @@
     <ClCompile Include="Source\ProjectileHoming.cpp" />
     <ClCompile Include="Source\ProjectileManager.cpp" />
     <ClCompile Include="Source\ProjectileStraite.cpp" />
+    <ClCompile Include="Source\ProjectileTurret.cpp" />
     <ClCompile Include="Source\RayCast.cpp" />
     <ClCompile Include="Source\SceneFactory.cpp" />
     <ClCompile Include="Source\SceneGame.cpp" />
