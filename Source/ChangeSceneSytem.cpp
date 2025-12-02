@@ -6,6 +6,7 @@
 #include "SceneLoading.h"
 #include "SceneGame.h"
 #include "SceneFactory.h"
+#include "Collision.h"
 
 int ChangeSceneSytem::stage_namber = 0;
 
@@ -50,10 +51,10 @@ void ChangeSceneSytem::Update(float elapsedTime)
 	mouse_position.x = static_cast<float>(mouse.GetPositionX());
 	mouse_position.y = static_cast<float>(mouse.GetPositionY());
 
-	bool is_x_inside = (mouse_position.x >= sprite_left) && (mouse_position.x < sprite_left + sprite_width);
-	bool is_y_inside = (mouse_position.y >= sprite_top) && (mouse_position.y < sprite_top + sprite_height);
-
-	bool is_mouse_over_sprite = is_x_inside && is_y_inside;
+	bool is_mouse_over_sprite = Collision::IntersectPosSquare(
+		mouse_position,
+		{ position.x+150,position.y+350},
+		{ 300 ,100 });
 
 	if (mouse.GetButtonDown() && Mouse::BTN_LEFT && is_mouse_over_sprite)
 	{
