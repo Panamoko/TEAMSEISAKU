@@ -83,10 +83,32 @@ void Cannon::Update(float elapsedTime)
                 DirectX::XMFLOAT3 launch_direction;
                 DirectX::XMStoreFloat3(&launch_direction, launch_direction_vec);
 
+                float offset_distance = 4.0f;
+
+                //大砲の位置と発射方向を XMVECTOR にロード
+                DirectX::XMVECTOR current_position_vec = DirectX::XMLoadFloat3(&position);
+                current_position_vec = DirectX::XMVector3Normalize(current_position_vec);
+
+                //発射方向ベクトルにオフセット距離を掛ける
+                DirectX::XMVECTOR offset_vector = DirectX::XMVectorScale(launch_direction_vec, offset_distance);
+
+                //大砲の位置 + オフセットベクトル = 新しい発射位置
+                DirectX::XMVECTOR launceh_position_vec = DirectX::XMVectorAdd(current_position_vec, offset_vector);
+
+                //XMFLOAT3 に格納
+                DirectX::XMFLOAT3 launch_position;
+                DirectX::XMStoreFloat3(&launch_position, launceh_position_vec);
+
+                launch_position = {
+                    launch_position.x + position.x,
+                    launch_position.y + position.y,
+                    launch_position.z + position.z
+                };
+
                 //ProjectileStraiteのインスタンスを生成
                 ProjectileStraite* stratite = new ProjectileStraite(&projectileManager);
 
-                stratite->Launch(launch_direction, { position.x + 3.0f,position.y,position.z + 3.0f });
+                stratite->Launch(launch_direction, { launch_position.x,launch_position.y + 1.0f,launch_position.z });
 
                 attac_timer = 0.0f;
             }
