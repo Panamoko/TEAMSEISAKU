@@ -87,8 +87,7 @@ void SceneTitle::Update(float elapsedTime)
 	if (mouse.GetButtonDown() && Mouse::BTN_LEFT && is_mouse_over_sprite)
 	{
 		scene_name = "scene_play";
-		scene->SetSceneName(scene_name);
-		SceneManager::Instance().ChangeScene(new SceneLoading(new SceneGame()));
+		SceneManager::Instance().ChangeScene(new SceneLoading(new SceneGame(scene_name)));
 	}
 
 }

@@ -59,7 +59,7 @@ void ChangeSceneSytem::Update(float elapsedTime)
 	{
 		std::string scene_name = "scene_tutorial";
 
-		SceneManager::Instance().ChangeScene(new SceneLoading(new SceneGame()));
+		SceneManager::Instance().ChangeScene(new SceneLoading(new SceneGame(scene_name)));
 	}
 }
 
