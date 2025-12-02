@@ -15,7 +15,7 @@ public:
 	// •`‰æˆ—
 	void Render(const RenderContext& rc, ModelRenderer* renderer);
 
-	void Turn(float elapsedTime, DirectX::XMFLOAT3 player_position);//‰ñ“]ˆ—
+	void Turn(float elapsedTime, float vx, float vz, float speed);//‰ñ“]ˆ—
 
 	//ƒfƒoƒbƒO•`‰æ
 	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) override;
