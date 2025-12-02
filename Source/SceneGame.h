@@ -52,6 +52,9 @@ public:
 	static float GetTimeScale() { return s_timeScale; }
 
 private:
+
+	void RenderPiP(ID3D11DeviceContext* dc);
+
 	// Šù‘¶‚Ì”z—ñ‚É‰Á‚¦‚Ä’Ç‰Á
 	std::vector<std::unique_ptr<AllySlimeMelee>> alliesMelee;
 

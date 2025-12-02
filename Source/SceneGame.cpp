@@ -265,50 +265,17 @@ void SceneGame::Render()
 {
 	Graphics& graphics = Graphics::Instance();
 	ID3D11DeviceContext* dc = graphics.GetDeviceContext();
-	ShapeRenderer* shapeRenderer = graphics.GetShapeRenderer();
 	ModelRenderer* modelRenderer = graphics.GetModelRenderer();
 	Camera& camera = Camera::Instance();
+	ShapeRenderer* shapeRenderer = graphics.GetShapeRenderer(); // デバッグ描画用
 
 	game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), modelRenderer);
 
 	// ---------------------------------------------------
 	// 1. PiP画面（UIのみ）の描画
 	// ---------------------------------------------------
-	if (pipRenderTarget)
-	{
-		// レンダーターゲット有効化
-			pipRenderTarget->Clear(dc, 0.2f, 0.2f, 0.2f, 1.0f);
-		pipRenderTarget->Activate(dc);
-
-		RenderContext rc;
-		rc.deviceContext = dc;
-		rc.lightDirection = { 0.0f, -1.0f, 0.0f };
-		rc.renderState = graphics.GetRenderState();
-
-		// ★変更: 縦並び & 大きく表示
-		// PiPのテクスチャ自体は1280x720あり、それを小さなウィンドウに縮小表示しています。
-		// そのため、ここで「128.0f」など大きく描かないと、Window内では豆粒みたいになってしまいます。
-
-		float iconSize = 128.0f; // かなり大きく設定
-		float padding = 12.0f;   // アイコン同士の間隔
-		float startX = 20.0f;    // 左端の余白
-		float startY = 20.0f;    // 上端の余白
-
-		// ※もし人数が増えてはみ出す場合は、自動計算するロジックに変えると安全です
-		// if (players.size() > 0) iconSize = (720.0f - startY * 2) / players.size() - padding;
-
-		for (size_t i = 0; i < players.size(); ++i) {
-			if (players[i]) {
-				float currentY = startY + static_cast<float>(i) * (iconSize + padding);
-
-				// 第4引数にサイズを渡す
-				players[i]->RenderUI(rc, startX, currentY, iconSize);
-			}
-		}
-
-		// レンダーターゲット解除
-		pipRenderTarget->Deactivate(dc);
-	}
+	// ★変更: 関数呼び出しだけになりスッキリします
+	RenderPiP(dc);
 
 	// ---------------------------------------------------
 	// 2. メイン画面の描画
@@ -321,16 +288,19 @@ void SceneGame::Render()
 	rc.renderState = graphics.GetRenderState();
 	rc.view = camera.GetView();
 	rc.projection = camera.GetProjection();
-
+	game_editor.render(objects, sprites2d, models, modelRenderer);
 	modelRenderer->BeginFrame(rc);
 
 	// 3Dモデル描画
 	{
 		StageManager::Instance().Render(rc, modelRenderer);
 		for (auto& up : players) up->Render(rc, modelRenderer);
+
+		// 味方スライム描画
 		for (auto& a : alliesStraight) a->Render(rc, modelRenderer);
-		for (auto& a : alliesHoming)  a->Render(rc, modelRenderer);
-		for (auto& a : alliesMelee)   a->Render(rc, modelRenderer);
+		for (auto& a : alliesHoming)   a->Render(rc, modelRenderer);
+		for (auto& a : alliesMelee)    a->Render(rc, modelRenderer);
+
 		EnemyManager::Instance().Render(rc, modelRenderer);
 		GimmicManager::Instance().Render(rc, modelRenderer);
 	}
@@ -342,7 +312,7 @@ void SceneGame::Render()
 		// 必要に応じて他のデバッグ描画を追加
 	}
 
-	// 2Dスプライト描画
+	// 2Dスプライト描画 (PiPウィンドウ自体の描画含む)
 	{
 		for (const auto& game_sprite : this->sprites2d)
 		{
@@ -352,41 +322,29 @@ void SceneGame::Render()
 		// PiPウィンドウ（左側・スライド式）の描画
 		if (pipFrameSprite && pipRenderTarget)
 		{
+			// ... (ここはウィンドウ枠と、RenderPiPで作ったテクスチャを表示する処理なので残す) ...
+			// ※ 長くなるようならここも `RenderPiPWindow(rc)` のように関数化できます
+
 			float pipW = 400.0f;
 			float pipH = 225.0f;
-			float tabW = 60.0f; // 画像の矢印部分の幅に合わせて調整
+			float tabW = 60.0f;
 
-			// 閉じてるときは左に隠す（X座標をマイナスに）
-			// isPipExpanded が true なら 0.0f (表示)、false なら隠れる位置
 			float pipX = isPipExpanded ? 0.0f : (-pipW + tabW);
 			float pipY = 100.0f;
 
-			// 1. 枠（Window.png）を描画
-			pipFrameSprite->Render(
-				rc,
-				pipX, pipY, 0.0f,
-				pipW, pipH,
-				0.0f,
-				1.0f, 1.0f, 1.0f, 1.0f
-			);
+			// 枠の描画
+			pipFrameSprite->Render(rc, pipX, pipY, 0.0f, pipW, pipH, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 
-			// 2. 中身（RenderTarget映像）を描画
-			// 枠線と矢印（右側）を避けて描画エリアを計算
+			// 中身（RenderPiPで描いた映像）の描画
 			float margin = 10.0f;
-			// 画像の右側にある矢印タブの上に映像が被らないように、右余白を大きく取る
 			float marginRight = tabW + margin;
 
-			float contentX = pipX + margin;
-			float contentY = pipY + margin;
-			float contentW = pipW - (margin + marginRight);
-			float contentH = pipH - (margin * 2.0f);
-
-			// RenderTextureを使って描画（関数名の競合回避版）
+			// RenderTextureを使って描画
 			pipFrameSprite->RenderTexture(
 				rc,
 				pipRenderTarget->GetSRV(),
-				contentX, contentY,
-				contentW, contentH
+				pipX + margin, pipY + margin,
+				pipW - (margin + marginRight), pipH - (margin * 2.0f)
 			);
 		}
 	}
@@ -451,5 +409,69 @@ int SceneGame::CountAlliesGlobal() const
 	return static_cast<int>(alliesStraight.size() + alliesHoming.size() + alliesMelee.size());
 }
 
+void SceneGame::RenderPiP(ID3D11DeviceContext* dc)
+{
+	// レンダーターゲットがなければ何もしない
+	if (!pipRenderTarget) return;
+
+	Graphics& graphics = Graphics::Instance();
+
+	// 1. レンダーターゲット有効化
+	pipRenderTarget->Clear(dc, 0.2f, 0.2f, 0.2f, 1.0f);
+	pipRenderTarget->Activate(dc);
+
+	// 2. 描画コンテキスト設定
+	RenderContext rc;
+	rc.deviceContext = dc;
+	rc.lightDirection = { 0.0f, -1.0f, 0.0f };
+	rc.renderState = graphics.GetRenderState();
+
+	// 3. UI（アイコン）の描画
+	float playerIconSize = 128.0f; // プレイヤー用
+	float allyIconSize = 100.0f;    // 味方用
+	float padding = 12.0f;         // 行間
+	float startX = 20.0f;          // 左余白
+	float startY = 20.0f;          // 上余白
+
+	for (size_t i = 0; i < players.size(); ++i) {
+		Player* pLeader = players[i].get();
+		if (!pLeader) continue;
+
+		// Y座標計算
+		float currentY = startY + static_cast<float>(i) * (playerIconSize + padding);
+
+		// (A) プレイヤー描画
+		pLeader->RenderUI(rc, startX, currentY, playerIconSize);
+
+		// (B) 従属する味方を描画
+		float currentAllyX = startX + playerIconSize + 10.0f;
+		float allyYOffset = (playerIconSize - allyIconSize) * 0.5f; // 高さ合わせ
+
+		// 直進型
+		for (auto& ally : alliesStraight) {
+			if (ally && ally->GetLeader() == pLeader) {
+				ally->RenderUI(rc, currentAllyX, currentY + allyYOffset, allyIconSize);
+				currentAllyX += allyIconSize + 5.0f;
+			}
+		}
+		// 追尾型 (Heal)
+		for (auto& ally : alliesHoming) {
+			if (ally && ally->GetLeader() == pLeader) {
+				ally->RenderUI(rc, currentAllyX, currentY + allyYOffset, allyIconSize);
+				currentAllyX += allyIconSize + 5.0f;
+			}
+		}
+		// 近接型 (Melee)
+		for (auto& ally : alliesMelee) {
+			if (ally && ally->GetLeader() == pLeader) {
+				ally->RenderUI(rc, currentAllyX, currentY + allyYOffset, allyIconSize);
+				currentAllyX += allyIconSize + 5.0f;
+			}
+		}
+	}
+
+	// 4. レンダーターゲット解除（バックバッファに戻す）
+	pipRenderTarget->Deactivate(dc);
+}
 REGISTER_SCENE(SceneGame);
 

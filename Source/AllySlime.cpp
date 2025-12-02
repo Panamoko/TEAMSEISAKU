@@ -13,7 +13,7 @@
 #include "Core.h"                // コア判定用
 #include <cmath>
 #include <cfloat>
-
+#include "SpriteManager.h"
 using namespace DirectX;
 
 // 以降で使いやすいように XMFLOAT3 の演算子を簡単に定義
@@ -52,7 +52,7 @@ AllySlime::AllySlime(int formationIndex)
     scale = { 0.002f, 0.002f, 0.002f }; // モデルの縮尺を調整
     radius = 0.5f;                      // 当たり判定半径（敵と共通）
     height = 1.0f;                      // 当たり判定の高さ
-
+    icon = SpriteManager::Instance().Load("Data/Sprite/SLime_B.png");
     // 初期位置はプレイヤー付近（正確な配置は UpdateAnchor で決定）
     {
         const Player& ref = (leader ? *leader : Player::Instance());
@@ -344,4 +344,18 @@ void AllySlime::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* ren
 
     // 追従アンカーの目印（黄色い球）
     renderer->RenderSphere(rc, anchor, 0.15f, XMFLOAT4(1, 1, 0, 1));
+}
+
+void AllySlime::RenderUI(const RenderContext& rc, float x, float y, float size)
+{
+    if (icon)
+    {
+        icon->Render(
+            rc,
+            x, y, 0.0f,             // 座標
+            size, size,             // サイズ
+            0.0f,                   // 回転
+            1.0f, 1.0f, 1.0f, 1.0f  // 色
+        );
+    }
 }

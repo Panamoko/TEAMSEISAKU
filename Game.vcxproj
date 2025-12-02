@@ -122,7 +122,6 @@
     <ClInclude Include="Source\AllySlime.h" />
     <ClInclude Include="Source\AllySlimeHeal.h" />
     <ClInclude Include="Source\AllySlimeMelee.h" />
-    <ClInclude Include="Source\AllyTargeting.h" />
     <ClInclude Include="Source\Animator.h" />
     <ClInclude Include="Source\AStar.h" />
     <ClInclude Include="Source\Barracks.h" />
@@ -209,7 +208,6 @@
     <ClCompile Include="Source\AllySlime.cpp" />
     <ClCompile Include="Source\AllySlimeHeal.cpp" />
     <ClCompile Include="Source\AllySlimeMelee.cpp" />
-    <ClCompile Include="Source\AllyTargeting.cpp" />
     <ClCompile Include="Source\AStar.cpp" />
     <ClCompile Include="Source\Barracks.cpp" />
     <ClCompile Include="Source\Camera.cpp" />

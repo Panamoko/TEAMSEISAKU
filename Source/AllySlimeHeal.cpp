@@ -32,7 +32,7 @@ AllySlimeHeal::AllySlimeHeal(int formationIndex)
     scale = { 0.002f, 0.002f, 0.002f };
     radius = 0.5f;
     height = 1.0f;
-
+    icon = SpriteManager::Instance().Load("Data/Sprite/SLime_G.png");
     const Player& ref = (leader ? *leader : Player::Instance());
     position = ref.GetPosition();
     UpdateTransform();
@@ -212,4 +212,12 @@ void AllySlimeHeal::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer*
         renderer->RenderCylinder(rc, center, autoHealRange, height, XMFLOAT4(0, 1, 0, 0.2f));
     }
     renderer->RenderSphere(rc, anchor, 0.15f, XMFLOAT4(1, 1, 0, 1));
+}
+
+void AllySlimeHeal::RenderUI(const RenderContext& rc, float x, float y, float size)
+{
+    if (icon)
+    {
+        icon->Render(rc, x, y, 0.0f, size, size, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+    }
 }

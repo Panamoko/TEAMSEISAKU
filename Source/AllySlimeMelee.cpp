@@ -11,7 +11,7 @@
 #include "Yagura.h"
 #include "Barracks.h"
 #include "AllySlime.h"
-
+#include "SpriteManager.h"
 using namespace DirectX;
 
 // ベクトル演算用ヘルパー
@@ -29,7 +29,7 @@ AllySlimeMelee::AllySlimeMelee(int formationIndex) : index(formationIndex)
     scale = { 0.002f, 0.002f, 0.002f };
     radius = 0.6f;
     height = 1.0f;
-
+    icon = SpriteManager::Instance().Load("Data/Sprite/SLime_R.png");
     // 攻撃用として設定
     type = Type::PlayerAttack;
 
@@ -363,5 +363,12 @@ void AllySlimeMelee::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer
     // 状態可視化
     if (state == State::Attack) {
         renderer->RenderSphere(rc, position, attackRange, { 1, 0, 0, 0.5f });
+    }
+}
+void AllySlimeMelee::RenderUI(const RenderContext& rc, float x, float y, float size)
+{
+    if (icon)
+    {
+        icon->Render(rc, x, y, 0.0f, size, size, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
     }
 }
