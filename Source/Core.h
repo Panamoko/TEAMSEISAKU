@@ -26,7 +26,6 @@ private:
 
 	Animator animator;
 	CylinderCollider* cylinder;
-	float hp;
 
 	// 死亡演出用メンバ変数
 	bool isDying = false;           // 死亡演出中フラグ

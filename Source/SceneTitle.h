@@ -3,6 +3,7 @@
 #include "System/Sprite.h"
 #include "Scene.h"
 #include "Editor.h"
+#include "ChangeSceneSytem.h"
 
 // タイトルシーン
 class SceneTitle : public Scene
@@ -41,4 +42,5 @@ private:
 	float alpha_timer = 0.0f;     // α値計算用のタイマー
 	float blink_interval = 0.5f;  // 点滅間隔（例: 0.5秒ごとに切り替え）
 	DirectX::XMFLOAT4 render_color = { 1.0f, 1.0f, 1.0f, 1.0f }; // 描画色
+	std::unique_ptr<ChangeSceneSytem> change_scene;
 };

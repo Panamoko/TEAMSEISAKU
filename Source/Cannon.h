@@ -28,7 +28,6 @@ public:
 	float GetHP() const { return hp; }
 
 private:
-	float hp;					//‘Ï‹v“x
 	float power;				//UŒ‚—Í
 	float attac_interval;		//UŒ‚•p“x
 	float attac_timer;			//ÄUŒ‚ŠÔ

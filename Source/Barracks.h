@@ -27,7 +27,6 @@ private:
 	float spawn_timer;						//経過時間
 	int max_enemy_count = 5;			//最大出現数
 	int current_enemy_count;				//現在の出現数
-	float hp;								//耐久度
 
 	std::shared_ptr<EnemySlime> enemys;		//敵
 	std::vector<std::shared_ptr<Enemy>> spawned_enemies;	//兵舎用の敵管理リスト
