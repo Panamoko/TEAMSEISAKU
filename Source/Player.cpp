@@ -51,6 +51,77 @@ void Player::UnregisterPlayer(Player* player)
 const std::vector<Player*>& Player::GetAllPlayers()
 {
 	return sAllPlayers;
+}static bool HasLineOfSight(const GridMap* map, const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end)
+{
+	if (!map) return true; // マップ情報がなければ「通っている」とみなす
+
+	// ワールド座標をグリッド座標(セル)へ変換
+	auto s = map->WorldToCell(start.x, start.z);
+	auto e = map->WorldToCell(end.x, end.z);
+
+	int x0 = s.first;
+	int y0 = s.second;
+	int x1 = e.first;
+	int y1 = e.second;
+
+	int dx = abs(x1 - x0);
+	int dy = abs(y1 - y0);
+	int sx = (x0 < x1) ? 1 : -1;
+	int sy = (y0 < y1) ? 1 : -1;
+	int err = dx - dy;
+
+	// 直線上のセルを走査して障害物がないか調べる
+	while (true)
+	{
+		if (map->IsBlocked(x0, y0)) return false; // 障害物があれば false
+
+		if (x0 == x1 && y0 == y1) break;
+
+		int e2 = 2 * err;
+		if (e2 > -dy)
+		{
+			err -= dy;
+			x0 += sx;
+		}
+		if (e2 < dx)
+		{
+			err += dx;
+			y0 += sy;
+		}
+	}
+	return true; // 障害物がなければ true
+}
+
+// -------------------------------------------------------------------------
+// 最寄りの敵を取得（XZ 平面距離）※壁越し判定を追加
+// -------------------------------------------------------------------------
+std::shared_ptr<Enemy> Player::FindNearestEnemy() const
+{
+	int count = EnemyManager::Instance().GetEnemyCount();
+	std::shared_ptr<Enemy> nearest = nullptr;
+	float bestDist2 = FLT_MAX;
+
+	for (int i = 0; i < count; ++i) {
+		std::shared_ptr<Enemy> e = EnemyManager::Instance().GetEnemy(i);
+		if (!e || e->IsDestroyRequested()) continue;
+
+		// ★修正ポイント: 壁越しチェック
+		// グリッドマップがあり、かつ「視線が通らない（壁がある）」敵は無視する
+		if (gridMap && !HasLineOfSight(gridMap, position, e->GetPosition()))
+		{
+			continue;
+		}
+
+		const auto ep = e->GetPosition();
+		float dx = ep.x - position.x;
+		float dz = ep.z - position.z;
+		float d2 = dx * dx + dz * dz;
+		if (d2 < bestDist2) {
+			bestDist2 = d2;
+			nearest = e;
+		}
+	}
+	return nearest;
 }
 
 //初期化
@@ -171,6 +242,28 @@ void Player::Update(float elapsedTime)
 // ★追加: コアへ向かう処理
 void Player::UpdateMoveToCore(float elapsedTime)
 {
+	std::shared_ptr<Enemy> target = FindNearestEnemy(); // 最寄りの敵を取得
+	if (target)
+	{
+		// 敵との距離を計算 (XZ平面)
+		float ex = target->GetPosition().x - position.x;
+		float ez = target->GetPosition().z - position.z;
+		float distSq = ex * ex + ez * ez;
+
+		// 自分の射程 (autoAttackRange) 内に敵がいる場合
+		// ※ ここでは「敵を感知して止まる距離」として autoAttackRange を利用
+		if (distSq <= autoAttackRange * autoAttackRange)
+		{
+			// ★変更点: 敵の方を向く処理 (Turn) を削除しました。
+			// これにより、Player自身は敵を無視して（向きを変えずに）立ち止まります。
+
+			// 移動を停止する
+			Move(elapsedTime, 0, 0, 0);
+
+			// コアへの移動処理を行わずにここで終了
+			return;
+		}
+	}
 	Core* core = Core::Instance();
 	// コアが存在しない、またはHPがない場合は動かない
 	if (!core || core->GetHP() <= 0.0f) {
@@ -723,55 +816,6 @@ void Player::AutoAttackUpdate(float elapsedTime)
 bool Player::IsActive() const
 {
 	return sActive == this;
-}
-
-// 最寄りの敵を取得（XZ 平面距離）
-std::shared_ptr<Enemy> Player::FindNearestEnemy() const
-{
-	int count = EnemyManager::Instance().GetEnemyCount();
-	std::shared_ptr<Enemy> nearest = nullptr;
-	float bestDist2 = FLT_MAX;
-
-	for (int i = 0; i < count; ++i) {
-		std::shared_ptr<Enemy> e = EnemyManager::Instance().GetEnemy(i);
-		if (!e || e->IsDestroyRequested()) continue;
-		if (!e) continue;
-		const auto ep = e->GetPosition();
-		float dx = ep.x - position.x;
-		float dz = ep.z - position.z;
-		float d2 = dx * dx + dz * dz;
-		if (d2 < bestDist2) {
-			bestDist2 = d2;
-			nearest = e;
-		}
-	}
-	return nearest;
-}
-
-// 非アクティブ時の自動移動（敵に向かい、近づきすぎたら停止）
-void Player::UpdateAutoMoveToEnemy(float dt)
-{
-	std::shared_ptr<Enemy> target = FindNearestEnemy();
-	if (!target) return;
-
-	const auto tp = target->GetPosition();
-	float vx = tp.x - position.x;
-	float vz = tp.z - position.z;
-	float dist = std::sqrt(vx * vx + vz * vz);
-	if (dist < 1e-3f) return;
-
-	vx /= dist; vz /= dist;
-
-	// 常に敵の方向へ向く
-	Turn(dt, vx, vz, turnSpeed * autoMoveTurnRate);
-
-	// 一定距離より遠ければ前進、近ければ止まる
-	if (dist > autoMoveStopDistance) {
-		Move(dt, vx, vz, moveSpeed * autoMoveSpeedRate);
-	}
-	else {
-		Move(dt, 0.0f, 0.0f, 0.0f);
-	}
 }
 
 void Player::OnCollision(GameObject* object)
