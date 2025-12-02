@@ -55,8 +55,6 @@ void Yagura::Update(float elapsedTime)
 	//OBBİ’è
 	obb->center = position;
 	obb->center.x -= 0.1f;
-
-
 }
 
 //Õ“Ëˆ—
