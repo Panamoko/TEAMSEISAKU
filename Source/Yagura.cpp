@@ -50,7 +50,7 @@ void Yagura::Update(float elapsedTime)
 	// ---- OBBサイズ設定 ----
 	// モデルサイズに合わせたハーフサイズを設定
 	// (モデル単位を1とした場合の半分の大きさ)
-	obb->half = DirectX::XMFLOAT3(20.0f * scale.x, 50.0f * scale.y, 20.0f * scale.z);
+	obb->half = DirectX::XMFLOAT3(20.0f * scale.x, 70.0f * scale.y, 20.0f * scale.z);
 
 	//OBB設定
 	obb->center = position;

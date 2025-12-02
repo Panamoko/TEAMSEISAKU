@@ -310,6 +310,7 @@ void SceneGame::Render()
 		for (auto& up : players) up->RenderDebugPrimitive(rc, shapeRenderer);
 		EnemyManager::Instance().RenderDebugPrimitive(rc, shapeRenderer);
 		// 必要に応じて他のデバッグ描画を追加
+		GimmicManager::Instance().RenderDebugPrimitive(rc, shapeRenderer);
 	}
 
 	// 2Dスプライト描画 (PiPウィンドウ自体の描画含む)
