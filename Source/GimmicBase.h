@@ -29,8 +29,11 @@ public:
 	void SetActive(bool active) { isActive = active; }
 	void SetTriggered(bool triggered) { isTriggered = triggered; }
 
+	void UpdateInvicible(float elapsedTime);
+
 protected:
 	bool isActive = true;//ギミックの状態
 	bool isTriggered = false;//ギミックの発動状態
+	float invincible_timer;//無敵時間
 };
 

@@ -41,6 +41,8 @@ void Barracks::Update(float elapsedTime)
         return;
     }
 
+    UpdateInvicible(elapsedTime);
+
     // ★変更: 先に兵舎の向きとサイズを計算して、スポーン位置を前方にずらす
 
     // 1. 兵舎の回転角度(Y軸)から前方ベクトルを計算
@@ -105,6 +107,18 @@ void Barracks::Update(float elapsedTime)
     obb->center.z += 0.5f; // ※モデルの原点ズレ補正があればそのまま
 }
 
+void Barracks::Render(const RenderContext& rc, ModelRenderer* renderer)
+{
+    if (invincible_timer <= 0.0f)
+    {
+        renderer->Render(rc, transform, model, ShaderId::Lambert);
+    }
+    else
+    {
+        renderer->Render(rc, transform, model, ShaderId::Lambert, { 1.0f,0.0f,0.0f,1.0f });
+    }
+}
+
 //デバッグ表示
 void Barracks::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer)
 {
@@ -126,7 +140,11 @@ void Barracks::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* rend
 //衝突処理
 void Barracks::OnCollision(GameObject* object)
 {
-	if (object->type == Type::PlayerAttack)hp -= 2.5f;
+    if (object->type == Type::PlayerAttack && invincible_timer <= 0.0f)
+    {
+        hp -= 2.5f;
+        invincible_timer = 0.1f;
+    }
 }
 
 bool Barracks::OnImGui()

@@ -45,8 +45,11 @@ void Gimmic_BreakWall::OnCollision(GameObject* objects)
 {
     if (isBroken || isRespawning) return;
 
-    if (objects->type == Type::PlayerAttack)
+    if (objects->type == Type::PlayerAttack && invincible_timer <= 0.0f)
+    {
         hp--;
+        invincible_timer = 0.1f;
+    }
 
     if (hp <= 0.0f)
     {
@@ -72,6 +75,8 @@ void Gimmic_BreakWall::OnCollision(GameObject* objects)
 void Gimmic_BreakWall::Update(float elapsedTime)
 {
     if (!collider || !model) return;
+
+    UpdateInvicible(elapsedTime);
 
     if (isRespawning)
     {
@@ -212,7 +217,14 @@ void Gimmic_BreakWall::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
     if (isBroken) return;
 
-    GameObject::Render(rc, renderer);
+    if (invincible_timer <= 0.0f)
+    {
+        GameObject::Render(rc, renderer);
+    }
+    else
+    {
+        renderer->Render(rc, transform, model, ShaderId::Lambert, { 1.0f,0.0f,0.0f,1.0f });
+    }
 }
 
 

@@ -53,6 +53,8 @@ void Core::init()
 
 void Core::Update(float elapsedTime)
 {
+    UpdateInvicible(elapsedTime);
+
     // --- ★死亡演出中の処理 ---
     if (isDying)
     {
@@ -173,7 +175,14 @@ void Core::Update(float elapsedTime)
 
 void Core::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
-	renderer->Render(rc, transform, model, ShaderId::Lambert);
+    if (invincible_timer <= 0.0f)
+    {
+        renderer->Render(rc, transform, model, ShaderId::Lambert);
+    }
+    else
+    {
+        renderer->Render(rc, transform, model, ShaderId::Lambert, { 1.0f,0.0f,0.0f,1.0f });
+    }
 }
 
 
@@ -196,10 +205,11 @@ void Core::OnCollision(GameObject* object)
 {
     if (hp <= 0.0f || isDying) return;
 
-	if (object->type == Type::PlayerAttack)
-	{
-		hp -= 10.0f;
-	}
+    if (object->type == Type::PlayerAttack && invincible_timer <= 0.0f)
+    {
+        hp -= 10.0f;
+        invincible_timer = 0.1f;
+    }
 }
 
 bool Core::OnImGui()
