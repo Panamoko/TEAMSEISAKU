@@ -11,7 +11,7 @@
 #include "System/ModelRenderer.h"
 #include "Character.h"          // 一部環境では "character.h" になるため、プロジェクト設定を確認すること
 #include "ProjectileManager.h"  // 味方が放つ弾を管理するマネージャ
-
+#include "System/Sprite.h"
 class Player; // 前方宣言
 
 class AllySlime : public Character
@@ -39,6 +39,8 @@ public:
     static void RegisterAlly(Character* ally);
     static void UnregisterAlly(Character* ally);
     static const std::vector<Character*>& GetAllAllies();
+
+    void RenderUI(const RenderContext& rc, float x, float y, float size);
 
 private:
     // 内部処理: 隊列アンカーや自動攻撃、衝突判定を更新
@@ -70,6 +72,9 @@ private:
 
     // 追従対象のプレイヤー（null の場合は Player::Instance() を利用）
     Player* leader = nullptr;
+
+	// 味方スライムアイコン（UI描画用）
+    Sprite* icon = nullptr;
 
     static std::vector<Character*> s_allies;
 };

@@ -2,7 +2,7 @@
 #include "Character.h"
 #include "System/Model.h"
 #include "System/ModelRenderer.h"
-
+#include "System/Sprite.h"
 class Player;
 class Enemy;
 class GimmicBase;
@@ -22,7 +22,7 @@ public:
     void SetIndex(int idx) { index = idx; }
     void SetLeader(Player* p) { leader = p; }
     Player* GetLeader() const { return leader; }
-
+    void RenderUI(const RenderContext& rc, float x, float y, float size);
 private:
     // èÛë‘ä«óù
     enum class State {
@@ -66,4 +66,5 @@ private:
     DirectX::XMFLOAT3 anchor = { 0,0,0 };
     Model* slimeModel = nullptr;
     Player* leader = nullptr;
+    Sprite* icon = nullptr;
 };

@@ -10,7 +10,7 @@
 #include "System/ModelRenderer.h"
 #include "Character.h"
 #include "ProjectileManager.h"
-
+#include "System/Sprite.h"
 class Player;
 // class Enemy; // 不要になったため削除
 struct RenderContext;
@@ -34,6 +34,8 @@ public:
 
     // 回復行動の更新（必要に応じてON/OFFできるよう公開）
     void UpdateHealing(float elapsedTime);
+
+    void RenderUI(const RenderContext& rc, float x, float y, float size);
 
 private:
     void UpdateAnchor();
@@ -61,4 +63,6 @@ private:
 
     // ===== 編隊リーダー =====
     Player* leader = nullptr; // null の場合は Player::Instance() を参照
+
+    Sprite* icon = nullptr;
 };

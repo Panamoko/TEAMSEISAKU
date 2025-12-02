@@ -267,9 +267,6 @@
     <ClInclude Include="Source\StageManager.h">
       <Filter>Source\Stage</Filter>
     </ClInclude>
-    <ClInclude Include="Source\AllyTargeting.h">
-      <Filter>Source\Character\Player</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Core.h">
       <Filter>Source\Gimmic</Filter>
     </ClInclude>
@@ -340,6 +337,7 @@
     <ClInclude Include="Source\Cannon.h">
       <Filter>Source\Gimmic</Filter>
     </ClInclude>
+    <ClInclude Include="Source\System\RenderTarget.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -498,9 +496,6 @@
     <ClCompile Include="Source\StageManager.cpp">
       <Filter>Source\Stage</Filter>
     </ClCompile>
-    <ClCompile Include="Source\AllyTargeting.cpp">
-      <Filter>Source\Character\Player</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Core.cpp">
       <Filter>Source\Gimmic</Filter>
     </ClCompile>
@@ -569,6 +564,9 @@
     </ClCompile>
     <ClCompile Include="Source\Cannon.cpp">
       <Filter>Source\Gimmic</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\System\RenderTarget.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
