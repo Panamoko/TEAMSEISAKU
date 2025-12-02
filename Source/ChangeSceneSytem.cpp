@@ -14,13 +14,14 @@ ChangeSceneSytem::ChangeSceneSytem()
 {
 	sprite_vector[0] = SpriteManager::Instance().Load("Data/Sprite/Tutorial.png");
 	sprite_vector[1] = SpriteManager::Instance().Load("Data/Sprite/Stage01.png");
-	position.x = 100.0f;
-	position.y = 100.0f;
-	size = { 256.0f,128.0f };
+	position.x = 400.0f;
+	position.y = 250.0f;
+	size = { 512.0f,700.0f };
 	sprite_width = size.x;
 	sprite_height = size.y;
 	float sprite_left = position.x;
 	float sprite_top = position.y;
+	color = { 1.0f,1.0f,1.0f,1.0f };
 }
 
 ChangeSceneSytem::~ChangeSceneSytem()
@@ -29,6 +30,21 @@ ChangeSceneSytem::~ChangeSceneSytem()
 
 void ChangeSceneSytem::Update(float elapsedTime)
 {
+	alpha_timer += elapsedTime;
+
+	if (std::fmod(alpha_timer, blink_interval * 2.0f) < blink_interval)
+	{
+		// ONの状態（不透明）
+		color.w = 1.0f;
+	}
+	else
+	{
+		// OFFの状態（透明、または半透明）
+		color.w = 0.0f; // 完全に透明にして見えなくする
+		// 半透明でチカチカさせたい場合は 0.5f などに設定
+	}
+
+
 	Mouse& mouse = Input::Instance().GetMouse();
 
 	mouse_position.x = static_cast<float>(mouse.GetPositionX());
@@ -41,7 +57,9 @@ void ChangeSceneSytem::Update(float elapsedTime)
 
 	if (mouse.GetButtonDown() && Mouse::BTN_LEFT && is_mouse_over_sprite)
 	{
-		SceneManager::Instance().ChangeScene(new SceneLoading(new SceneGame));
+		std::string scene_name = "scene_tutorial";
+
+		SceneManager::Instance().ChangeScene(new SceneLoading(new SceneGame()));
 	}
 }
 

@@ -46,4 +46,5 @@ protected:
 	//各シーン専用のオブジェクト
 	std::vector<std::shared_ptr<GameObject>> objects;
 	std::vector<std::shared_ptr<GameObject>> sprites;
+	Scene* scene;
 };

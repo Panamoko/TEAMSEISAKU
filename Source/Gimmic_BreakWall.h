@@ -27,7 +27,6 @@ public:
 
 private:
 	bool isBroken = false; // 壊れているかどうか
-	float hp = 2.0f; // 耐久値
 
 	float maxHp = 2.0f; // ���|�b�v���̂��߂ɍő�HP���L��
 	float respawnTime = 5.0f; // リスポーンするまでの時間 (5秒)
