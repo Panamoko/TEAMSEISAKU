@@ -36,10 +36,11 @@ public:
     void UpdateHealing(float elapsedTime);
 
     void RenderUI(const RenderContext& rc, float x, float y, float size);
+    void OnDead() override;
+
 
 private:
     void UpdateAnchor();
-    void CollisionProjectilesVsPlayers(); // プレイヤーとの判定に変更
 
 private:
     // ===== 編隊・追従パラメータ =====
@@ -65,4 +66,5 @@ private:
     Player* leader = nullptr; // null の場合は Player::Instance() を参照
 
     Sprite* icon = nullptr;
+    Sprite* hpBarSprite = nullptr;
 };

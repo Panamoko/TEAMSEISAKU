@@ -7,7 +7,7 @@
 #include "GameObject.h"
 
 //キャラクター
-class Character:public GameObject
+class Character :public GameObject
 {
 public:
 	Character() {};
@@ -51,9 +51,9 @@ public:
 
 	// HP取得
 	int GetHealth() const { return health; }
-	
-	// 最大HP取得（現在は初期値5で固定のようなので、適宜定数か変数を返します）
-	int GetMaxHealth() const { return 5; }
+
+	// 固定値5ではなく、変数を返すように変更
+	int GetMaxHealth() const { return maxHealth; }
 
 	// 衝突処理
 	void OnCollision(GameObject* object) override;
@@ -132,6 +132,7 @@ protected:
 	bool isGround = false;
 	float					height = 2.0f;
 	int						health = 5;
+	int						maxHealth = 5;
 	float					invincibleTimer = 0.0f;
 	float					friction = 15.0f;
 	float					acceleration = 50.0f;
