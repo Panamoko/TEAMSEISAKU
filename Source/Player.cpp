@@ -147,10 +147,10 @@ void Player::Update(float elapsedTime)
 	projectileManager.Update(elapsedTime);
 
 	//プレイヤーと敵との衝突処理
-	CollisionPlayerVsEnemies();
+	//CollisionPlayerVsEnemies();
 
 	//プレイヤーと柵との衝突処理
-	CollisionPlayerVsFences();
+	//CollisionPlayerVsFences();
 
 	// オブジェクト行列を更新
 	UpdateTransform();

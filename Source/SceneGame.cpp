@@ -269,6 +269,8 @@ void SceneGame::Render()
 	ModelRenderer* modelRenderer = graphics.GetModelRenderer();
 	Camera& camera = Camera::Instance();
 
+	game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), modelRenderer);
+
 	// ---------------------------------------------------
 	// 1. PiP‰æ–ÊiUI‚Ì‚İj‚Ì•`‰æ
 	// ---------------------------------------------------
