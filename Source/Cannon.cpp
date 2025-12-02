@@ -37,6 +37,8 @@ void Cannon::Update(float elapsedTime)
 
     UpdateInvicible(elapsedTime);
 
+    UpdateTransform();
+
     cylinder->center = position;
 	attac_timer += elapsedTime;
     if (attac_timer >= attac_interval)attac_timer = attac_interval;
