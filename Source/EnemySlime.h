@@ -10,127 +10,107 @@
 
 class Player;
 
-// スライム
+// スライム（敵基底クラスとしても機能）
 class EnemySlime : public Enemy
 {
 public:
+	// --- コンストラクタ / デストラクタ ---
 	EnemySlime(const char* modelPath = "Data/Model/chara/nico.mdl");
 	~EnemySlime() override;
 
-	// 更新処理
+	// --- 基本更新・描画 ---
 	void Update(float elapsedTime) override;
-
-	// 描画処理
 	void Render(const RenderContext& rc, ModelRenderer* renderer) override;
+	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) override;
 
-	//デバッグプリミティブ描画
-	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer)override;
-
-	//縄張り設定
+	// --- 外部設定 ---
+	// 縄張りの設定
 	void SetTerritory(const DirectX::XMFLOAT3& origin, float range);
-
-	//死亡したときに呼ばれる
-	void OnDead() override;
-
-	//衝突処理
-	void OnCollision(GameObject* object) override;
-
-	// グリッドマップをセットする関数
+	// マップ情報のセット
 	void SetGridMap(const GridMap* map) { gridMap = map; }
 
+	// --- イベントハンドラ ---
+	void OnDead() override;                 // 死亡時
+	void OnCollision(GameObject* object) override; // 衝突時
+
 protected:
-	//ターゲット位置をランダム設定
-	void SetRandomTargerPosition();
+	// ==========================================
+	// AI & 戦略ロジック
+	// ==========================================
 
-	// プレイヤーと味方が多いエリアを計算して目標地点を返す
-	DirectX::XMFLOAT3 GetStrategicTargetPosition();
+	// プレイヤーと味方が多いエリアを計算し、戦略的な目標地点を取得
+	// 戻り値: true=戦略的移動が必要 / false=ランダム移動でOK
+	bool GetStrategicTarget(DirectX::XMFLOAT3& outPos);
 
-	//目標地点へ移動
+	// 経路探索を用いて目標地点へ移動
 	void MoveToTarget(float elapsedTime, float moveSpeedRate, float turnSpeedRate);
 
-	// 分離行動（重なり防止）の計算
+	// 味方同士の分離行動（重なり防止）
 	void ApplySeparationForce(float elapsedTime);
 
-	//徘徊ステートへ偏移
-	virtual void SetWanderState();
-
-	//徘徊ステート更新処理
-	void UpdateWanderState(float elapsedTime);
-
-	//待機ステートへ偏移
-	void SetIdleState();
-
-	//待機ステート更新処理
-	virtual void UpdateIdleState(float elapsedTime);
-
-	//プレイヤー索敵
+	// ターゲット（プレイヤーや味方）の索敵
 	Character* SearchTarget();
 
-	//攻撃ステートへ偏移
-	virtual void SetAttackState(Character* target);
-
-	//攻撃ステート更新処理
-	virtual void UpdateAttackState(float elapsedTime);
-
-
-
-protected:
-	//状態一覧
+	// ==========================================
+	// ステートマシン (状態遷移)
+	// ==========================================
 	enum class State
 	{
-		//徘徊状態
-		Wander,
-		//待機状態
-		Idle,
-		//攻撃状態
-		Attack
+		Wander, // 徘徊
+		Idle,   // 待機
+		Attack  // 攻撃
 	};
 
+	// 徘徊ステート
+	virtual void SetWanderState();
+	void UpdateWanderState(float elapsedTime);
 
-	//std::vector<std::unique_ptr<Model>> models;
+	// 待機ステート
+	void SetIdleState();
+	virtual void UpdateIdleState(float elapsedTime);
 
-	//Model* model = nullptr;
-	//現在の状態
-	State				state = State::Wander;
-	//目標地点
-	DirectX::XMFLOAT3	targetPosition = { 0,0,0 };
-	//領域範囲
-	DirectX::XMFLOAT3	territoryOrigin = { 0,0,0 };
-	//領域半径
-	float				territoryRange = 10.0f;
-	//移動速度
-	float				moveSpeed = 2.0f;
-	//回転速度
-	float				turnSpeed = DirectX::XMConvertToRadians(360);
-	//状態維持時間
-	float				stateTimer = 0.0f;
-	//索敵範囲
-	float				searchRange = 5.0f;
+	// 攻撃ステート
+	virtual void SetAttackState(Character* target);
+	virtual void UpdateAttackState(float elapsedTime);
 
-	bool isAttackFired = false; // 攻撃判定済みフラグ
+protected:
+	// --- パラメータ ---
+	State state = State::Wander;
 
-	// ターゲット中のプレイヤー
-	Character* targetCharacter= nullptr;
+	// 移動・探索関連
+	DirectX::XMFLOAT3 targetPosition = { 0,0,0 }; // 現在の目的地
+	DirectX::XMFLOAT3 territoryOrigin = { 0,0,0 };// 縄張りの中心
+	float territoryRange = 10.0f;                 // 縄張りの半径
+	float searchRange = 5.0f;                     // 索敵半径
 
-	ProjectileManager	projectileManager;
+	// 速度設定
+	float moveSpeed = 2.0f;
+	float turnSpeed = DirectX::XMConvertToRadians(360);
 
+	// タイマー
+	float stateTimer = 0.0f;        // ステート維持用
+	float targetUpdateTimer = 0.0f; // 索敵・思考の間隔用
+
+	// --- コンポーネント・オブジェクト ---
+	ProjectileManager projectileManager;
 	Animator animator;
-
 	AStar aStar;
-	std::vector<std::pair<int, int>> currentPath; // 現在の経路
-	int pathIndex = 0; // 次に向かうノードのインデックス
-	float pathRecalcTimer = 0.0f; // 再計算用タイマー
-	const GridMap* gridMap = nullptr; // マップへの参照
+	const GridMap* gridMap = nullptr;
 
-	// ターゲット検索の更新タイマー
-	float targetUpdateTimer = 0.0f;
+	// 経路探索用
+	std::vector<std::pair<int, int>> currentPath;
+	int pathIndex = 0;
+	float pathRecalcTimer = 0.0f;
+
+	// --- 攻撃制御 ---
+	Character* targetCharacter = nullptr; // ロックオン中の相手
+	bool isAttackFired = false;           // 攻撃モーション中に発射したか
+
 private:
-
+	// 内部リソース
 	editor game_editor;
 	std::vector<std::unique_ptr<GameSprite>> sprites2d;
-
-	Model* slimeModel = nullptr;
-	CylinderCollider* cylinder;
-
+	CylinderCollider* cylinder = nullptr;
 	std::unique_ptr<Model> uniqueModel;
+	// 親クラスの model ポインタは uniqueModel.get() を指す
 };
