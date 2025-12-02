@@ -66,7 +66,7 @@ void Cannon::Update(float elapsedTime)
 
         if (distance <= (attac_territory * attac_territory))
         {
-            //Turn(elapsedTime, player_pos);
+            Turn(elapsedTime, player_pos);
 
             if (attac_timer >= attac_interval)
             {
@@ -138,47 +138,115 @@ void Cannon::Render(const RenderContext& rc, ModelRenderer* renderer)
     projectileManager.Render(rc, renderer);
 }
 
-void Cannon::Turn(float elapsedTime, float vx, float vz, float speed)
+void Cannon::Turn(float elapsedTime, DirectX::XMFLOAT3 player_position)
 {
-    speed *= elapsedTime;
+	//大砲の位置とプレイヤーの位置を取得
+	DirectX::XMVECTOR cannon_pos = DirectX::XMLoadFloat3(&position);
+	DirectX::XMVECTOR player_pos = DirectX::XMLoadFloat3(&player_position);
 
-    // 進行ベクトルがゼロベクトルの場合は処理する必要なし
-    float length = sqrtf(vx * vx + vz * vz);
-    if (length < 0.001f) return;
+	//プレイヤーへの方向ベクトルを計算
+	DirectX::XMVECTOR direction_to_player = DirectX::XMVectorSubtract(player_pos, cannon_pos);
 
-    // 進行ベクトルを単位ベクトル化
-    vx /= length;
-    vz /= length;
+	//方向ベクトルを正規化
+	direction_to_player = DirectX::XMVector3Normalize(direction_to_player);
 
-    // 自身の回転値から前方向を求める
-    float frontX = sinf(angle.y);
-    float frontZ = cosf(angle.y);
+	//目標角度の計算
+	float direction_x = DirectX::XMVectorGetX(direction_to_player);
+	float direction_y = DirectX::XMVectorGetY(direction_to_player);
+	float direction_z = DirectX::XMVectorGetZ(direction_to_player);
 
-    //--- ガタつきに対応させる ---
+    //目標 X 軸回転（Pitch: 垂直方向の回転）の計算
+    //水平方向の距離 (X-Z平面の長さ)
+    float horizontal_distance = std::sqrt(direction_x * direction_x + direction_z * direction_z);
 
-        // 回転角を求めるため、２つの単位ベクトルの内積を計算する
-    float dot = (frontX * vx) + (frontZ * vz);	//内積：フロントが基準
+    //Y成分（高さ）と水平距離から Pitch（垂直角度）を計算
+    float target_pitch = std::atan2(direction_y, horizontal_distance);
 
-    // 内積値は-1.0～1.0で表現されており、２つの単位ベクトルの角度が
-    // 小さいほど1.0に近づくという性質を利用して回転速度を調整する
-    float rot = 1.0f - dot;	//補正値
-    //rot = 1.0f - dot;	//ImGuiで表示するためにメンバー変数とした
-    if (rot > speed) rot = speed;	//回転速度よりも、rotが大きい場合は、回転速度を使う
+    //目標 Z 軸回転（Yaw: 水平方向の回転）の計算
+    //Z軸（前方）と X軸（横）から水平角度を計算
+    //angle.z を水平回転 (Yaw) に割り当てます
+    float target_yaw_z = std::atan2(direction_x, direction_z);
 
-    // 左右判定を行うために２つの単位ベクトルの外積を計算する
-    float cross = (frontZ * vx) - (frontX * vz);
+    //回転処理 (X軸とZ軸のみ)
+    float max_rotation = speed * elapsedTime;
 
-    // 2Dの外積値が正の場合か負の場合によって左右判定が行える
-    // 左右判定を行うことによって左右回転を選択する
-    if (cross < 0.0f)
+    //Y軸回転 (angle.y - 水平方向 Yaw) の回転処理
+
+    float current_yaw_y = angle.y;
+    float yaw_y_difference = target_yaw_z - current_yaw_y;
+
+    //角度差を -PI から PI の間に収める
+    while (yaw_y_difference > XM_PI)
     {
-        //angle.y -= speed;
-        angle.y -= rot;
+        yaw_y_difference -= XM_2PI;
+    }
+    while (yaw_y_difference < -XM_PI)
+    {
+        yaw_y_difference += XM_2PI;
+    }
+
+    //実際に回転させる角度を決定
+    float yaw_y_rotation_amount;
+    if (std::abs(yaw_y_difference) > max_rotation)
+    {
+        yaw_y_rotation_amount = (yaw_y_difference > 0) ? max_rotation : -max_rotation;
     }
     else
     {
-        //angle.y += speed;
-        angle.y += rot;
+        yaw_y_rotation_amount = yaw_y_difference;
+    }
+
+    //Y軸の角度を更新
+    angle.y += yaw_y_rotation_amount;
+
+    //Y軸の角度を -PI から PI の間にクランプ
+    while (angle.y > XM_PI)
+    {
+        angle.y -= XM_2PI;
+    }
+    while (angle.y < -XM_PI)
+    {
+        angle.y += XM_2PI;
+    }
+
+
+    //X 軸回転 (angle.x - 垂直方向) の回転処理
+
+    float current_pitch = angle.x;
+    float pitch_difference = target_pitch - current_pitch;
+
+    //角度差を -PI から PI の間に収める (最短経路で回転)
+    while (pitch_difference > DirectX::XM_PI)
+    {
+        pitch_difference -= DirectX::XM_2PI;
+    }
+    while (pitch_difference < -DirectX::XM_PI)
+    {
+        pitch_difference += DirectX::XM_2PI;
+    }
+
+    //実際に回転させる角度を決定
+    float pitch_rotation_amount;
+    if (std::abs(pitch_difference) > max_rotation)
+    {
+        pitch_rotation_amount = (pitch_difference > 0) ? max_rotation : -max_rotation;
+    }
+    else
+    {
+        pitch_rotation_amount = pitch_difference;
+    }
+
+    //X軸の角度を更新
+    angle.x += pitch_rotation_amount;
+
+    //X軸の角度を -PI から PI の間にクランプ
+    while (angle.x > DirectX::XM_PI)
+    {
+        angle.x -= DirectX::XM_2PI;
+    }
+    while (angle.x < -DirectX::XM_PI)
+    {
+        angle.x += DirectX::XM_2PI;
     }
 }
 
