@@ -28,6 +28,7 @@ using namespace DirectX;
 float SceneGame::s_timeScale = 1.0f;
 float SceneGame::s_slowTimer = 0.0f;
 
+
 // スロー設定
 void SceneGame::SetSlowMotion(float scale, float duration)
 {
@@ -128,7 +129,16 @@ void SceneGame::Finalize()
 
 	if (pipRenderTarget) delete pipRenderTarget;
 }
-
+template <typename T>
+void RemoveInactiveObjects(std::vector<std::unique_ptr<T>>& objects)
+{
+	auto it = std::remove_if(objects.begin(), objects.end(),
+		[](const std::unique_ptr<T>& obj) {
+			// HP0になって OnDead() が呼ばれると IsActive() が false になるはず
+			return !obj->IsActive();
+		});
+	objects.erase(it, objects.end());
+}
 // 更新処理
 void SceneGame::Update(float elapsedTime)
 {
@@ -146,9 +156,10 @@ void SceneGame::Update(float elapsedTime)
 	float scaledElapsedTime = elapsedTime * s_timeScale;
 
 	pickingRay.Update(); // レイ情報の更新
-
-	//Playerクラスの関数に丸投げするだけ
-	Player::UpdateSpawn(players, pickingRay);
+	if (!UpdatePiP())
+	{
+		Player::UpdateSpawn(players, pickingRay);
+	}
 
 	//カメラコントローラー更新処理
 	if (Player::GetActivePtr() != nullptr)
@@ -203,7 +214,10 @@ void SceneGame::Update(float elapsedTime)
 		for (auto& a : alliesMelee)   a->Update(scaledElapsedTime);
 
 		CollisionManager::Instance().CheckAllCollision();
-
+		RemoveInactiveObjects(players);
+		RemoveInactiveObjects(alliesStraight);
+		RemoveInactiveObjects(alliesHoming);
+		RemoveInactiveObjects(alliesMelee);
 		grid_map.Build(GameObjectManager::Instance().GetAllObjects());
 	}
 
@@ -310,7 +324,6 @@ void SceneGame::Render()
 		for (auto& up : players) up->RenderDebugPrimitive(rc, shapeRenderer);
 		EnemyManager::Instance().RenderDebugPrimitive(rc, shapeRenderer);
 		// 必要に応じて他のデバッグ描画を追加
-		//GimmicManager::Instance().RenderDebugPrimitive(rc, shapeRenderer);
 	}
 
 	// 2Dスプライト描画 (PiPウィンドウ自体の描画含む)
@@ -476,3 +489,48 @@ void SceneGame::RenderPiP(ID3D11DeviceContext* dc)
 }
 REGISTER_SCENE(SceneGame);
 
+bool SceneGame::UpdatePiP()
+{
+	Mouse& mouse = Input::Instance().GetMouse();
+
+	// 左クリックされた瞬間のみ判定
+	if (mouse.GetButtonDown() & Mouse::BTN_LEFT)
+	{
+		float mx = (float)mouse.GetPositionX();
+		float my = (float)mouse.GetPositionY();
+
+		// PiPのサイズ設定（描画側と合わせる必要があります）
+		const float pipW = 400.0f;
+		const float pipH = 225.0f;
+		const float tabW = 60.0f;
+
+		// 現在の表示位置
+		float currentPipX = isPipExpanded ? 0.0f : (-pipW + tabW);
+		float currentPipY = 100.0f;
+
+		// --- 判定エリア ---
+		float tabLeft = currentPipX + pipW - tabW;
+		float tabRight = currentPipX + pipW;
+		float winTop = currentPipY;
+		float winBottom = currentPipY + pipH;
+
+		// UI全体の範囲（展開中はウィンドウ全体、格納中はタブのみ）
+		float uiLeft = isPipExpanded ? currentPipX : tabLeft;
+		float uiRight = currentPipX + pipW;
+
+		// 範囲内をクリックしたか？
+		if (mx >= uiLeft && mx < uiRight &&
+			my >= winTop && my < winBottom)
+		{
+			// さらにタブ部分なら開閉トグル
+			if (mx >= tabLeft && mx < tabRight)
+			{
+				isPipExpanded = !isPipExpanded;
+			}
+
+			return true; // UIをクリックした
+		}
+	}
+
+	return false; // UIをクリックしていない
+}

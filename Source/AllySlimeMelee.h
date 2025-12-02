@@ -23,6 +23,8 @@ public:
     void SetLeader(Player* p) { leader = p; }
     Player* GetLeader() const { return leader; }
     void RenderUI(const RenderContext& rc, float x, float y, float size);
+    void OnDead() override;
+
 private:
     // 状態管理
     enum class State {
@@ -54,7 +56,7 @@ private:
     float attackRange = 1.5f;    // 攻撃届く距離
     float damageCooldown = 1.0f; // 攻撃間隔
     float attackTimer = 0.0f;    // タイマー
-    int   attackDamage = 2;      // ダメージ量
+    int   attackDamage = 0;      // ダメージ量
 
     // ターゲット情報
     // 敵かギミックのどちらかを保持する
@@ -67,4 +69,5 @@ private:
     Model* slimeModel = nullptr;
     Player* leader = nullptr;
     Sprite* icon = nullptr;
+    Sprite* hpBarSprite = nullptr;
 };

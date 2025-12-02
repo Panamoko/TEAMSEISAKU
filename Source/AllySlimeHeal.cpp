@@ -33,6 +33,18 @@ AllySlimeHeal::AllySlimeHeal(int formationIndex)
     radius = 0.5f;
     height = 1.0f;
     icon = SpriteManager::Instance().Load("Data/Sprite/SLime_G.png");
+    hpBarSprite = new Sprite(nullptr);
+    // ★追加: コライダーの設定
+    collider = std::make_unique<CylinderCollider>();
+    collider->type = ColliderType::Cylinder;
+    collider->owner = this;
+
+    // コライダーのサイズ設定 (モデルに合わせて調整)
+    auto* cyl = static_cast<CylinderCollider*>(collider.get());
+    cyl->radius = radius;
+    cyl->height = height;
+    cyl->center = position; // 初期位置
+
     const Player& ref = (leader ? *leader : Player::Instance());
     position = ref.GetPosition();
     UpdateTransform();
@@ -42,7 +54,12 @@ AllySlimeHeal::AllySlimeHeal(int formationIndex)
 
 AllySlimeHeal::~AllySlimeHeal()
 {
-    AllySlime::UnregisterAlly(this); // 解除
+    // ★追加
+    if (hpBarSprite) {
+        delete hpBarSprite;
+        hpBarSprite = nullptr;
+    }
+    AllySlime::UnregisterAlly(this);
 }
 
 void AllySlimeHeal::UpdateAnchor()
@@ -63,9 +80,6 @@ void AllySlimeHeal::UpdateAnchor()
     anchor.y = p.y;
 }
 
-// ----------------------------------------------------------------------------
-// ターゲット検索：HPが減っているプレイヤーを探す
-// ----------------------------------------------------------------------------
 void AllySlimeHeal::UpdateHealing(float elapsedTime)
 {
     if (!autoHealEnabled) return;
@@ -75,100 +89,57 @@ void AllySlimeHeal::UpdateHealing(float elapsedTime)
         return;
     }
 
-    // 発射位置（スライムの中心あたり）
-    const XMFLOAT3 muzzle = { position.x, position.y + height * 0.5f, position.z };
     const float rangeSq = autoHealRange * autoHealRange;
+    bool healedAny = false;
 
-    float bestDistSq = FLT_MAX;
-    XMFLOAT3 bestTarget = { 0, 0, 0 };
-    bool hasTarget = false;
-
-    // 全プレイヤーを取得してループ
+    // --- 全プレイヤーをチェック ---
     const auto& players = Player::GetAllPlayers();
-    for (auto* player : players)
+    for (auto* p : players)
     {
-        if (!player) continue;
-
-        // HPが満タンなら回復対象にしない
-        // ※GetHealth(), GetMaxHealth() は Characterクラスに追加済みと仮定
-        if (player->GetHealth() >= player->GetMaxHealth()) continue;
+        if (!p || p->GetHealth() <= 0) continue;
+        if (p->GetHealth() >= p->GetMaxHealth()) continue; // HP満タンならスキップ
 
         // 距離チェック
-        XMFLOAT3 q = player->GetPosition();
-        q.y += player->GetHeight() * 0.5f; // プレイヤーの中心を狙う
-
-        float dx = q.x - muzzle.x;
-        float dy = q.y - muzzle.y;
-        float dz = q.z - muzzle.z;
-        float d2 = dx * dx + dy * dy + dz * dz;
-
-        // 射程内かつ、今までで一番近ければターゲットにする
-        if (d2 <= rangeSq && d2 < bestDistSq) {
-            bestDistSq = d2;
-            bestTarget = q;
-            hasTarget = true;
+        float dx = p->GetPosition().x - position.x;
+        float dz = p->GetPosition().z - position.z;
+        if ((dx * dx + dz * dz) <= rangeSq)
+        {
+            p->Heal(1); // 1回復
+            healedAny = true;
         }
     }
 
-    // ターゲット（傷ついた味方）がいなければ何もしない
-    if (!hasTarget) return;
+    // --- 全味方スライムをチェック ---
+    const auto& allies = AllySlime::GetAllAllies();
+    for (auto* a : allies)
+    {
+        if (!a || a->GetHealth() <= 0) continue;
+        if (a->GetHealth() >= a->GetMaxHealth()) continue;
 
-    // 発射処理
-    XMFLOAT3 dir = { bestTarget.x - muzzle.x, bestTarget.y - muzzle.y, bestTarget.z - muzzle.z };
-    float len = std::sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
-    if (len < 0.001f) return;
-    dir.x /= len; dir.y /= len; dir.z /= len;
-
-    auto* proj = new ProjectileHoming(&projectileManager);
-    // 必要ならここで弾の色を変える等の処理を入れる
-    proj->Launch(dir, muzzle, bestTarget);
-
-    autoHealTimer = autoHealInterval;
-}
-
-// ----------------------------------------------------------------------------
-// 衝突判定：弾丸 vs プレイヤー（回復）
-// ----------------------------------------------------------------------------
-void AllySlimeHeal::CollisionProjectilesVsPlayers()
-{
-    const auto& players = Player::GetAllPlayers();
-    const int projectileCount = projectileManager.GetProjectileCount();
-
-    for (int i = 0; i < projectileCount; ++i) {
-        Projectile* projectile = projectileManager.GetProjectile(i);
-        if (!projectile) continue;
-
-        bool isHit = false;
-
-        // 全プレイヤーと判定
-        for (auto* player : players) {
-            if (!player) continue;
-
-            XMFLOAT3 outPos;
-            // Sphere vs Cylinder 判定
-            const bool hit = Collision::IntersectSphereVsCylinder(
-                projectile->GetPosition(), projectile->GetRadius(),
-                player->GetPosition(), player->GetRadius(), player->GetHeight(),
-                outPos
-            );
-
-            if (hit) {
-                // 回復処理を実行 (Character::Heal)
-                player->Heal(1); // 1回復
-
-                // エフェクトや音を出すならここで
-
-                // 弾を消去
-                projectile->Destroy();
-                isHit = true;
-                break;
-            }
+        float dx = a->GetPosition().x - position.x;
+        float dz = a->GetPosition().z - position.z;
+        if ((dx * dx + dz * dz) <= rangeSq)
+        {
+            a->Heal(1);
+            healedAny = true;
         }
+    }
+
+    // 誰かを回復したらクールダウンに入る
+    if (healedAny)
+    {
+        autoHealTimer = autoHealInterval;
+        // エフェクトがあればここで再生
     }
 }
 
 void AllySlimeHeal::Update(float elapsedTime)
 {
+    if (leader && (!leader->IsActive() || leader->GetHealth() <= 0))
+    {
+        OnDead(); // 死亡処理を実行
+        return;   // 更新をここで打ち切る
+    }
     // 1) 隊列アンカー更新
     UpdateAnchor();
 
@@ -190,9 +161,6 @@ void AllySlimeHeal::Update(float elapsedTime)
     UpdateInvincibleTimer(elapsedTime);
     UpdateTransform();
 
-    // 5) 弾の更新と衝突判定
-    projectileManager.Update(elapsedTime);
-    CollisionProjectilesVsPlayers();
 }
 
 void AllySlimeHeal::Render(const RenderContext& rc, ModelRenderer* renderer)
@@ -219,5 +187,34 @@ void AllySlimeHeal::RenderUI(const RenderContext& rc, float x, float y, float si
     if (icon)
     {
         icon->Render(rc, x, y, 0.0f, size, size, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+
+        // ★追加: HPバー描画
+        if (hpBarSprite)
+        {
+            float barW = size;
+            float barH = 8.0f;
+            float barX = x;
+            float barY = y - barH - 3.0f;
+
+            float hpRatio = (float)health / (float)maxHealth;
+            hpRatio = std::clamp(hpRatio, 0.0f, 1.0f);
+
+            // 背景
+            hpBarSprite->Render(rc, barX, barY, 0.0f, barW, barH, 0.0f, 0.2f, 0.2f, 0.2f, 1.0f);
+            // HPバー
+            hpBarSprite->Render(rc, barX, barY, 0.0f, barW * hpRatio, barH, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+        }
     }
+}
+
+// ---------------------------------------------------------
+// 死亡時の処理
+// ---------------------------------------------------------
+void AllySlimeHeal::OnDead()
+{
+    // 1. 味方リストから削除
+    AllySlime::UnregisterAlly(this);
+
+    // 2. 非アクティブ化
+    GameObject::SetActive(false);
 }

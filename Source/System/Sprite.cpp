@@ -126,6 +126,8 @@ Sprite::Sprite(const char* filename)
 	}
 }
 
+// Source/System/Sprite.cpp
+
 // 描画実行
 void Sprite::Render(const RenderContext& rc,
 	float dx, float dy,					// 左上位置
@@ -135,17 +137,32 @@ void Sprite::Render(const RenderContext& rc,
 	float sw, float sh,					// 画像切り抜きサイズ
 	float angle,						// 角度
 	float r, float g, float b, float a	// 色
-	) const
+) const
 {
-	if (!sprite_resource) // リソースがない場合は描画しない
+	// ★変更: 描画に使うテクスチャとサイズを決定する
+	ID3D11ShaderResourceView* srv = nullptr;
+	float resource_width = 0.0f;
+	float resource_height = 0.0f;
+
+	if (sprite_resource)
 	{
+		// 共有リソースがある場合
+		srv = sprite_resource->shader_resource_view.Get();
+		resource_width = sprite_resource->texture_width;
+		resource_height = sprite_resource->texture_height;
+	}
+	else if (shaderResourceView)
+	{
+		// 共有リソースがない場合、自分自身のローカルリソース（白画像など）を使う
+		srv = shaderResourceView.Get();
+		resource_width = textureWidth;
+		resource_height = textureHeight;
+	}
+	else
+	{
+		// どちらもなければ描画しない
 		return;
 	}
-
-	//共有リソースからテクスチャ情報を取得
-	ID3D11ShaderResourceView* srv = sprite_resource->shader_resource_view.Get();
-	float resource_width = sprite_resource->texture_width;
-	float resource_height = sprite_resource->texture_height;
 
 	ID3D11DeviceContext* dc = rc.deviceContext;
 
@@ -225,6 +242,7 @@ void Sprite::Render(const RenderContext& rc,
 		v[i].color.z = b;
 		v[i].color.w = a;
 
+		// ★変更: resource_width / resource_height を使用
 		v[i].texcoord.x = texcoords[i].x / resource_width;
 		v[i].texcoord.y = texcoords[i].y / resource_height;
 	}
@@ -240,7 +258,8 @@ void Sprite::Render(const RenderContext& rc,
 	dc->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	dc->VSSetShader(vertexShader.Get(), nullptr, 0);
 	dc->PSSetShader(pixelShader.Get(), nullptr, 0);
-	//dc->PSSetShaderResources(0, 1, shaderResourceView.GetAddressOf());
+
+	// ★変更: srv をセット
 	dc->PSSetShaderResources(0, 1, &srv);
 
 	// レンダーステート設定
@@ -259,7 +278,7 @@ void Sprite::Render(const RenderContext& rc,
 	float dw, float dh,					// 幅、高さ
 	float angle,						// 角度
 	float r, float g, float b, float a	// 色
-	) const
+) const
 {
 	float resource_width = sprite_resource ? sprite_resource->texture_width : 0.0f;
 	float resource_height = sprite_resource ? sprite_resource->texture_height : 0.0f;

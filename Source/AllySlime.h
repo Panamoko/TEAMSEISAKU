@@ -42,6 +42,8 @@ public:
 
     void RenderUI(const RenderContext& rc, float x, float y, float size);
 
+    void OnDead() override;
+
 private:
     // 内部処理: 隊列アンカーや自動攻撃、衝突判定を更新
     void UpdateAnchor();
@@ -73,8 +75,9 @@ private:
     // 追従対象のプレイヤー（null の場合は Player::Instance() を利用）
     Player* leader = nullptr;
 
-	// 味方スライムアイコン（UI描画用）
+    // 味方スライムアイコン（UI描画用）
     Sprite* icon = nullptr;
+    Sprite* hpBarSprite = nullptr;
 
     static std::vector<Character*> s_allies;
 };

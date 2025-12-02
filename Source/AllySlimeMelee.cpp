@@ -29,7 +29,21 @@ AllySlimeMelee::AllySlimeMelee(int formationIndex) : index(formationIndex)
     scale = { 0.002f, 0.002f, 0.002f };
     radius = 0.6f;
     height = 1.0f;
+    maxHealth = 30; // 近接型なので少しタフに
+    health = maxHealth;
+    // ★追加: コライダーの設定
+    collider = std::make_unique<CylinderCollider>();
+    collider->type = ColliderType::Cylinder;
+    collider->owner = this;
+
+    // コライダーのサイズ設定 (モデルに合わせて調整)
+    auto* cyl = static_cast<CylinderCollider*>(collider.get());
+    cyl->radius = radius;
+    cyl->height = height;
+    cyl->center = position; // 初期位置
+
     icon = SpriteManager::Instance().Load("Data/Sprite/SLime_R.png");
+    hpBarSprite = new Sprite(nullptr);
     // 攻撃用として設定
     type = Type::PlayerAttack;
 
@@ -42,7 +56,12 @@ AllySlimeMelee::AllySlimeMelee(int formationIndex) : index(formationIndex)
 
 AllySlimeMelee::~AllySlimeMelee()
 {
-    AllySlime::UnregisterAlly(this); // 解除
+    // ★追加
+    if (hpBarSprite) {
+        delete hpBarSprite;
+        hpBarSprite = nullptr;
+    }
+    AllySlime::UnregisterAlly(this);
 }
 
 void AllySlimeMelee::UpdateAnchor()
@@ -339,6 +358,11 @@ void AllySlimeMelee::CheckAttackCollision()
 
 void AllySlimeMelee::Update(float elapsedTime)
 {
+    if (leader && (!leader->IsActive() || leader->GetHealth() <= 0))
+    {
+        OnDead(); // 死亡処理を実行
+        return;   // 更新をここで打ち切る
+    }
     UpdateAnchor();
     UpdateState(elapsedTime);
 
@@ -370,5 +394,31 @@ void AllySlimeMelee::RenderUI(const RenderContext& rc, float x, float y, float s
     if (icon)
     {
         icon->Render(rc, x, y, 0.0f, size, size, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+
+        // ★追加: HPバー描画
+        if (hpBarSprite)
+        {
+            float barW = size;
+            float barH = 8.0f;
+            float barX = x;
+            float barY = y - barH - 3.0f;
+
+            float hpRatio = (float)health / (float)maxHealth;
+            hpRatio = std::clamp(hpRatio, 0.0f, 1.0f);
+
+            // 背景
+            hpBarSprite->Render(rc, barX, barY, 0.0f, barW, barH, 0.0f, 0.2f, 0.2f, 0.2f, 1.0f);
+            // HPバー
+            hpBarSprite->Render(rc, barX, barY, 0.0f, barW * hpRatio, barH, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+        }
     }
+}
+
+void AllySlimeMelee::OnDead()
+{
+    // 1. 味方リストから削除（ヒーラーの対象などから外れる）
+    AllySlime::UnregisterAlly(this);
+
+    // 2. 非アクティブ化（これでSceneGame::Update内の削除処理に引っかかり、消滅する）
+    GameObject::SetActive(false);
 }
