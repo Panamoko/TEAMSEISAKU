@@ -82,7 +82,7 @@ void SceneTitle::Update(float elapsedTime)
 	bool is_mouse_over_sprite = Collision::IntersectPosSquare(
 		mouse_position,
 		{ position.x,position.y+100 },
-		{ 300 ,100 });
+		{ 500 ,100 });
 
 	if (mouse.GetButtonDown() && Mouse::BTN_LEFT && is_mouse_over_sprite)
 	{
