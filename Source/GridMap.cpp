@@ -69,7 +69,7 @@ void GridMap::Build(const std::vector<std::shared_ptr<GameObject>>& objects)
             // ★修正ポイント：判定用に一時的にOBBを太らせるコピーを作る
             OBB checkOBB = *obb;
             // セルサイズの半分くらい太らせることで、中心点がズレても引っかかるようにする
-            float fatMargin = cell_size * 0.5f;
+            float fatMargin = cell_size * 1.0f;
             checkOBB.half.x += fatMargin;
             checkOBB.half.z += fatMargin;
 

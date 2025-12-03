@@ -9,6 +9,33 @@
 #include <cfloat>
 #include <algorithm> // clamp, sort
 
+// 視線判定用ヘルパー関数
+static bool HasLineOfSight(const GridMap* map, const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end)
+{
+	if (!map) return true;
+
+	auto s = map->WorldToCell(start.x, start.z);
+	auto e = map->WorldToCell(end.x, end.z);
+
+	int x0 = s.first, y0 = s.second;
+	int x1 = e.first, y1 = e.second;
+
+	int dx = abs(x1 - x0), dy = abs(y1 - y0);
+	int sx = (x0 < x1) ? 1 : -1;
+	int sy = (y0 < y1) ? 1 : -1;
+	int err = dx - dy;
+
+	while (true)
+	{
+		if (map->IsBlocked(x0, y0)) return false; // 障害物あり
+		if (x0 == x1 && y0 == y1) break;
+		int e2 = 2 * err;
+		if (e2 > -dy) { err -= dy; x0 += sx; }
+		if (e2 < dx) { err += dx; y0 += sy; }
+	}
+	return true;
+}
+
 // コンストラクタ
 EnemySlime::EnemySlime(const char* modelPath)
 {
@@ -195,9 +222,17 @@ bool EnemySlime::GetStrategicTarget(DirectX::XMFLOAT3& outPos)
 
 	if (isElite)
 	{
-		// 密集回避のため少し散らす
-		strategicPos.x += MathUtils::RandomRenge(-2.0f, 2.0f);
-		strategicPos.z += MathUtils::RandomRenge(-2.0f, 2.0f);
+		// ★修正: ランダムではなく、IDに基づいた「固定的」な分散座標を生成する
+		// これにより、同じセクターを目指している限り、フレーム毎に目的地がブレることがなくなる
+
+		// IDを使って 0.0 ~ 2PI の角度オフセットを作る
+		float angleOffset = (float)(GetID() % 8) * (DirectX::XM_2PI / 8.0f);
+		// IDを使って 半径を少しばらけさせる (3.0m ~ 5.0m)
+		float radiusOffset = 3.0f + (float)(GetID() % 3);
+
+		strategicPos.x += sinf(angleOffset) * radiusOffset;
+		strategicPos.z += cosf(angleOffset) * radiusOffset;
+
 		outPos = strategicPos;
 		return true;
 	}
@@ -309,8 +344,9 @@ void EnemySlime::SetWanderState()
 
 void EnemySlime::UpdateWanderState(float elapsedTime)
 {
-	// 到着判定
-	if (MathUtils::DistSqXZ(targetPosition, position) < radius * radius)
+	// ★修正: 到着判定を少し甘くする (半径 0.5f -> 1.5f)
+	// 4体が密集しても、お互いに押し合って到着判定が出ない状況を防ぐ
+	if (MathUtils::DistSqXZ(targetPosition, position) < 1.5f * 1.5f)
 	{
 		SetIdleState();
 		return;
@@ -318,23 +354,26 @@ void EnemySlime::UpdateWanderState(float elapsedTime)
 
 	MoveToTarget(elapsedTime, 1.0f, 1.0f);
 
-	// 0.5秒ごとの思考
 	if (targetUpdateTimer <= 0.0f)
 	{
 		targetUpdateTimer = 0.5f;
 
-		// 1. 敵発見なら攻撃へ
 		if (Character* target = SearchTarget())
 		{
 			SetAttackState(target);
 			return;
 		}
 
-		// 2. 戦況が変わったら進路変更
 		DirectX::XMFLOAT3 newStrategicPos;
 		if (GetStrategicTarget(newStrategicPos))
 		{
-			targetPosition = newStrategicPos;
+			// ★修正: 固定オフセット化したので、ここでは単純に「場所が変わったか」だけ見ればOK
+			// セクターが変われば大きく座標が変わるので、閾値は適度な大きさ(例: 25.0f = 5m)で良い
+			float distSq = MathUtils::DistSqXZ(targetPosition, newStrategicPos);
+			if (distSq > 25.0f)
+			{
+				targetPosition = newStrategicPos;
+			}
 		}
 	}
 }
@@ -444,16 +483,76 @@ void EnemySlime::MoveToTarget(float elapsedTime, float moveSpeedRate, float turn
 
 	if (gridMap && moveSpeedRate > 0.0f)
 	{
-		// 定期的に経路更新
 		pathRecalcTimer -= elapsedTime;
-		if (pathRecalcTimer <= 0.0f)
+
+		// ★変更: 目的地が動いたかチェック
+		float distToPrev = MathUtils::DistSqXZ(targetPosition, prevTargetPos);
+		bool targetMoved = (distToPrev > 1.0f); // 1.0m以上ずれたら再計算
+
+		// 経路がない、または目的地が変わった場合のみ計算する
+		// (0.5秒ごとの定期更新は、目的地が変わらない限り行わない)
+		if (currentPath.empty() || targetMoved)
 		{
-			pathRecalcTimer = 0.5f;
-			auto start = gridMap->WorldToCell(position.x, position.z);
-			auto goal = gridMap->WorldToCell(targetPosition.x, targetPosition.z);
-			auto rawPath = aStar.FindPath(start.first, start.second, goal.first, goal.second, *gridMap);
-			currentPath = rawPath.empty() ? rawPath : aStar.SmoothPath(rawPath, *gridMap);
-			pathIndex = 0;
+			// 少し待機時間を持たせる（連続呼び出し防止）
+			if (pathRecalcTimer <= 0.0f || targetMoved)
+			{
+				pathRecalcTimer = 0.5f; // 次回のチェックまでインターバル
+				prevTargetPos = targetPosition; // 記憶更新
+
+				auto start = gridMap->WorldToCell(position.x, position.z);
+				auto goal = gridMap->WorldToCell(targetPosition.x, targetPosition.z);
+
+				auto rawPath = aStar.ReplanPath(
+					start.first, start.second,
+					goal.first, goal.second,
+					*gridMap,
+					start.first, start.second
+				);
+
+				//currentPath = rawPath.empty() ? rawPath : aStar.SmoothPath(rawPath, *gridMap);
+				currentPath = rawPath;
+
+				// パスインデックスの初期化ロジック
+				// (前回実装した「内積判定」などはそのままでOK)
+				pathIndex = 0;
+				if (!currentPath.empty())
+				{
+					int closestIndex = 0;
+					float minDistSq = FLT_MAX;
+					for (int i = 0; i < static_cast<int>(currentPath.size()); ++i)
+					{
+						DirectX::XMFLOAT3 nodePos = gridMap->GetWorldPosition(currentPath[i].first, currentPath[i].second);
+						float d = MathUtils::DistSqXZ(position, nodePos);
+						if (d < minDistSq)
+						{
+							// 自分の位置から少し浮かせた高さ(y+0.5)で判定するとより安全ですが、
+							// ここではXZ平面のグリッド判定(HasLineOfSight)を使います。
+							if (HasLineOfSight(gridMap, position, nodePos))
+							{
+								minDistSq = d;
+								closestIndex = i;
+							}
+						}
+					}
+					pathIndex = closestIndex;
+
+					// 進行方向チェック（後ろのノードを選ばないようにする）
+					if (pathIndex + 1 < currentPath.size())
+					{
+						DirectX::XMFLOAT3 nodePos = gridMap->GetWorldPosition(currentPath[pathIndex].first, currentPath[pathIndex].second);
+						DirectX::XMFLOAT3 nextNodePos = gridMap->GetWorldPosition(currentPath[pathIndex + 1].first, currentPath[pathIndex + 1].second);
+						float pathVecX = nextNodePos.x - nodePos.x;
+						float pathVecZ = nextNodePos.z - nodePos.z;
+						float myVecX = position.x - nodePos.x;
+						float myVecZ = position.z - nodePos.z;
+						float dot = pathVecX * myVecX + pathVecZ * myVecZ;
+						if (dot > 0.0f)
+						{
+							pathIndex++;
+						}
+					}
+				}
+			}
 		}
 
 		if (!currentPath.empty() && pathIndex < currentPath.size())

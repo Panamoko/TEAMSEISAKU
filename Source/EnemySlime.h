@@ -73,6 +73,9 @@ protected:
 	virtual void SetAttackState(Character* target);
 	virtual void UpdateAttackState(float elapsedTime);
 
+	// 前回経路探索したときのターゲット位置（無駄な再計算防止用）
+	DirectX::XMFLOAT3 prevTargetPos = { -9999.0f, -9999.0f, -9999.0f };
+
 protected:
 	// --- パラメータ ---
 	State state = State::Wander;

@@ -182,8 +182,18 @@ std::vector<std::pair<int, int>> AStar::ReplanPath(
     const GridMap& gridMap,
     int agent_cellX,int agent_cellZ)
 {
+    // ゴールが変わっていたら、前回の経路は使えないのでリセットする
+    if (!last_path.empty())
+    {
+        auto& lastGoal = last_path.back();
+        if (lastGoal.first != goalX || lastGoal.second != goalZ)
+        {
+            last_path.clear();
+        }
+    }
+
     //ゴール到達判定の緩和
-    const int GOAL_TOLERANCE_SQUARED = 2;
+    const int GOAL_TOLERANCE_SQUARED = 10;
     int dist_x = agent_cellX - goalX;
     int dist_z = agent_cellZ - goalZ;
     int dist_sq = (dist_x * dist_x) + (dist_z * dist_z);
