@@ -68,10 +68,11 @@ void SceneManager::ChangeSceneByName(const std::string& scene_name)
 	//Factory を使って新しいシーンのインスタンスを生成
 	Scene* newScene = SceneFactory::CreateScene(scene_name);
 
-	if (newScene)
+	if (newScene != nullptr)
 	{
-		//既存の ChangeScene メソッドに生成したインスタンスを渡す
-		ChangeScene(new SceneLoading(newScene));
+		newScene->SetSceneName(scene_name);
+
+		ChangeScene(newScene);
 	}
 	else
 	{

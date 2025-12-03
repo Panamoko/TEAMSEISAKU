@@ -24,6 +24,7 @@ void SceneTitle::Initialize()
 	sprite_height = size.y;
 
 	change_scene = std::make_unique<ChangeSceneSytem>();
+	scene = new SceneTitle();
 }
 
 // I—¹‰»
@@ -35,6 +36,7 @@ void SceneTitle::Finalize()
 	//	delete sprite;
 	//	sprite = nullptr;
 	//}
+	delete scene;
 }
 
 // XVˆ—
