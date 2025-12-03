@@ -93,6 +93,8 @@ void SceneGame::Initialize()
 	pipFrameSprite = SpriteManager::Instance().Load("Data/Sprite/Window.png");
 
 	grid_map.Initialize(150, 150, 0.8f);
+
+	preparation = std::make_unique<PreparationPhase>();
 }
 
 // 終了化
@@ -175,6 +177,8 @@ void SceneGame::Update(float elapsedTime)
 
 	if (game_editor.PlayGame())
 	{
+		preparation->Update(elapsedTime);
+
 		//ステージ更新処理
 		stage->Update(scaledElapsedTime);
 
@@ -199,8 +203,11 @@ void SceneGame::Update(float elapsedTime)
 			}
 		}
 
+		if (preparation->GetState())
+		{
 		// 全プレイヤー更新（入力は Player 側で“アクティブのみ”にガード）
 		for (auto& up : players) up->Update(scaledElapsedTime);
+		}
 
 		//エネミー更新処理
 		EnemyManager::Instance().Update(scaledElapsedTime);
@@ -214,6 +221,7 @@ void SceneGame::Update(float elapsedTime)
 		for (auto& a : alliesMelee)   a->Update(scaledElapsedTime);
 
 		CollisionManager::Instance().CheckAllCollision();
+
 		RemoveInactiveObjects(players);
 		RemoveInactiveObjects(alliesStraight);
 		RemoveInactiveObjects(alliesHoming);
@@ -360,6 +368,8 @@ void SceneGame::Render()
 				pipX + margin, pipY + margin,
 				pipW - (margin + marginRight), pipH - (margin * 2.0f)
 			);
+
+			preparation->Render();
 		}
 	}
 }

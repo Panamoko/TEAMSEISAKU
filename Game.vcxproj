@@ -155,6 +155,7 @@
     <ClInclude Include="Source\ModelManager.h" />
     <ClInclude Include="Source\Picking_Ray.h" />
     <ClInclude Include="Source\Player.h" />
+    <ClInclude Include="Source\PreparationPhase.h" />
     <ClInclude Include="Source\Projectile.h" />
     <ClInclude Include="Source\ProjectileHoming.h" />
     <ClInclude Include="Source\ProjectileManager.h" />
@@ -239,6 +240,7 @@
     <ClCompile Include="Source\ModelManager.cpp" />
     <ClCompile Include="Source\Picking_Ray.cpp" />
     <ClCompile Include="Source\Player.cpp" />
+    <ClCompile Include="Source\PreparationPhase.cpp" />
     <ClCompile Include="Source\Projectile.cpp" />
     <ClCompile Include="Source\ProjectileHoming.cpp" />
     <ClCompile Include="Source\ProjectileManager.cpp" />

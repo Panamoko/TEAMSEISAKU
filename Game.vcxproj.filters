@@ -88,6 +88,9 @@
     <Filter Include="Source\ChangeSceneSytem">
       <UniqueIdentifier>{dc53eae1-adb5-4d34-a0f2-42c6aaebd19f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Phase">
+      <UniqueIdentifier>{903a4a62-8662-4cba-ae77-7f566eb657f9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui-docking\imconfig.h">
@@ -341,6 +344,9 @@
     <ClInclude Include="Source\ProjectileTurret.h">
       <Filter>Source\Projectile</Filter>
     </ClInclude>
+    <ClInclude Include="Source\PreparationPhase.h">
+      <Filter>Source\Phase</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -573,6 +579,9 @@
     </ClCompile>
     <ClCompile Include="Source\ProjectileTurret.cpp">
       <Filter>Source\Projectile</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PreparationPhase.cpp">
+      <Filter>Source\Phase</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -15,6 +15,7 @@
 #include "AllySlimeMelee.h"
 #include "GameSprite.h"
 #include "System/RenderTarget.h"
+#include "PreparationPhase.h"
 
 class Player;
 class AllySlime;         // Šù‘¶’¼ü’e
@@ -83,6 +84,7 @@ private:
 	int CountAlliesGlobal() const;
 
 	CameraController* cameraController = nullptr;
+	std::unique_ptr<PreparationPhase> preparation;
 
 	// ƒXƒ[ŠÇ——p
 	static float s_timeScale;    // Œ»İ‚ÌŠÔ”{—¦ (1.0f ‚ª’Êí)

@@ -9,9 +9,11 @@ PreparationPhase::PreparationPhase()
 	state = false;
 	sprite = SpriteManager::Instance().Load("Data/Sprite/Preparation_Phase.png");
 	sprite2 = SpriteManager::Instance().Load("Data/Sprite/State.png");
-	position = { 640,10 };
-	sprite2_pos = { 1000,600 };
-	size = { 10.0f,10.0f };
+	position = { 550,-10 };
+	sprite2_pos = { 950,550 };
+	size = { 300.0f,200.0f };
+	sprite2_size = size;
+	sprite2_color = { 1.0f,1.0f,1.0f,0.7f };
 }
 
 //a
@@ -25,7 +27,16 @@ void PreparationPhase::Update(float elapsedTime)
 	bool is_mouse_over_sprite = Collision::IntersectPosSquare(
 		mouse_position,
 		{ sprite2_pos.x,sprite2_pos.y },
-		{ 300 ,100 });
+		{ size.x ,size.y });
+
+	if (is_mouse_over_sprite)
+	{
+		sprite2_color.w = 1.0f;
+	}
+	else
+	{
+		sprite2_color.w = 0.7f;
+	}
 
 	if (mouse.GetButtonDown() && Mouse::BTN_LEFT && is_mouse_over_sprite)
 	{
@@ -45,17 +56,19 @@ void PreparationPhase::Render()
 	RenderContext rc;
 	rc.deviceContext = dc;
 	rc.renderState = renderState;
+	if (!state)
+	{
+		sprite->Render(rc,				//&rc
+			position.x, position.y, 0,					//dx , dy , dz
+			size.x, size.y,	//dw , dh
+			0,							//angle
+			color.x, color.y, color.z, color.w);				//color
 
-	sprite->Render(rc,				//&rc
-		position.x, position.y, 0,					//dx , dy , dz
-		size.x, size.y,	//dw , dh
-		0,							//angle
-		color.x, color.y, color.z, color.w);				//color
-
-	sprite2->Render(rc,				//&rc
-		sprite2_pos.x, sprite2_pos.y, 0,					//dx , dy , dz
-		size.x, size.y,	//dw , dh
-		0,							//angle
-		color.x, color.y, color.z, color.w);				//color
+		sprite2->Render(rc,				//&rc
+			sprite2_pos.x, sprite2_pos.y, 0,					//dx , dy , dz
+			sprite2_size.x, sprite2_size.y,	//dw , dh
+			0,							//angle
+			sprite2_color.x, sprite2_color.y, sprite2_color.z, sprite2_color.w);				//color
+	}
 
 }
