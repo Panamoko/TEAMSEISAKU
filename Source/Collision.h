@@ -140,6 +140,21 @@ public:
 		float& out_penetration
 	);
 
+	// ì_Ç∆éläpÇÃåç∑îªíË
+	static bool IntersectPosSquare(
+		const DirectX::XMFLOAT2& pos,
+		const DirectX::XMFLOAT2& squarePos,
+		const DirectX::XMFLOAT2& size
+	)
+	{
+		if (pos.x < squarePos.x)return false;
+		if (pos.y < squarePos.y)return false;
+		if (pos.x > squarePos.x + size.x)return false;
+		if (pos.y > squarePos.y + size.y)return false;
+		return true;
+	}
+
+
 private:
 	static DirectX::XMVECTOR Normalize(const DirectX::XMFLOAT3& v);
 	static bool Overlap(float min1, float max1, float min2, float max2, float& overlap, float& centerDiff);

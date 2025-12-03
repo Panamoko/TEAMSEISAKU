@@ -16,12 +16,15 @@ void SceneTitle::Initialize()
 	sprite2 = SpriteManager::Instance().Load("Data/Sprite/GameStage.png");
 
 	scene_name = "scene_title";
-	position = { 430,490,0 };
+	position = { 430,370,0 };
 	size = { 500,300,0 };
 	sprite_left = position.x;
 	sprite_top = position.y;
 	sprite_width = size.x;
 	sprite_height = size.y;
+
+	change_scene = std::make_unique<ChangeSceneSytem>();
+	scene = new SceneTitle();
 }
 
 // I—¹‰»
@@ -33,6 +36,7 @@ void SceneTitle::Finalize()
 	//	delete sprite;
 	//	sprite = nullptr;
 	//}
+	delete scene;
 }
 
 // XVˆ—
@@ -64,8 +68,12 @@ void SceneTitle::Update(float elapsedTime)
 	if (gamePad.GetButtonDown() & anyButton)
 	{
 		//SceneManager::Instance().ChangeScene(new SceneGame);
-		SceneManager::Instance().ChangeScene(new SceneLoading(new SceneGame));
+		scene_name = "scene";
+		scene->SetSceneName(scene_name);
+		SceneManager::Instance().ChangeScene(new SceneLoading(new SceneGame()));
 	}
+
+	change_scene->Update(elapsedTime);
 
 	Mouse& mouse = Input::Instance().GetMouse();
 	DirectX::XMFLOAT2 mouse_position = { 0.0f,0.0f };
@@ -73,14 +81,15 @@ void SceneTitle::Update(float elapsedTime)
 	mouse_position.x = static_cast<float>(mouse.GetPositionX());
 	mouse_position.y = static_cast<float>(mouse.GetPositionY());
 
-	bool is_x_inside = (mouse_position.x >= sprite_left) && (mouse_position.x < sprite_left + sprite_width);
-	bool is_y_inside = (mouse_position.y >= sprite_top) && (mouse_position.y < sprite_top + sprite_height);
-
-	bool is_mouse_over_sprite = is_x_inside && is_y_inside;
+	bool is_mouse_over_sprite = Collision::IntersectPosSquare(
+		mouse_position,
+		{ position.x,position.y+100 },
+		{ 500 ,100 });
 
 	if (mouse.GetButtonDown() && Mouse::BTN_LEFT && is_mouse_over_sprite)
 	{
-		SceneManager::Instance().ChangeScene(new SceneLoading(new SceneGame));
+		scene_name = "scene_play";
+		SceneManager::Instance().ChangeScene(new SceneLoading(new SceneGame(scene_name)));
 	}
 
 }
@@ -106,8 +115,8 @@ void SceneTitle::Render()
 		float screenWidth = static_cast<float>(graphics.GetScreenWidth());
 		float screenHeight = static_cast<float>(graphics.GetScreenHeight());
 		sprite->Render(rc,				//&rc
-			0, 0, 0,					//dx , dy , dz
-			screenWidth, screenHeight,	//dw , dh
+			150, 0, 0,					//dx , dy , dz
+			screenWidth * 0.8f, screenHeight * 0.8f,	//dw , dh
 			0,							//angle
 			1, 1, 1, 1);				//color
 
@@ -118,6 +127,8 @@ void SceneTitle::Render()
 			render_color.x, render_color.y, render_color.z, render_color.w);				//color
 
 	}
+
+	change_scene->Render();
 }
 
 // GUI•`‰æ
