@@ -14,6 +14,7 @@ PreparationPhase::PreparationPhase()
 	size = { 10.0f,10.0f };
 }
 
+//a
 void PreparationPhase::Update(float elapsedTime)
 {
 	Mouse& mouse = Input::Instance().GetMouse();
