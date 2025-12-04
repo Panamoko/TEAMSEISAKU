@@ -42,9 +42,9 @@
             "model_path": "Data/Model/bilud/Core.mdl",
             "name": "Core",
             "position": [
+                -0.699999988079071,
                 0.0,
-                0.0,
-                2.0999999046325684
+                0.5
             ],
             "rotation": [
                 0.0,
@@ -635,6 +635,151 @@
                 0.10000000149011612,
                 0.05000000074505806,
                 0.10000000149011612
+            ],
+            "type": 1
+        },
+        {
+            "class_name": "Yagura",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 48,
+            "mesh_index": 1,
+            "model_path": "Data/Model/bilud/takadai.mdl",
+            "name": "takadai",
+            "position": [
+                -27.0,
+                0.0,
+                -24.399999618530273
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                0.10000000149011612,
+                0.10000000149011612,
+                0.10000000149011612
+            ],
+            "type": 1
+        },
+        {
+            "class_name": "Barracks",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 49,
+            "mesh_index": 2,
+            "model_path": "Data/Model/bilud/ie.mdl",
+            "name": "ie",
+            "position": [
+                -20.200000762939453,
+                0.0,
+                14.5
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                0.03999999910593033,
+                0.03999999910593033,
+                0.03999999910593033
+            ],
+            "type": 1
+        },
+        {
+            "class_name": "Yagura",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 52,
+            "mesh_index": 1,
+            "model_path": "Data/Model/bilud/takadai.mdl",
+            "name": "takadai2",
+            "position": [
+                25.0,
+                0.0,
+                26.5
+            ],
+            "rotation": [
+                0.0,
+                90.0,
+                0.0
+            ],
+            "scale": [
+                0.10000000149011612,
+                0.10000000149011612,
+                0.10000000149011612
+            ],
+            "type": 1
+        },
+        {
+            "class_name": "Gimmic_BreakWall",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 53,
+            "mesh_index": 5,
+            "model_path": "Data/Model/bilud/ie2.mdl",
+            "name": "ie22",
+            "position": [
+                10.800000190734863,
+                0.0,
+                13.0
+            ],
+            "rotation": [
+                0.0,
+                -90.0,
+                0.0
+            ],
+            "scale": [
+                0.05000000074505806,
+                0.05000000074505806,
+                0.05000000074505806
+            ],
+            "type": 1
+        },
+        {
+            "class_name": "Gimmic_BreakWall",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 55,
+            "mesh_index": 5,
+            "model_path": "Data/Model/bilud/ie2.mdl",
+            "name": "ie2",
+            "position": [
+                -14.399999618530273,
+                0.0,
+                -13.699999809265137
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                0.05000000074505806,
+                0.05000000074505806,
+                0.05000000074505806
             ],
             "type": 1
         }
