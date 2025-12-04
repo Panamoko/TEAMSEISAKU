@@ -23,6 +23,7 @@
 #include "PlayerMelee.h"
 #include "PlayerHeal.h"
 #include "PlayerShot.h"
+#include "TutorialSprite.h"
 
 class SceneGame : public Scene
 {
@@ -84,6 +85,7 @@ private:
 
 	CameraController* cameraController = nullptr;
 	std::unique_ptr<PreparationPhase> preparation;
+	std::unique_ptr<TutorialSprite> tutorial_sprite;
 
 	static float s_timeScale;
 	static float s_slowTimer;

@@ -103,22 +103,25 @@ void SceneTitle::Update(float elapsedTime)
 			pendingNextScene = new SceneGame("scene_play");
 		}
 		// else if に変更して、Startが押されたらTutorial判定をスキップする
-		else
-		{
-			// 2. Tutorial ボタンの判定
-			bool hitTutorial = Collision::IntersectPosSquare(
-				mousePos,
-				{ tutorialButtonPos.x, tutorialButtonPos.y },
-				{ tutorialButtonSize.x, tutorialButtonSize.y }
-			);
+		
+		change_scene->Update(elapsedTime);
 
-			if (hitTutorial)
-			{
-				isSceneChanging = true;
-				transitionTimer = 0.0f;
-				pendingNextScene = new SceneGame("scene_tutorial");
-			}
-		}
+		//else
+		//{
+		//	// 2. Tutorial ボタンの判定
+		//	bool hitTutorial = Collision::IntersectPosSquare(
+		//		mousePos,
+		//		{ tutorialButtonPos.x, tutorialButtonPos.y },
+		//		{ tutorialButtonSize.x, tutorialButtonSize.y }
+		//	);
+
+		//	if (hitTutorial)
+		//	{
+		//		isSceneChanging = true;
+		//		transitionTimer = 0.0f;
+		//		pendingNextScene = new SceneGame("scene_tutorial");
+		//	}
+		//}
 	}
 }
 
@@ -153,11 +156,14 @@ void SceneTitle::Render()
 			0, 1, 1, 1, render_color.w);
 
 	// ★追加: Tutorial ボタン (こちらは点滅させず表示する例)
-	if (spriteTutorial)
-		spriteTutorial->Render(rc,
-			tutorialButtonPos.x, tutorialButtonPos.y, tutorialButtonPos.z,
-			tutorialButtonSize.x, tutorialButtonSize.y,
-			0, 1, 1, 1, 1.0f); // 常に表示
+	
+	change_scene->Render();
+
+	//if (spriteTutorial)
+	//	spriteTutorial->Render(rc,
+	//		tutorialButtonPos.x, tutorialButtonPos.y, tutorialButtonPos.z,
+	//		tutorialButtonSize.x, tutorialButtonSize.y,
+	//		0, 1, 1, 1, 1.0f); // 常に表示
 
 	// ディゾルブ演出 (最前面)
 	if (isSceneChanging && dissolve)

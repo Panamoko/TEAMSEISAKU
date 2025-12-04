@@ -35,6 +35,8 @@ TutorialSprite::TutorialSprite()
 	current_index = 1;
 	end_sprite_namber = false;
 
+	click_sprite.resize(2, nullptr);
+
 	click_sprite[0] = SpriteManager::Instance().Load("Data/Sprite/next_image.png");
 	click_sprite[1] = SpriteManager::Instance().Load("Data/Sprite/back_image.png");
 }
