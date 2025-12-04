@@ -7,16 +7,16 @@
 TutorialSprite::TutorialSprite()
 {
 	click_pos = { 0.0f,0.0f };
-	click_size = { 1280.0f,720.0f };
-	position = { 0.0f,0.0f };
+	click_size = { 450.0f,250.0f };
+	position = { 40.0f,350.0f };
 	color = { 1.0f,1.0f,1.0f,1.0f };
 
 	BUTTON_WIDTH = 200.0f;
 	BUTTON_HEIGHT = 100.0f;
 	BUTTON_Y = 600.0f;
 	COLOR_R = 1.0f, COLOR_G = 1.0f, COLOR_B = 1.0f, COLOR_A = 1.0f;
-	BACK_BUTTON_X = 300.0f;
-	NEXT_BUTTON_X = 600.0f;
+	BACK_BUTTON_X = 50.0f;
+	NEXT_BUTTON_X = 250.0f;
 	next_image_coror_a = 0.7f;
 	back_image_coror_a = 0.7f;
 
@@ -36,7 +36,6 @@ TutorialSprite::TutorialSprite()
 	end_sprite_namber = false;
 
 	click_sprite.resize(2, nullptr);
-
 	click_sprite[0] = SpriteManager::Instance().Load("Data/Sprite/next_image.png");
 	click_sprite[1] = SpriteManager::Instance().Load("Data/Sprite/back_image.png");
 }
@@ -125,6 +124,7 @@ void TutorialSprite::Render()
 	rc.deviceContext = dc;
 	rc.renderState = renderState;
 
+
 	if (current_index >= 0 && current_index < sprite.size())
 	{
 		sprite[current_index].Render(
@@ -145,7 +145,7 @@ void TutorialSprite::Render()
 			// **A. 「次へ」ボタン (click_sprite[0]) の描画**
 			if (click_sprite[0] != nullptr)
 			{
-				const float NEXT_BUTTON_X = 600.0f; // 例として X座標を指定
+				//const float NEXT_BUTTON_X = 600.0f; // 例として X座標を指定
 				click_sprite[0]->Render(
 					rc,
 					NEXT_BUTTON_X, BUTTON_Y, 0.0f, // 描画位置
