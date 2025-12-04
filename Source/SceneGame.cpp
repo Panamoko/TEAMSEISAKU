@@ -7,10 +7,10 @@
 #include "EnemySlime.h"
 #include "Player.h"
 #include "Core.h"
-#include "AllySlime.h"         // 既存＝直線弾
-#include "AllySlimeHeal.h"   // 新規＝追尾弾
-#include <cfloat>          // ★ FLT_MAX 用
-#include "System/Mouse.h"  // ★ Mouse::BTN_LEFT / GetX()/GetY() を使うなら明示的に
+#include "AllySlime.h"
+#include "AllySlimeHeal.h"
+#include <cfloat>
+#include "System/Mouse.h"
 #include "CollisionManager.h"
 #include "GimmicManager.h"
 #include "StageManager.h"
@@ -18,118 +18,85 @@
 #include <cmath>
 #include <DirectXMath.h>
 #include <algorithm>
-static constexpr int kMaxAlliesPerPlayer = 6;
-using namespace DirectX;
 #include "SceneManager.h"
 #include "SceneTitle.h"
 #include "SceneLoading.h"
 #include "SceneFactory.h"
 
+// 派生クラスのインクルード
+#include "PlayerMelee.h"
+#include "PlayerHeal.h"
+#include "PlayerShot.h"
+
+static constexpr int kMaxAlliesPerPlayer = 6;
+using namespace DirectX;
 
 float SceneGame::s_timeScale = 1.0f;
 float SceneGame::s_slowTimer = 0.0f;
 
-
-// スロー設定
 void SceneGame::SetSlowMotion(float scale, float duration)
 {
 	s_timeScale = scale;
 	s_slowTimer = duration;
 }
 
-SceneGame::~SceneGame() = default;  // ★これを追加
-// 初期化
+SceneGame::~SceneGame() = default;
+
 void SceneGame::Initialize()
 {
-	//ステージ初期化
 	stage = new Stage();
-	//カメラコントローラー初期化
 	cameraController = new CameraController();
 
-
-
-	// 最初は 0 番をアクティブに
 	Player::SetActive(nullptr);
+	players.clear();
 
-	// カメラ初期設定
 	Graphics& graphics = Graphics::Instance();
 	Camera& camera = Camera::Instance();
 
 	camera.SetQuarterView(
-		DirectX::XMFLOAT3(0, 0, 0), // 注視点 (Focus)
-		0.0f,                       // Yaw (0度 = 手前側から奥を見る)
-		45.0f,                      // Pitch (既存の 15, -15 の角度に合わせるなら45度)
-		75.0f                       // Distance (CameraController::maxDistance と同じ値)
+		DirectX::XMFLOAT3(0, 0, 0),
+		0.0f,
+		45.0f,
+		75.0f
 	);
 
 	camera.SetPerspectiveFov(
-		DirectX::XMConvertToRadians(45),//視野角
-		graphics.GetScreenWidth() / graphics.GetScreenHeight(),//アスペクト比
-		0.1f,	//クリップ距離（近）
-		1000.0f	//クリップ距離（遠）
+		DirectX::XMConvertToRadians(45),
+		graphics.GetScreenWidth() / graphics.GetScreenHeight(),
+		0.1f,
+		1000.0f
 	);
 
-	// エネミー初期化
 	EnemyManager& enemyManager = EnemyManager::Instance();
-
 	GimmicManager::Instance().GetAll();
 
 	Scene* currentScene = SceneManager::Instance().GetCurrentScene();
 	currentScene->SetSceneName(scene_name);
-	std::string scene_file_name = "JSON /" + scene_name + ".json";
-
-	if (currentScene)
-	{
-		// アクティブなシーンがあれば、その名前をファイル名として使用
-		scene_file_name = "JSON/" + currentScene->GetSceneName() + ".json";
-	}
+	std::string scene_file_name = "JSON/" + currentScene->GetSceneName() + ".json";
 
 	Serializer::LoadScene(objects, sprites2d, scene_file_name);
 
-	// ★追加: レンダーターゲット作成 (解像度はメイン画面と同じか、少し落としても良い)
 	pipRenderTarget = new RenderTarget(1280, 720);
-
-	// PiP表示用の枠やダミーSpriteを用意（Render関数でRenderTargetのテクスチャを使って描画するため、中身は適当でOK）
-	// ここではSpriteの機能だけ借りたいのでダミーロード
 	pipFrameSprite = SpriteManager::Instance().Load("Data/Sprite/Window.png");
 
 	grid_map.Initialize(150, 150, 0.8f);
-
-	// Dissolve初期化
-	dissolve = std::make_unique<Dissolve>();
-	dissolve->Initialize(Graphics::Instance().GetDevice(), "Data/Sprite/DissolveNoise.png");
-
-	// 初期状態は「演出中」かつ「タイマーMAX（真っ黒）」
-	isSceneStarting = true;
-	startTransitionTimer = startDuration;
 }
 
-// 終了化
 void SceneGame::Finalize()
 {
-	//エネミーの終了化
 	EnemyManager::Instance().Clear();
-
 	CollisionManager::Instance().Clear();
-
 	GimmicManager::Instance().Clear();
-
 	GameObjectManager::Instance().Clear();
 
-	//カメラコントローラー終了化
 	if (cameraController != nullptr)
 	{
 		delete cameraController;
 		cameraController = nullptr;
 	}
 
-	for (auto& up : players)
-	{
-		up->Finalize();
-	}
 	players.clear();
 
-	//ステージ終了化
 	if (stage != nullptr)
 	{
 		delete stage;
@@ -138,186 +105,125 @@ void SceneGame::Finalize()
 
 	if (pipRenderTarget) delete pipRenderTarget;
 }
+
+// unique_ptr用の削除関数（既存）
 template <typename T>
 void RemoveInactiveObjects(std::vector<std::unique_ptr<T>>& objects)
 {
 	auto it = std::remove_if(objects.begin(), objects.end(),
 		[](const std::unique_ptr<T>& obj) {
-			// HP0になって OnDead() が呼ばれると IsActive() が false になるはず
 			return !obj->IsActive();
 		});
 	objects.erase(it, objects.end());
 }
-// 更新処理
+
+// ★追加: shared_ptr用の削除関数 (エラー「識別子が見つかりません」の修正)
+template <typename T>
+void RemoveInactiveSharedObjects(std::vector<std::shared_ptr<T>>& objects)
+{
+	auto it = std::remove_if(objects.begin(), objects.end(),
+		[](const std::shared_ptr<T>& obj) {
+			return !obj->IsActive();
+		});
+	objects.erase(it, objects.end());
+}
+
 void SceneGame::Update(float elapsedTime)
 {
-	// 開始演出（明転）の更新
-	if (isSceneStarting)
-	{
-		// タイマーを減らす (Duration -> 0.0)
-		startTransitionTimer -= elapsedTime;
-
-		if (startTransitionTimer <= 0.0f)
-		{
-			startTransitionTimer = 0.0f;
-			isSceneStarting = false; // 演出終了、通常操作へ
-		}
-	}
-
-	// スロータイマーの更新
 	if (s_slowTimer > 0.0f)
 	{
 		s_slowTimer -= elapsedTime;
-		if (s_slowTimer <= 0.0f)
-		{
-			s_timeScale = 1.0f; // 時間経過でスロー解除
-		}
+		if (s_slowTimer <= 0.0f) s_timeScale = 1.0f;
 	}
 
-	// オブジェクト更新に使うスケーリング済み時間
 	float scaledElapsedTime = elapsedTime * s_timeScale;
 
-	pickingRay.Update(); // レイ情報の更新
-	if (!UpdatePiP())
-	{
-		Player::UpdateSpawn(players, pickingRay);
-	}
-
-	//カメラコントローラー更新処理
 	if (Player::GetActivePtr() != nullptr)
 	{
 		DirectX::XMFLOAT3 target = Player::Instance().GetPosition();
 		target.y += 0.5f;
 		cameraController->SetTarget(target);
 	}
-
 	cameraController->Update(elapsedTime);
 
+	// スポーン処理
+	pickingRay.Update();
+	UpdatePlayerSpawn();
+
+	// キーボード切り替え
 	Player::UpdateActiveByKeyboard(players);
 
 	if (game_editor.PlayGame())
 	{
-		//ステージ更新処理
 		stage->Update(scaledElapsedTime);
-
 		StageManager::Instance().Update(scaledElapsedTime);
 
-		// 全プレイヤーにマップ情報を渡す
-		for (auto& up : players)
+		// マップ情報セット & 更新
+		for (auto& character : players)
 		{
-			up->SetGridMap(&grid_map);
+			// Characterとして扱う（共通）
+			// Player型にキャストしてマップをセット
+			if (auto p = std::dynamic_pointer_cast<Player>(character)) {
+				p->SetGridMap(&grid_map);
+			}
+
+			// 更新
+			character->Update(scaledElapsedTime);
+
+			// 自動スポーン処理 (Player型であれば)
+			if (auto p = std::dynamic_pointer_cast<Player>(character))
+			{
+				if (p->UpdateAutoSpawn(scaledElapsedTime))
+				{
+					p->SpawnAlly(this);
+				}
+			}
 		}
 
-		// エネミーにもマップ情報を渡す
 		EnemyManager& em = EnemyManager::Instance();
 		int enemyCount = em.GetEnemyCount();
 		for (int i = 0; i < enemyCount; ++i)
 		{
 			auto enemy = em.GetEnemy(i);
-			// EnemySlime型（またはその派生）であればキャストしてセット
 			if (auto slime = std::dynamic_pointer_cast<EnemySlime>(enemy))
 			{
 				slime->SetGridMap(&grid_map);
 			}
 		}
 
-		// 全プレイヤー更新（入力は Player 側で“アクティブのみ”にガード）
-		for (auto& up : players) up->Update(scaledElapsedTime);
-
-		//エネミー更新処理
 		EnemyManager::Instance().Update(scaledElapsedTime);
-
-		//ギミック更新処理
 		GimmicManager::Instance().Update(scaledElapsedTime);
 
-		// 味方スライム更新
 		for (auto& a : alliesStraight) a->Update(scaledElapsedTime);
 		for (auto& a : alliesHoming)  a->Update(scaledElapsedTime);
 		for (auto& a : alliesMelee)   a->Update(scaledElapsedTime);
 
 		CollisionManager::Instance().CheckAllCollision();
-		RemoveInactiveObjects(players);
+
+		// ★修正: ここで定義した RemoveInactiveSharedObjects を呼ぶ
+		RemoveInactiveSharedObjects(players);
+
 		RemoveInactiveObjects(alliesStraight);
 		RemoveInactiveObjects(alliesHoming);
 		RemoveInactiveObjects(alliesMelee);
 		grid_map.Build(GameObjectManager::Instance().GetAllObjects());
 	}
 
-	// === 追加: C/Vでスポーン ===
-	auto& gp = Input::Instance().GetGamePad();
-	auto down = gp.GetButtonDown();
-	Player* active = Player::GetActivePtr(); // あなたのAPIに合わせて
-
-	if (active) {
-		if (down & GamePad::BTN_X) {      // Cキー（エミュ）＝直線弾
-			AddAllyStraightFor(active);
-		}
-		if (down & GamePad::BTN_Y) {      // Vキー（エミュ）＝追尾弾
-			AddAllyHomingFor(active);
-		}
-		if (down & GamePad::BTN_B) {
-			AddAllyMeleeFor(active);
-		}
-	}
-	// ★変更: PiPのクリック判定 (左端配置 & スライド式)
-	Mouse& mouse = Input::Instance().GetMouse();
-	if (mouse.GetButtonDown() & Mouse::BTN_LEFT)
-	{
-		float mx = (float)mouse.GetPositionX();
-		float my = (float)mouse.GetPositionY();
-
-		// PiPのサイズ設定
-		// 常に一定サイズで表示し、出し入れだけを行う形にします
-		float pipW = 400.0f; // ウィンドウ全体の幅
-		float pipH = 225.0f; // 高さ
-		float tabW = 60.0f;  // 矢印（タブ）部分の幅（クリック判定用）
-
-		// 表示位置（X座標）の計算
-		// Expanded(開): 0.0f (左端にピッタリ)
-		// Collapsed(閉): -pipW + tabW (タブだけ残して画面外へ)
-		float currentPipX = isPipExpanded ? 0.0f : (-pipW + tabW);
-		float currentPipY = 100.0f; // 上から少し下げた位置
-
-		// クリック判定エリア
-		// 画像の「右端のタブ部分」をクリックしたらトグルする
-		// 判定エリア： (ウィンドウ右端 - タブ幅) ～ ウィンドウ右端
-		float clickAreaLeft = currentPipX + pipW - tabW;
-		float clickAreaRight = currentPipX + pipW;
-		float clickAreaTop = currentPipY;
-		float clickAreaBottom = currentPipY + pipH;
-
-		if (mx >= clickAreaLeft && mx < clickAreaRight &&
-			my >= clickAreaTop && my < clickAreaBottom)
-		{
-			isPipExpanded = !isPipExpanded;
-		}
-	}
-
-
+	UpdatePiP();
 }
 
-// 描画処理
 void SceneGame::Render()
 {
 	Graphics& graphics = Graphics::Instance();
 	ID3D11DeviceContext* dc = graphics.GetDeviceContext();
 	ModelRenderer* modelRenderer = graphics.GetModelRenderer();
 	Camera& camera = Camera::Instance();
-	ShapeRenderer* shapeRenderer = graphics.GetShapeRenderer(); // デバッグ描画用
+	ShapeRenderer* shapeRenderer = graphics.GetShapeRenderer();
 
 	game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), modelRenderer);
 
-	// ---------------------------------------------------
-	// 1. PiP画面（UIのみ）の描画
-	// ---------------------------------------------------
-	// ★変更: 関数呼び出しだけになりスッキリします
 	RenderPiP(dc);
 
-	// ---------------------------------------------------
-	// 2. メイン画面の描画
-	// ---------------------------------------------------
-
-	// 描画準備
 	RenderContext rc;
 	rc.deviceContext = dc;
 	rc.lightDirection = { 0.0f, -1.0f, 0.0f };
@@ -330,7 +236,12 @@ void SceneGame::Render()
 	// 3Dモデル描画
 	{
 		StageManager::Instance().Render(rc, modelRenderer);
-		for (auto& up : players) up->Render(rc, modelRenderer);
+
+		// プレイヤー描画
+		for (auto& character : players) {
+			// CharacterのRenderを呼ぶ（Playerでオーバーライドされている）
+			character->Render(rc, modelRenderer);
+		}
 
 		// 味方スライム描画
 		for (auto& a : alliesStraight) a->Render(rc, modelRenderer);
@@ -343,24 +254,19 @@ void SceneGame::Render()
 
 	// 3Dデバッグ描画
 	{
-		for (auto& up : players) up->RenderDebugPrimitive(rc, shapeRenderer);
+		for (auto& character : players) character->RenderDebugPrimitive(rc, shapeRenderer);
 		EnemyManager::Instance().RenderDebugPrimitive(rc, shapeRenderer);
-		// 必要に応じて他のデバッグ描画を追加
 	}
 
-	// 2Dスプライト描画 (PiPウィンドウ自体の描画含む)
+	// 2Dスプライト描画
 	{
 		for (const auto& game_sprite : this->sprites2d)
 		{
 			if (game_sprite) game_sprite->Render();
 		}
 
-		// PiPウィンドウ（左側・スライド式）の描画
 		if (pipFrameSprite && pipRenderTarget)
 		{
-			// ... (ここはウィンドウ枠と、RenderPiPで作ったテクスチャを表示する処理なので残す) ...
-			// ※ 長くなるようならここも `RenderPiPWindow(rc)` のように関数化できます
-
 			float pipW = 400.0f;
 			float pipH = 225.0f;
 			float tabW = 60.0f;
@@ -368,14 +274,11 @@ void SceneGame::Render()
 			float pipX = isPipExpanded ? 0.0f : (-pipW + tabW);
 			float pipY = 100.0f;
 
-			// 枠の描画
 			pipFrameSprite->Render(rc, pipX, pipY, 0.0f, pipW, pipH, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 
-			// 中身（RenderPiPで描いた映像）の描画
 			float margin = 10.0f;
 			float marginRight = tabW + margin;
 
-			// RenderTextureを使って描画
 			pipFrameSprite->RenderTexture(
 				rc,
 				pipRenderTarget->GetSRV(),
@@ -383,23 +286,11 @@ void SceneGame::Render()
 				pipW - (margin + marginRight), pipH - (margin * 2.0f)
 			);
 		}
-
-		// 最後にディゾルブを上書き描画
-		if (isSceneStarting && dissolve)
-		{
-			// 進行度: 1.0(真っ黒) -> 0.0(透明)
-			float t = std::clamp(startTransitionTimer / startDuration, 0.0f, 1.0f);
-			dissolve->Render(dc, t);
-		}
 	}
 }
 
-// GUI描画
 void SceneGame::DrawGUI()
 {
-	//Player::Instance().DrawDebugGUI();
-
-
 }
 
 int SceneGame::CountAlliesFor(Player* leader) const
@@ -413,41 +304,37 @@ int SceneGame::CountAlliesFor(Player* leader) const
 
 void SceneGame::AddAllyStraightFor(Player* leader)
 {
-	if (CountAlliesFor(leader) >= kMaxAlliesPerPlayer)
-	{
-		// （任意）ImGui::SetTooltip("Allies capped per player (5)");
-		return;
-	}
+	if (CountAlliesFor(leader) >= kMaxAlliesPerPlayer) return;
 	int slot = CountAlliesFor(leader);
-	auto p = std::make_unique<AllySlime>(slot); // 既存クラス＝直線弾
-	p->SetLeader(leader);
+
+	// ★修正: コンストラクタに leader を渡す
+	auto p = std::make_unique<AllySlime>(slot, leader);
+	// p->SetLeader(leader); // コンストラクタで設定済みなので不要（残しても無害）
+
 	alliesStraight.emplace_back(std::move(p));
 }
 
 void SceneGame::AddAllyHomingFor(Player* leader)
 {
-	// 新:
-	if (CountAlliesFor(leader) >= kMaxAlliesPerPlayer) {
-		return;
-	}
+	if (CountAlliesFor(leader) >= kMaxAlliesPerPlayer) return;
 	int slot = CountAlliesFor(leader);
-	auto p = std::make_unique<AllySlimeHeal>(slot); // 新規クラス＝追尾弾
-	p->SetLeader(leader);
+
+	// ★修正
+	auto p = std::make_unique<AllySlimeHeal>(slot, leader);
+
 	alliesHoming.emplace_back(std::move(p));
 }
 
 void SceneGame::AddAllyMeleeFor(Player* leader)
 {
-	if (CountAlliesFor(leader) >= kMaxAlliesPerPlayer)
-	{
-		return;
-	}
+	if (CountAlliesFor(leader) >= kMaxAlliesPerPlayer) return;
 	int slot = CountAlliesFor(leader);
-	auto p = std::make_unique<AllySlimeMelee>(slot);
-	p->SetLeader(leader);
+
+	// ★修正
+	auto p = std::make_unique<AllySlimeMelee>(slot, leader);
+
 	alliesMelee.emplace_back(std::move(p));
 }
-
 int SceneGame::CountAlliesGlobal() const
 {
 	return static_cast<int>(alliesStraight.size() + alliesHoming.size() + alliesMelee.size());
@@ -455,57 +342,48 @@ int SceneGame::CountAlliesGlobal() const
 
 void SceneGame::RenderPiP(ID3D11DeviceContext* dc)
 {
-	// レンダーターゲットがなければ何もしない
 	if (!pipRenderTarget) return;
 
 	Graphics& graphics = Graphics::Instance();
 
-	// 1. レンダーターゲット有効化
 	pipRenderTarget->Clear(dc, 0.2f, 0.2f, 0.2f, 1.0f);
 	pipRenderTarget->Activate(dc);
 
-	// 2. 描画コンテキスト設定
 	RenderContext rc;
 	rc.deviceContext = dc;
 	rc.lightDirection = { 0.0f, -1.0f, 0.0f };
 	rc.renderState = graphics.GetRenderState();
 
-	// 3. UI（アイコン）の描画
-	float playerIconSize = 128.0f; // プレイヤー用
-	float allyIconSize = 100.0f;    // 味方用
-	float padding = 12.0f;         // 行間
-	float startX = 20.0f;          // 左余白
-	float startY = 20.0f;          // 上余白
+	float playerIconSize = 128.0f;
+	float allyIconSize = 100.0f;
+	float padding = 12.0f;
+	float startX = 20.0f;
+	float startY = 20.0f;
 
 	for (size_t i = 0; i < players.size(); ++i) {
-		Player* pLeader = players[i].get();
+		// ★修正: players[i] は Character なので Player* にキャスト
+		Player* pLeader = dynamic_cast<Player*>(players[i].get());
 		if (!pLeader) continue;
 
-		// Y座標計算
 		float currentY = startY + static_cast<float>(i) * (playerIconSize + padding);
 
-		// (A) プレイヤー描画
 		pLeader->RenderUI(rc, startX, currentY, playerIconSize);
 
-		// (B) 従属する味方を描画
 		float currentAllyX = startX + playerIconSize + 10.0f;
-		float allyYOffset = (playerIconSize - allyIconSize) * 0.5f; // 高さ合わせ
+		float allyYOffset = (playerIconSize - allyIconSize) * 0.5f;
 
-		// 直進型
 		for (auto& ally : alliesStraight) {
 			if (ally && ally->GetLeader() == pLeader) {
 				ally->RenderUI(rc, currentAllyX, currentY + allyYOffset, allyIconSize);
 				currentAllyX += allyIconSize + 5.0f;
 			}
 		}
-		// 追尾型 (Heal)
 		for (auto& ally : alliesHoming) {
 			if (ally && ally->GetLeader() == pLeader) {
 				ally->RenderUI(rc, currentAllyX, currentY + allyYOffset, allyIconSize);
 				currentAllyX += allyIconSize + 5.0f;
 			}
 		}
-		// 近接型 (Melee)
 		for (auto& ally : alliesMelee) {
 			if (ally && ally->GetLeader() == pLeader) {
 				ally->RenderUI(rc, currentAllyX, currentY + allyYOffset, allyIconSize);
@@ -514,7 +392,6 @@ void SceneGame::RenderPiP(ID3D11DeviceContext* dc)
 		}
 	}
 
-	// 4. レンダーターゲット解除（バックバッファに戻す）
 	pipRenderTarget->Deactivate(dc);
 }
 REGISTER_SCENE(SceneGame);
@@ -523,44 +400,47 @@ bool SceneGame::UpdatePiP()
 {
 	Mouse& mouse = Input::Instance().GetMouse();
 
-	// 左クリックされた瞬間のみ判定
 	if (mouse.GetButtonDown() & Mouse::BTN_LEFT)
 	{
 		float mx = (float)mouse.GetPositionX();
 		float my = (float)mouse.GetPositionY();
 
-		// PiPのサイズ設定（描画側と合わせる必要があります）
 		const float pipW = 400.0f;
 		const float pipH = 225.0f;
 		const float tabW = 60.0f;
 
-		// 現在の表示位置
 		float currentPipX = isPipExpanded ? 0.0f : (-pipW + tabW);
 		float currentPipY = 100.0f;
 
-		// --- 判定エリア ---
 		float tabLeft = currentPipX + pipW - tabW;
 		float tabRight = currentPipX + pipW;
 		float winTop = currentPipY;
 		float winBottom = currentPipY + pipH;
 
-		// UI全体の範囲（展開中はウィンドウ全体、格納中はタブのみ）
 		float uiLeft = isPipExpanded ? currentPipX : tabLeft;
 		float uiRight = currentPipX + pipW;
 
-		// 範囲内をクリックしたか？
 		if (mx >= uiLeft && mx < uiRight &&
 			my >= winTop && my < winBottom)
 		{
-			// さらにタブ部分なら開閉トグル
 			if (mx >= tabLeft && mx < tabRight)
 			{
 				isPipExpanded = !isPipExpanded;
 			}
-
-			return true; // UIをクリックした
+			return true;
 		}
 	}
+	return false;
+}
 
-	return false; // UIをクリックしていない
+void SceneGame::UpdatePlayerSpawn()
+{
+	bool isClick = (Input::Instance().GetMouse().GetButtonDown() & Mouse::BTN_LEFT);
+	if (!ImGui::GetIO().WantCaptureMouse && isClick)
+	{
+		if (players.size() < 5)
+		{
+			Player::UpdateSpawn(players, pickingRay);
+		}
+	}
 }

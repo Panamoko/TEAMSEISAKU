@@ -10,6 +10,7 @@ Barracks::Barracks()
 {
     model = ModelManager::Instance().Load("Data/Model/bilud/ie.mdl");
     model = ModelManager::Instance().Load("Data/Model/bilud/ie2.mdl");
+
 	//Šî‘bİ’è
 	hp = 10.0f;
 	spawn_interval = 5.0f;
@@ -64,7 +65,11 @@ void Barracks::Update(float elapsedTime)
 
     // --- ‚±‚±‚©‚ç‚ÍŠù‘¶‚Ìˆ— ---
 
-    spawn_timer += elapsedTime;
+    if (current_enemy_count < max_enemy_count)
+    {
+        spawn_timer += elapsedTime;
+    }
+
     current_enemy_count = static_cast<int>(spawned_enemies.size());
 
     if (current_enemy_count < max_enemy_count && spawn_timer >= spawn_interval)

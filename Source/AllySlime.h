@@ -18,7 +18,7 @@ class AllySlime : public Character
 {
 public:
     // formationIndex: 隊列内でのスロット番号（0 始まり）
-    explicit AllySlime(int formationIndex);
+    explicit AllySlime(int formationIndex, Player* leader);
     ~AllySlime() override {}
 
     // メインフレーム更新処理

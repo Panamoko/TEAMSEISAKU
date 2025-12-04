@@ -156,6 +156,10 @@
     <ClInclude Include="Source\ModelManager.h" />
     <ClInclude Include="Source\Picking_Ray.h" />
     <ClInclude Include="Source\Player.h" />
+    <ClInclude Include="Source\PlayerHeal.h" />
+    <ClInclude Include="Source\PlayerMelee.h" />
+    <ClInclude Include="Source\PlayerShot.h" />
+    <ClInclude Include="Source\PreparationPhase.h" />
     <ClInclude Include="Source\Projectile.h" />
     <ClInclude Include="Source\ProjectileHoming.h" />
     <ClInclude Include="Source\ProjectileManager.h" />
@@ -196,6 +200,7 @@
     <ClInclude Include="Source\System\Shader.h" />
     <ClInclude Include="Source\System\ShapeRenderer.h" />
     <ClInclude Include="Source\System\Sprite.h" />
+    <ClInclude Include="Source\TutorialSprite.h" />
     <ClInclude Include="Source\Yagura.h" />
   </ItemGroup>
   <ItemGroup>
@@ -241,6 +246,10 @@
     <ClCompile Include="Source\ModelManager.cpp" />
     <ClCompile Include="Source\Picking_Ray.cpp" />
     <ClCompile Include="Source\Player.cpp" />
+    <ClCompile Include="Source\PlayerHeal.cpp" />
+    <ClCompile Include="Source\PlayerMelee.cpp" />
+    <ClCompile Include="Source\PlayerShot.cpp" />
+    <ClCompile Include="Source\PreparationPhase.cpp" />
     <ClCompile Include="Source\Projectile.cpp" />
     <ClCompile Include="Source\ProjectileHoming.cpp" />
     <ClCompile Include="Source\ProjectileManager.cpp" />
@@ -276,6 +285,7 @@
     <ClCompile Include="Source\System\RenderTarget.cpp" />
     <ClCompile Include="Source\System\ShapeRenderer.cpp" />
     <ClCompile Include="Source\System\Sprite.cpp" />
+    <ClCompile Include="Source\TutorialSprite.cpp" />
     <ClCompile Include="Source\Yagura.cpp" />
   </ItemGroup>
   <ItemGroup>
