@@ -1,6 +1,7 @@
 #pragma once
 
 #include "System/Sprite.h"
+#include "Dissolve.h"
 #include "Scene.h"
 #include <thread>
 
@@ -38,4 +39,9 @@ private:
 
 	Scene* nextScene = nullptr;
 	std::thread* thread = nullptr;
+
+	std::unique_ptr<Dissolve> dissolve;
+	float transitionTimer = 0.0f;       // 演出用タイマー
+	const float transitionDuration = 1.0f; // 演出時間
+	bool isFadeInMode = true;
 };

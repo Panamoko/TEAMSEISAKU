@@ -25,6 +25,7 @@ using namespace DirectX;
 #include "SceneLoading.h"
 #include "SceneFactory.h"
 
+
 float SceneGame::s_timeScale = 1.0f;
 float SceneGame::s_slowTimer = 0.0f;
 
@@ -93,6 +94,14 @@ void SceneGame::Initialize()
 	pipFrameSprite = SpriteManager::Instance().Load("Data/Sprite/Window.png");
 
 	grid_map.Initialize(150, 150, 0.8f);
+
+	// Dissolve初期化
+	dissolve = std::make_unique<Dissolve>();
+	dissolve->Initialize(Graphics::Instance().GetDevice(), "Data/Sprite/DissolveNoise.png");
+
+	// 初期状態は「演出中」かつ「タイマーMAX（真っ黒）」
+	isSceneStarting = true;
+	startTransitionTimer = startDuration;
 }
 
 // 終了化
@@ -142,6 +151,19 @@ void RemoveInactiveObjects(std::vector<std::unique_ptr<T>>& objects)
 // 更新処理
 void SceneGame::Update(float elapsedTime)
 {
+	// 開始演出（明転）の更新
+	if (isSceneStarting)
+	{
+		// タイマーを減らす (Duration -> 0.0)
+		startTransitionTimer -= elapsedTime;
+
+		if (startTransitionTimer <= 0.0f)
+		{
+			startTransitionTimer = 0.0f;
+			isSceneStarting = false; // 演出終了、通常操作へ
+		}
+	}
+
 	// スロータイマーの更新
 	if (s_slowTimer > 0.0f)
 	{
@@ -360,6 +382,14 @@ void SceneGame::Render()
 				pipX + margin, pipY + margin,
 				pipW - (margin + marginRight), pipH - (margin * 2.0f)
 			);
+		}
+
+		// 最後にディゾルブを上書き描画
+		if (isSceneStarting && dissolve)
+		{
+			// 進行度: 1.0(真っ黒) -> 0.0(透明)
+			float t = std::clamp(startTransitionTimer / startDuration, 0.0f, 1.0f);
+			dissolve->Render(dc, t);
 		}
 	}
 }

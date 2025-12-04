@@ -15,6 +15,7 @@
 #include "AllySlimeMelee.h"
 #include "GameSprite.h"
 #include "System/RenderTarget.h"
+#include "Dissolve.h"
 
 class Player;
 class AllySlime;         // 既存＝直線弾
@@ -92,4 +93,10 @@ private:
 	RenderTarget* pipRenderTarget = nullptr; // ワイプ画面の描画先
 	bool isPipExpanded = false;              // 拡大表示中かどうか
 	Sprite* pipFrameSprite = nullptr;        // 枠線などを表示したい場合用（今回は空のSpriteで代用）
+
+	// 明転演出用
+	std::unique_ptr<Dissolve> dissolve;
+	bool isSceneStarting = true;    // 開始演出中か
+	float startTransitionTimer = 0.0f; // タイマー
+	const float startDuration = 1.5f;  // 明転にかかる時間
 };
