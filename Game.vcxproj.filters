@@ -88,6 +88,9 @@
     <Filter Include="Source\ChangeSceneSytem">
       <UniqueIdentifier>{dc53eae1-adb5-4d34-a0f2-42c6aaebd19f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Phase">
+      <UniqueIdentifier>{903a4a62-8662-4cba-ae77-7f566eb657f9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui-docking\imconfig.h">
@@ -188,6 +191,9 @@
     </ClInclude>
     <ClInclude Include="Source\EnemySlime.h">
       <Filter>Source\Character\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Player.h">
+      <Filter>Source\Character\Player</Filter>
     </ClInclude>
     <ClInclude Include="Source\Camera.h">
       <Filter>Source\Camera</Filter>
@@ -338,17 +344,8 @@
     <ClInclude Include="Source\ProjectileTurret.h">
       <Filter>Source\Projectile</Filter>
     </ClInclude>
-    <ClInclude Include="Source\PlayerShot.h">
-      <Filter>Source\Character\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\PlayerHeal.h">
-      <Filter>Source\Character\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\PlayerMelee.h">
-      <Filter>Source\Character\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Player.h">
-      <Filter>Source\Character\Player</Filter>
+    <ClInclude Include="Source\PreparationPhase.h">
+      <Filter>Source\Phase</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -435,6 +432,9 @@
     </ClCompile>
     <ClCompile Include="Source\EnemySlime.cpp">
       <Filter>Source\Character\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Player.cpp">
+      <Filter>Source\Character\Player</Filter>
     </ClCompile>
     <ClCompile Include="Source\Camera.cpp">
       <Filter>Source\Camera</Filter>
@@ -580,17 +580,8 @@
     <ClCompile Include="Source\ProjectileTurret.cpp">
       <Filter>Source\Projectile</Filter>
     </ClCompile>
-    <ClCompile Include="Source\PlayerShot.cpp">
-      <Filter>Source\Character\Player</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\PlayerHeal.cpp">
-      <Filter>Source\Character\Player</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\PlayerMelee.cpp">
-      <Filter>Source\Character\Player</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Player.cpp">
-      <Filter>Source\Character\Player</Filter>
+    <ClCompile Include="Source\PreparationPhase.cpp">
+      <Filter>Source\Phase</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

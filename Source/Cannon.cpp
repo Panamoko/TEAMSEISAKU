@@ -7,14 +7,16 @@
 Cannon::Cannon()
 {
     class_name = "Cannon";
+    model = ModelManager::Instance().Load("Data/Model/bilud/cannon.mdl");
 
     //基礎設定
 	hp = 50.0f;
 	attac_interval = 3.0f;
-	attac_territory = 10.0f;
+	attac_territory = 15.0f;
 	attac_timer = 0.0f;
 	power = 10.0f;
 	speed = 3.0f;
+    scale = { 0.5f,0.5f,0.5f };
 
     //当たり判定の種類設定
     collider = std::make_unique<CylinderCollider>();
@@ -110,9 +112,9 @@ void Cannon::Update(float elapsedTime)
                 };
 
                 //ProjectileStraiteのインスタンスを生成
-                ProjectileStraite* stratite = new ProjectileStraite(&projectileManager);
+                ProjectileStraite* stratite = new ProjectileStraite(&projectileManager, "Data/Model/Sword/Sword.mdl", type = Type::EnemyAttack);
 
-                stratite->Launch(launch_direction, { launch_position.x,launch_position.y + 1.0f,launch_position.z });
+                stratite->Launch(launch_direction, { launch_position.x - 0.3f,launch_position.y + 1.0f,launch_position.z });
 
                 attac_timer = 0.0f;
             }

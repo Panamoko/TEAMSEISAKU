@@ -11,7 +11,7 @@
 //	scale.x = scale.y = scale.z = 0.5f;
 //}
 
-ProjectileStraite::ProjectileStraite(ProjectileManager* manager, const char* modelPath)
+ProjectileStraite::ProjectileStraite(ProjectileManager* manager, const char* modelPath, Type type_)
 	:Projectile(manager)	//基底クラスのコンストラクタを呼び出す
 {
 	auto resource = ModelManager::Instance().GetResource(modelPath);
@@ -21,8 +21,7 @@ ProjectileStraite::ProjectileStraite(ProjectileManager* manager, const char* mod
 //	scale.x = scale.y = scale.z = 0.5f;
 	scale.x = scale.y = scale.z = 3.0f;
 
-	// GameObject の type を PlayerAttack に設定
-	type = Type::PlayerAttack;
+	type = type_;
 
 	// (Gimmic_BreakWall は OBB だが、球は球 (Sphere) で判定するのが妥当)
 	collider = std::make_unique<SphereCollider>();

@@ -16,6 +16,7 @@
 #include "AllySlimeMelee.h"
 #include "GameSprite.h"
 #include "System/RenderTarget.h"
+#include "PreparationPhase.h"
 
 // 派生クラスのインクルード
 #include "PlayerMelee.h"
@@ -65,6 +66,7 @@ private:
 	int CountAlliesGlobal() const;
 
 	CameraController* cameraController = nullptr;
+	std::unique_ptr<PreparationPhase> preparation;
 
 	static float s_timeScale;
 	static float s_slowTimer;
