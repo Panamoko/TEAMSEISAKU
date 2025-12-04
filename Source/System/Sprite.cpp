@@ -4,6 +4,10 @@
 #include "Misc.h"
 #include "GpuResourceUtils.h"
 
+Microsoft::WRL::ComPtr<ID3D11VertexShader> Sprite::commonVertexShader;
+Microsoft::WRL::ComPtr<ID3D11PixelShader>  Sprite::commonPixelShader;
+Microsoft::WRL::ComPtr<ID3D11InputLayout>  Sprite::commonInputLayout;
+
 // コンストラクタ
 Sprite::Sprite()
 	: Sprite(nullptr)
@@ -58,9 +62,8 @@ Sprite::Sprite(const char* filename)
 
 	HRESULT hr = S_OK;
 
-	// 頂点バッファの生成
+	// 頂点バッファの生成 (これは個別に必要なのでそのまま)
 	{
-		// 頂点バッファを作成するための設定オプション
 		D3D11_BUFFER_DESC buffer_desc = {};
 		buffer_desc.ByteWidth = sizeof(Vertex) * 4;
 		buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
@@ -68,44 +71,50 @@ Sprite::Sprite(const char* filename)
 		buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 		buffer_desc.MiscFlags = 0;
 		buffer_desc.StructureByteStride = 0;
-		// 頂点バッファオブジェクトの生成
 		hr = device->CreateBuffer(&buffer_desc, nullptr, vertexBuffer.GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
 
-	// 頂点シェーダー
+	// ★変更: 頂点シェーダーと入力レイアウトの共有化
+	// まだロードされていない場合のみロード処理を行う
+	if (!commonVertexShader)
 	{
-		// 入力レイアウト
 		D3D11_INPUT_ELEMENT_DESC inputElementDesc[] =
 		{
 			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			{ "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		};
+		// common... のアドレスにロードする
 		hr = GpuResourceUtils::LoadVertexShader(
 			device,
 			"Data/Shader/SpriteVS.cso",
 			inputElementDesc,
 			ARRAYSIZE(inputElementDesc),
-			inputLayout.GetAddressOf(),
-			vertexShader.GetAddressOf());
+			commonInputLayout.GetAddressOf(),
+			commonVertexShader.GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-
 	}
 
-	// ピクセルシェーダー
+	// ★変更: ピクセルシェーダーの共有化
+	if (!commonPixelShader)
 	{
+		// common... のアドレスにロードする
 		hr = GpuResourceUtils::LoadPixelShader(
 			device,
 			"Data/Shader/SpritePS.cso",
-			pixelShader.GetAddressOf());
+			commonPixelShader.GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
 
-	// テクスチャの生成	
+	// ★重要: 共有リソースをこのインスタンスのメンバ変数にセットする
+	// ComPtrなので、代入するだけで参照カウントが増え、安全に共有される
+	vertexShader = commonVertexShader;
+	pixelShader = commonPixelShader;
+	inputLayout = commonInputLayout;
+
 	if (filename != nullptr)
 	{
-		// テクスチャファイル読み込み
 		D3D11_TEXTURE2D_DESC desc;
 		hr = GpuResourceUtils::LoadTexture(device, filename, shaderResourceView.GetAddressOf(), &desc);
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
@@ -115,10 +124,8 @@ Sprite::Sprite(const char* filename)
 	}
 	else
 	{
-		// ダミーテクスチャ生成
 		D3D11_TEXTURE2D_DESC desc;
-		hr = GpuResourceUtils::CreateDummyTexture(device, 0xFFFFFFFF, shaderResourceView.GetAddressOf(),
-			&desc);
+		hr = GpuResourceUtils::CreateDummyTexture(device, 0xFFFFFFFF, shaderResourceView.GetAddressOf(), &desc);
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
 		textureWidth = static_cast<float>(desc.Width);

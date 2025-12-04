@@ -58,7 +58,7 @@ public:
 
 protected:
 	// ‹¤’Ê‰Šú‰»—pŠÖ”
-	void InitializeCommon(const char* modelPath);
+	void InitializeCommon(const char* modelPath, const char* iconPath);
 
 	void OnLanding() override;
 	void OnDead() override;

@@ -32,6 +32,7 @@ AllySlimeHeal::AllySlimeHeal(int formationIndex, Player* initLeader)
     scale = { 0.002f, 0.002f, 0.002f };
     radius = 0.5f;
     height = 1.0f;
+    maxHealth = 20;
     icon = SpriteManager::Instance().Load("Data/Sprite/SLime_G.png");
     hpBarSprite = new Sprite(nullptr);
     // ★追加: コライダーの設定
@@ -102,9 +103,10 @@ void AllySlimeHeal::UpdateHealing(float elapsedTime)
         // 距離チェック
         float dx = p->GetPosition().x - position.x;
         float dz = p->GetPosition().z - position.z;
+        // 味方スライム回復部分
         if ((dx * dx + dz * dz) <= rangeSq)
         {
-            p->Heal(1); // 1回復
+            p->Heal(10); // ★数値を変更 (例: 1 -> 10)
             healedAny = true;
         }
     }

@@ -48,7 +48,7 @@ AllySlimeMelee::AllySlimeMelee(int formationIndex, Player* initLeader)
     position = ref.GetPosition();
 
     UpdateTransform();
-
+    attackDamage = 5;
     AllySlime::RegisterAlly(this);
 }
 

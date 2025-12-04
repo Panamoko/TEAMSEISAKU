@@ -254,7 +254,7 @@ void AllySlime::CollisionProjectilesVsEnemies()
             if (!hit) continue;
 
             // ヒット時にダメージ（無敵 0.5s は Player と合わせる）
-            if (enemy->ApplyDamage(1, 0.5f)) {
+            if (enemy->ApplyDamage(5, 0.5f)) {
 
             }
 
