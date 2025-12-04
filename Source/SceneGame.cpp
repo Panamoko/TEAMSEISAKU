@@ -22,6 +22,7 @@
 #include "SceneTitle.h"
 #include "SceneLoading.h"
 #include "SceneFactory.h"
+#include "System//Audio.h"
 
 // 派生クラスのインクルード
 #include "PlayerMelee.h"
@@ -39,6 +40,12 @@ void SceneGame::SetSlowMotion(float scale, float duration)
 {
 	s_timeScale = scale;
 	s_slowTimer = duration;
+}
+
+SceneGame::SceneGame(const std::string& name)
+{
+	scene_name = name;
+	Audio::Instance().Initialize();
 }
 
 SceneGame::~SceneGame() = default;
@@ -96,6 +103,8 @@ void SceneGame::Initialize()
 	isSceneStarting = true; // フェードイン開始
 	startTransitionTimer = startTransitionDuration;
 
+	Stage_BGM = Audio::Instance().LoadAudioSource("Data/Sound/BGM_Play.wav");
+
 }
 
 void SceneGame::Finalize()
@@ -147,6 +156,7 @@ void RemoveInactiveSharedObjects(std::vector<std::shared_ptr<T>>& objects)
 
 void SceneGame::Update(float elapsedTime)
 {
+	Stage_BGM->Play(true);
 	// 時間経過とともにタイマーを減らし、0になったらフラグを下ろす
 	if (isSceneStarting)
 	{

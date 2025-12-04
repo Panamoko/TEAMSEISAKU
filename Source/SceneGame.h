@@ -29,7 +29,7 @@
 class SceneGame : public Scene
 {
 public:
-	SceneGame(const std::string& name = "scene_play") { scene_name = name; };
+	SceneGame(const std::string& name = "scene_play");
 	~SceneGame() override;
 
 	void Initialize() override;
