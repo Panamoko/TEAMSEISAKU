@@ -4,6 +4,7 @@
 #include "Scene.h"
 #include "Editor.h"
 #include "ChangeSceneSytem.h"
+#include "Dissolve.h"
 
 // タイトルシーン
 class SceneTitle : public Scene
@@ -12,35 +13,38 @@ public:
 	SceneTitle() {}
 	~SceneTitle() override {}
 
-	// 初期化
 	void Initialize() override;
-
-	// 終了化
 	void Finalize() override;
-
-	// 更新処理
 	void Update(float elapsedTime) override;
-
-	// 描画処理
 	void Render() override;
-
-	// GUI描画
 	void DrawGUI() override;
 
 private:
-	Sprite* sprite = nullptr;
-	Sprite* sprite2 = nullptr;
+	Sprite* sprite = nullptr;      // タイトルロゴ
+	Sprite* spriteStart = nullptr; // Game Startボタン (GameStage.png)
+	Sprite* spriteTutorial = nullptr; // ★追加: Tutorialボタン
+
 	editor game_editor;
 	std::vector<std::shared_ptr<GameObject>> objects;
 	std::vector<std::unique_ptr<GameSprite>> sprites;
-	DirectX::XMFLOAT3 position;
-	DirectX::XMFLOAT3 size;
-	float sprite_left;
-	float sprite_top;
-	float sprite_width;
-	float sprite_height;
-	float alpha_timer = 0.0f;     // α値計算用のタイマー
-	float blink_interval = 0.5f;  // 点滅間隔（例: 0.5秒ごとに切り替え）
-	DirectX::XMFLOAT4 render_color = { 1.0f, 1.0f, 1.0f, 1.0f }; // 描画色
+
+	// ボタンの座標とサイズ
+	DirectX::XMFLOAT3 startButtonPos;
+	DirectX::XMFLOAT3 startButtonSize;
+	DirectX::XMFLOAT3 tutorialButtonPos;
+	DirectX::XMFLOAT3 tutorialButtonSize;
+
+	float alpha_timer = 0.0f;
+	float blink_interval = 0.5f;
+	DirectX::XMFLOAT4 render_color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	std::unique_ptr<ChangeSceneSytem> change_scene;
+
+	// ディゾルブ制御用
+	std::unique_ptr<Dissolve> dissolve;
+	bool isSceneChanging = false;   // 遷移開始フラグ
+	float transitionTimer = 0.0f;   // タイマー
+	const float transitionDuration = 1.5f; // 暗転にかかる時間
+
+	// ★追加: 遷移先のシーンを保存しておく変数
+	Scene* pendingNextScene = nullptr;
 };

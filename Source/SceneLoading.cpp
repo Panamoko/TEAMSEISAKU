@@ -2,6 +2,7 @@
 #include "System/Input.h"
 #include "SceneLoading.h"
 #include "SceneManager.h"
+#include <algorithm>
 
 // 初期化
 void SceneLoading::Initialize()
@@ -11,6 +12,15 @@ void SceneLoading::Initialize()
 
 	// スレッド開始
 	thread = new std::thread(LoadingThread, this);
+
+	// Dissolve初期化
+	dissolve = std::make_unique<Dissolve>();
+	dissolve->Initialize(Graphics::Instance().GetDevice(), "Data/Sprite/DissolveNoise.png");
+
+	// 最初は「完全に黒」からスタートして、徐々に晴れていく
+	transitionTimer = transitionDuration;
+	// 「まずは画面を表示していくモード」にする
+	isFadeInMode = true;
 }
 
 // 終了化
@@ -39,11 +49,40 @@ void SceneLoading::Update(float elapsedTime)
 	constexpr float speed = 180;
 	angle += speed * elapsedTime;
 
-	// 次のシーンの準備が完了したらシーンを切り替える
-	if (nextScene->IsReady())
+	// --- ディゾルブ演出ロジック ---
+	if (isFadeInMode)
 	{
-		SceneManager::Instance().ChangeScene(nextScene);
-		nextScene = nullptr;
+		// 【フェードイン】 (真っ黒 1.0 -> 表示 0.0)
+		transitionTimer -= elapsedTime;
+
+		if (transitionTimer <= 0.0f)
+		{
+			transitionTimer = 0.0f;
+
+			// 画面が見えきった状態で、次のシーンのロードが終わっているか確認
+			if (nextScene && nextScene->IsReady())
+			{
+				// ロード完了＆フェードイン完了なら、フェードアウトへ移行
+				isFadeInMode = false;
+			}
+			// ロードがまだなら、transitionTimer=0(見える状態)のまま待機
+		}
+	}
+	else
+	{
+		// 【フェードアウト】 (表示 0.0 -> 真っ黒 1.0)
+		transitionTimer += elapsedTime;
+
+		// 完全に隠れきったらシーン切り替え
+		if (transitionTimer >= transitionDuration)
+		{
+			transitionTimer = transitionDuration;
+			if (nextScene)
+			{
+				SceneManager::Instance().ChangeScene(nextScene);
+				nextScene = nullptr;
+			}
+		}
 	}
 }
 
@@ -59,22 +98,20 @@ void SceneLoading::Render()
 	rc.deviceContext = dc;
 	rc.renderState = renderState;
 
-	// 2Dスプライト描画
+	// 1. ローディングアイコン描画
+	if (sprite)
 	{
-		// 画面右下にローディングアイコンを描画
-		float screenWidth = static_cast<float>(graphics.GetScreenWidth());
-		float screenHeight = static_cast<float>(graphics.GetScreenHeight());
+		float sw = graphics.GetScreenWidth();
+		float sh = graphics.GetScreenHeight();
+		sprite->Render(rc, sw - 150, sh - 150, 0, 128, 128, angle, 1, 1, 1, 1);
+	}
 
-		float spriteWidth = 256;
-		float spriteHeight = 256;
-		float positionX = screenWidth - spriteWidth;
-		float positionY = screenHeight - spriteHeight;
-
-		sprite->Render(rc,
-			positionX, positionY, 0,
-			spriteWidth, spriteHeight,
-			angle,
-			1, 1, 1, 1);
+	// 2. ディゾルブ演出を最前面に描画
+	if (dissolve)
+	{
+		float t = std::clamp(transitionTimer / transitionDuration, 0.0f, 1.0f);
+		// t=1.0(真っ黒) <---> t=0.0(透明)
+		dissolve->Render(dc, t);
 	}
 }
 
