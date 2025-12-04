@@ -5,14 +5,13 @@
 #include "Editor.h"
 #include "ChangeSceneSytem.h"
 #include "Dissolve.h"
-#include <System/AudioSource.h>
 
 
 // タイトルシーン
 class SceneTitle : public Scene
 {
 public:
-	SceneTitle() {}
+	SceneTitle();
 	~SceneTitle() override {}
 
 	void Initialize() override;
@@ -50,5 +49,4 @@ private:
 	// ★追加: 遷移先のシーンを保存しておく変数
 	Scene* pendingNextScene = nullptr;
 
-	AudioSource* Stage_BGM = nullptr;
 };

@@ -70,6 +70,8 @@ GameObject::GameObject() :name("Empty")
 		0,0,1,0,
 		0,0,0,1
 	};
+	Audio::Instance().Initialize();
+	hitSE[0] = Audio::Instance().LoadAudioSource("Data/Sound/Hit.wav");
 }
 
 GameObject::~GameObject()

@@ -10,6 +10,11 @@
 #include <algorithm>
 #include "System/Audio.h"
 
+SceneTitle::SceneTitle()
+{
+	Audio::Instance().Initialize();
+}
+
 // èâä˙âª
 void SceneTitle::Initialize()
 {
@@ -37,8 +42,6 @@ void SceneTitle::Initialize()
 	isSceneChanging = false;
 	transitionTimer = 0.0f;
 	pendingNextScene = nullptr;
-
-	Audio::Instance().Initialize();
 
 	Stage_BGM = Audio::Instance().LoadAudioSource("Data/Sound/BGM_Title.wav");
 

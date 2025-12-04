@@ -32,7 +32,7 @@ TutorialSprite::TutorialSprite()
 	{
 		std::cerr << "Fatal Error: Tutorial images could not be loaded." << std::endl;
 	}
-	current_index = 1;
+	current_index = 0;
 	end_sprite_namber = false;
 
 	click_sprite.resize(2, nullptr);
