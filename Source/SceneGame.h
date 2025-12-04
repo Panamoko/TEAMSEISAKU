@@ -17,6 +17,7 @@
 #include "GameSprite.h"
 #include "System/RenderTarget.h"
 #include "PreparationPhase.h"
+#include "Dissolve.h"
 
 // 派生クラスのインクルード
 #include "PlayerMelee.h"
@@ -74,4 +75,9 @@ private:
 	RenderTarget* pipRenderTarget = nullptr;
 	bool isPipExpanded = false;
 	Sprite* pipFrameSprite = nullptr;
+
+	std::unique_ptr<Dissolve> dissolve;
+	bool isSceneStarting = true;        // 開始演出中フラグ
+	float startTransitionTimer = 0.0f;  // 演出タイマー
+	const float startTransitionDuration = 1.5f; // フェードインにかける時間
 };
