@@ -8,7 +8,7 @@
 #include "System/Graphics.h"
 #include "System/ImGuiRenderer.h"
 #include "SceneGame.h"
-
+#include "EffectManager.h"
 #include "SceneTitle.h"
 #include "SceneManager.h"
 
@@ -29,6 +29,12 @@ Framework::Framework(HWND hWnd)
 	// グラフィックス初期化
 	Graphics::Instance().Initialize(hWnd);
 
+	// エフェクト初期化
+	EffectManager::Instance().Initialize(
+		Graphics::Instance().GetDevice(),
+		Graphics::Instance().GetDeviceContext()
+	);
+
 	// IMGUI初期化
 	ImGuiRenderer::Initialize(hWnd, Graphics::Instance().GetDevice(), Graphics::Instance().GetDeviceContext());
 
@@ -44,6 +50,9 @@ Framework::~Framework()
 	//sceneGame.Finalize();
 	SceneManager::Instance().Clear();
 
+	// エフェクト終了化
+	EffectManager::Instance().Finalize();
+
 	// IMGUI終了化
 	ImGuiRenderer::Finalize();
 
@@ -55,6 +64,9 @@ void Framework::Update(float elapsedTime)
 {
 	// インプット更新処理
 	Input::Instance().Update();
+
+	// エフェクト更新処理
+	EffectManager::Instance().Update(elapsedTime);
 
 	// IMGUIフレーム開始処理	
 	ImGuiRenderer::NewFrame();
@@ -78,6 +90,9 @@ void Framework::Render(float elapsedTime)
 	// シーン描画処理
 	//sceneGame.Render();
 	SceneManager::Instance().Render();
+
+	// エフェクト描画
+	EffectManager::Instance().Render();
 
 	// シーンGUI描画処理
 	//sceneGame.DrawGUI();

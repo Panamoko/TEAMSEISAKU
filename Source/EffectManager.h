@@ -1,0 +1,43 @@
+#pragma once
+#include <Effekseer.h>
+#include <EffekseerRendererDX11.h>
+#include <string>
+#include <map>
+#include <d3d11.h>
+#include <DirectXMath.h>
+
+class EffectManager
+{
+public:
+    static EffectManager& Instance() {
+        static EffectManager instance;
+        return instance;
+    }
+
+    // 初期化・終了
+    void Initialize(ID3D11Device* device, ID3D11DeviceContext* context);
+    void Finalize();
+
+    // 毎フレーム呼ぶ
+    void Update(float elapsedTime); // 時間経過
+    void Render();                  // 描画
+
+    // エフェクト読み込み
+    void Load(const std::string& name, const std::wstring& path);
+
+    // エフェクト再生 (戻り値はハンドル。停止などに使う)
+    Effekseer::Handle Play(const std::string& name, const DirectX::XMFLOAT3& position);
+
+    // 全停止
+    void StopAll();
+
+private:
+    EffectManager() = default;
+    ~EffectManager() = default;
+
+    ::Effekseer::ManagerRef manager = nullptr;
+    ::EffekseerRendererDX11::RendererRef renderer = nullptr;
+
+    // 読み込んだエフェクトのキャッシュ
+    std::map<std::string, ::Effekseer::EffectRef> effects;
+};

@@ -23,6 +23,7 @@
 #include "SceneLoading.h"
 #include "SceneFactory.h"
 #include "System//Audio.h"
+#include "EffectManager.h"
 
 // 派生クラスのインクルード
 #include "PlayerMelee.h"
@@ -105,6 +106,8 @@ void SceneGame::Initialize()
 
 	Stage_BGM = Audio::Instance().LoadAudioSource("Data/Sound/BGM_Play.wav");
 
+	// エフェクトの読み込み
+	EffectManager::Instance().Load("Hit", L"Data/Effect/Hit.efk");
 }
 
 void SceneGame::Finalize()
@@ -187,6 +190,34 @@ void SceneGame::Update(float elapsedTime)
 	// スポーン処理
 	pickingRay.Update();
 	UpdatePlayerSpawn();
+
+	// ★追加: 右クリックでエフェクト再生テスト
+	Mouse& mouse = Input::Instance().GetMouse();
+	if (mouse.GetButtonDown() & Mouse::BTN_RIGHT) // 右クリック
+	{
+		// ピッキングレイ（カメラからマウス位置へ伸びる線）を取得
+		DirectX::XMFLOAT3 rayOrigin = pickingRay.GetRayOrigin();
+		DirectX::XMFLOAT3 rayDir = pickingRay.GetRayDirection();
+
+		// 地面(Y=0)との交差判定（簡易計算）
+		// レイの方程式: P = Origin + t * Dir
+		// Y = Origin.y + t * Dir.y = 0 となる t を求める
+		if (std::abs(rayDir.y) > 0.001f) // ゼロ除算防止
+		{
+			float t = -rayOrigin.y / rayDir.y;
+			if (t > 0.0f)
+			{
+				// 交点座標を計算
+				DirectX::XMFLOAT3 hitPos;
+				hitPos.x = rayOrigin.x + t * rayDir.x;
+				hitPos.y = 0.0f; // 地面の高さ
+				hitPos.z = rayOrigin.z + t * rayDir.z;
+
+				// エフェクト再生！
+				EffectManager::Instance().Play("Hit", hitPos);
+			}
+		}
+	}
 
 	// キーボード切り替え
 	Player::UpdateActiveByKeyboard(players);

@@ -91,6 +91,9 @@
     <Filter Include="Source\Phase">
       <UniqueIdentifier>{903a4a62-8662-4cba-ae77-7f566eb657f9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Effect">
+      <UniqueIdentifier>{5e864a7b-3c2d-4237-91d3-7684b32e07be}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui-docking\imconfig.h">
@@ -360,6 +363,9 @@
       <Filter>Source\Sprite</Filter>
     </ClInclude>
     <ClInclude Include="Source\Dissolve.h" />
+    <ClInclude Include="Source\EffectManager.h">
+      <Filter>Source\Effect</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -610,6 +616,9 @@
     </ClCompile>
     <ClCompile Include="Source\Dissolve.cpp">
       <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\EffectManager.cpp">
+      <Filter>Source\Effect</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
