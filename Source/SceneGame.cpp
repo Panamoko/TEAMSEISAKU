@@ -203,11 +203,8 @@ void SceneGame::Update(float elapsedTime)
 			}
 		}
 
-		if (preparation->GetState())
-		{
 		// 全プレイヤー更新（入力は Player 側で“アクティブのみ”にガード）
 		for (auto& up : players) up->Update(scaledElapsedTime);
-		}
 
 		//エネミー更新処理
 		EnemyManager::Instance().Update(scaledElapsedTime);
@@ -290,8 +287,6 @@ void SceneGame::Render()
 	ModelRenderer* modelRenderer = graphics.GetModelRenderer();
 	Camera& camera = Camera::Instance();
 	ShapeRenderer* shapeRenderer = graphics.GetShapeRenderer(); // デバッグ描画用
-
-	game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), modelRenderer);
 
 	// ---------------------------------------------------
 	// 1. PiP画面（UIのみ）の描画
