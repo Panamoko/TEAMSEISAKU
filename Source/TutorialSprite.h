@@ -19,4 +19,6 @@ private:
 
     std::vector<Sprite> sprite;
     std::vector<std::string> sprite_paths;
+
+    bool end_sprite_namber;
 };

@@ -22,6 +22,8 @@ TutorialSprite::TutorialSprite()
 	{
 		std::cerr << "Fatal Error: Tutorial images could not be loaded." << std::endl;
 	}
+	current_index = 1;
+	end_sprite_namber = false;
 }
 
 void TutorialSprite::AddSprite(const Sprite& sprite_date)
@@ -48,7 +50,11 @@ void TutorialSprite::Update()
 		if (current_index >= sprite.size())
 		{
 			current_index = -1;
-
+			end_sprite_namber = true;
+		}
+		else
+		{
+			end_sprite_namber = false;
 		}
 	}
 
