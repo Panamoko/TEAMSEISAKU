@@ -147,8 +147,6 @@ void RemoveInactiveSharedObjects(std::vector<std::shared_ptr<T>>& objects)
 
 void SceneGame::Update(float elapsedTime)
 {
-	Stage_BGM->Play(true);
-
 	// 時間経過とともにタイマーを減らし、0になったらフラグを下ろす
 	if (isSceneStarting)
 	{
