@@ -2,16 +2,15 @@
 //
 // AllySlime.h
 // プレイヤーの後方で隊列を組みつつ追従し、敵を攻撃する味方スライム。
-// ・隊列（縦列）でフォーメーションを維持しながら移動
-// ・周囲の敵やギミックを自動攻撃して援護
-// ・更新処理や衝突判定はこのクラス内で完結
 //
 
 #include "System/Model.h"
 #include "System/ModelRenderer.h"
-#include "Character.h"          // 一部環境では "character.h" になるため、プロジェクト設定を確認すること
-#include "ProjectileManager.h"  // 味方が放つ弾を管理するマネージャ
+#include "Character.h"
+#include "ProjectileManager.h"
 #include "System/Sprite.h"
+#include "Animator.h"  // ★追加: これがないと Animator 型が使えません
+
 class Player; // 前方宣言
 
 class AllySlime : public Character
@@ -43,6 +42,14 @@ public:
     void RenderUI(const RenderContext& rc, float x, float y, float size);
 
     void OnDead() override;
+
+protected: // ★private ではなく protected にすることで、継承したクラス(MeleeやHeal)からもアクセスできるようにします
+
+    // ★追加: アニメーション管理クラス
+    Animator animator;
+
+    // ★追加: 回復などのアクション中かどうかを管理するフラグ
+    bool isAction = false;
 
 private:
     // 内部処理: 隊列アンカーや自動攻撃、衝突判定を更新

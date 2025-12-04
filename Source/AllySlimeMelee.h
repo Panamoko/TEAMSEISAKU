@@ -3,6 +3,7 @@
 #include "System/Model.h"
 #include "System/ModelRenderer.h"
 #include "System/Sprite.h"
+#include "Animator.h"
 class Player;
 class Enemy;
 class GimmicBase;
@@ -40,6 +41,10 @@ private:
 
     // 衝突・ダメージ判定
     void CheckAttackCollision();
+
+    // アニメーター
+    Animator animator;
+    bool isAction = false;
 
 private:
     // --- パラメータ ---

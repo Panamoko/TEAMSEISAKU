@@ -1,6 +1,3 @@
-// =============================================
-// AllySlimeHoming.cpp
-// =============================================
 #include "AllySlimeHeal.h"
 #include "AllySlime.h"
 #include "Player.h"
@@ -9,16 +6,10 @@
 #include "Collision.h"
 #include <cfloat>
 #include <cmath>
-
-// 不要なインクルードを削除
-// #include "EnemyManager.h"
-// #include "GimmicManager.h"
-// #include "Gimmic_BreakWall.h"
-// #include "Core.h"
+#include <cstdlib>
 
 using namespace DirectX;
 
-// 演算子オーバーロード（ベクトル計算用）
 static inline XMFLOAT3 operator+(const XMFLOAT3& a, const XMFLOAT3& b) { return { a.x + b.x,a.y + b.y,a.z + b.z }; }
 static inline XMFLOAT3 operator-(const XMFLOAT3& a, const XMFLOAT3& b) { return { a.x - b.x,a.y - b.y,a.z - b.z }; }
 static inline XMFLOAT3 operator*(const XMFLOAT3& a, float s) { return { a.x * s,a.y * s,a.z * s }; }
@@ -26,40 +17,51 @@ static inline XMFLOAT3 operator*(const XMFLOAT3& a, float s) { return { a.x * s,
 AllySlimeHeal::AllySlimeHeal(int formationIndex, Player* initLeader)
     : index(formationIndex), leader(initLeader)
 {
-    // ヒーラーっぽい色（例えば赤やピンク、緑など）のモデルがあれば差し替えると分かりやすいです
-    slimeModel = ModelManager::Instance().Load("Data/Model/Slime/Slime_G.mdl");
+    // ★修正: CreateUniqueInstance を使用
+    auto modelPtr = ModelManager::Instance().CreateUniqueInstance("Data/Model/Slime/Slime_G.mdl");
+    slimeModel = modelPtr.release();
+
+    animator.SetModel(slimeModel);
+    animator.Play("kyara_taiki (1)", true);
+
+    // ★修正: ランダムオフセット
+    float randomOffset = static_cast<float>(rand() % 100) / 100.0f;
+    animator.Update(randomOffset);
 
     scale = { 0.002f, 0.002f, 0.002f };
     radius = 0.5f;
     height = 1.0f;
-    maxHealth = 20;      // 任意の最大体力
-    health = maxHealth;  // 現在体力を最大値に合わせる
+    maxHealth = 20;
+    health = maxHealth;
     icon = SpriteManager::Instance().Load("Data/Sprite/SLime_G.png");
     hpBarSprite = new Sprite(nullptr);
-    // ★追加: コライダーの設定
+
     collider = std::make_unique<CylinderCollider>();
     collider->type = ColliderType::Cylinder;
     collider->owner = this;
 
-    // コライダーのサイズ設定 (モデルに合わせて調整)
     auto* cyl = static_cast<CylinderCollider*>(collider.get());
     cyl->radius = radius;
     cyl->height = height;
-    cyl->center = position; // 初期位置
+    cyl->center = position;
 
     const Player& ref = (leader ? *leader : Player::Instance());
     position = ref.GetPosition();
     UpdateTransform();
 
-    AllySlime::RegisterAlly(this); // 登録
+    AllySlime::RegisterAlly(this);
 }
 
 AllySlimeHeal::~AllySlimeHeal()
 {
-    // ★追加
     if (hpBarSprite) {
         delete hpBarSprite;
         hpBarSprite = nullptr;
+    }
+    // ★修正: 削除
+    if (slimeModel) {
+        delete slimeModel;
+        slimeModel = nullptr;
     }
     AllySlime::UnregisterAlly(this);
 }
@@ -94,25 +96,21 @@ void AllySlimeHeal::UpdateHealing(float elapsedTime)
     const float rangeSq = autoHealRange * autoHealRange;
     bool healedAny = false;
 
-    // --- 全プレイヤーをチェック ---
     const auto& players = Player::GetAllPlayers();
     for (auto* p : players)
     {
         if (!p || p->GetHealth() <= 0) continue;
-        if (p->GetHealth() >= p->GetMaxHealth()) continue; // HP満タンならスキップ
+        if (p->GetHealth() >= p->GetMaxHealth()) continue;
 
-        // 距離チェック
         float dx = p->GetPosition().x - position.x;
         float dz = p->GetPosition().z - position.z;
-        // 味方スライム回復部分
         if ((dx * dx + dz * dz) <= rangeSq)
         {
-            p->Heal(10); // ★数値を変更 (例: 1 -> 10)
+            p->Heal(10);
             healedAny = true;
         }
     }
 
-    // --- 全味方スライムをチェック ---
     const auto& allies = AllySlime::GetAllAllies();
     for (auto* a : allies)
     {
@@ -128,42 +126,65 @@ void AllySlimeHeal::UpdateHealing(float elapsedTime)
         }
     }
 
-    // 誰かを回復したらクールダウンに入る
     if (healedAny)
     {
         autoHealTimer = autoHealInterval;
-        // エフェクトがあればここで再生
+        // ★修正: 回復アニメーション
+        isHealingAction = true;
+        animator.Play("kyara_kugeki (1)", false);
     }
 }
 
 void AllySlimeHeal::Update(float elapsedTime)
 {
+    animator.Update(elapsedTime);
+
     if (leader && (!leader->IsActive() || leader->GetHealth() <= 0))
     {
-        OnDead(); // 死亡処理を実行
-        return;   // 更新をここで打ち切る
+        OnDead();
+        return;
     }
-    // 1) 隊列アンカー更新
+
     UpdateAnchor();
 
-    // 2) 移動処理
+    // 揺れ防止移動
     float vx = anchor.x - position.x;
     float vz = anchor.z - position.z;
     float d = std::sqrt(vx * vx + vz * vz);
-    if (d > 0.0001f) { vx /= d; vz /= d; }
-    else { vx = vz = 0.0f; }
+    if (d < 0.1f) { vx = 0.0f; vz = 0.0f; }
+    else { vx /= d; vz /= d; }
 
     Move(elapsedTime, vx, vz, moveSpeed);
     Turn(elapsedTime, vx, vz, turnSpeed);
 
-    // 3) 自動回復ロジック
     UpdateHealing(elapsedTime);
 
-    // 4) 基底クラス更新
+    // アニメーション
+    if (isHealingAction)
+    {
+        if (!animator.IsPlaying()) isHealingAction = false;
+    }
+    else
+    {
+        float speedSq = velocity.x * velocity.x + velocity.z * velocity.z;
+        if (speedSq > 0.01f)
+        {
+            animator.Play("kyara_junp", true);
+        }
+        else
+        {
+            animator.Play("kyara_taiki (1)", true);
+        }
+    }
+
     UpdateVelocity(elapsedTime);
     UpdateInvincibleTimer(elapsedTime);
     UpdateTransform();
 
+    if (collider)
+    {
+        static_cast<CylinderCollider*>(collider.get())->center = position;
+    }
 }
 
 void AllySlimeHeal::Render(const RenderContext& rc, ModelRenderer* renderer)
@@ -179,7 +200,6 @@ void AllySlimeHeal::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer*
 
     if (autoHealEnabled) {
         const XMFLOAT3 center = { position.x, position.y, position.z };
-        // 回復射程を緑色で表示
         renderer->RenderCylinder(rc, center, autoHealRange, height, XMFLOAT4(0, 1, 0, 0.2f));
     }
     renderer->RenderSphere(rc, anchor, 0.15f, XMFLOAT4(1, 1, 0, 1));
@@ -191,7 +211,6 @@ void AllySlimeHeal::RenderUI(const RenderContext& rc, float x, float y, float si
     {
         icon->Render(rc, x, y, 0.0f, size, size, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 
-        // ★追加: HPバー描画
         if (hpBarSprite)
         {
             float barW = size;
@@ -202,22 +221,14 @@ void AllySlimeHeal::RenderUI(const RenderContext& rc, float x, float y, float si
             float hpRatio = (float)health / (float)maxHealth;
             hpRatio = std::clamp(hpRatio, 0.0f, 1.0f);
 
-            // 背景
             hpBarSprite->Render(rc, barX, barY, 0.0f, barW, barH, 0.0f, 0.2f, 0.2f, 0.2f, 1.0f);
-            // HPバー
             hpBarSprite->Render(rc, barX, barY, 0.0f, barW * hpRatio, barH, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
         }
     }
 }
 
-// ---------------------------------------------------------
-// 死亡時の処理
-// ---------------------------------------------------------
 void AllySlimeHeal::OnDead()
 {
-    // 1. 味方リストから削除
     AllySlime::UnregisterAlly(this);
-
-    // 2. 非アクティブ化
     GameObject::SetActive(false);
 }

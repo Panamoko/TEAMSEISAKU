@@ -11,6 +11,7 @@
 #include "Character.h"
 #include "ProjectileManager.h"
 #include "System/Sprite.h"
+#include "Animator.h"
 class Player;
 // class Enemy; // 不要になったため削除
 struct RenderContext;
@@ -41,7 +42,8 @@ public:
 
 private:
     void UpdateAnchor();
-
+    Animator animator;
+    bool isHealingAction = false; // 回復モーション中かどうかのフラグ
 private:
     // ===== 編隊・追従パラメータ =====
     int   index = 0;               // 編隊内スロット番号

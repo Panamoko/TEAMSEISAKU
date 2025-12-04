@@ -1,98 +1,139 @@
 #pragma once
 #include <string>
-#include "System/Model.h"          // AnimationScene と同じ Model / ModelResource を想定
+#include "System/Model.h"
 
 using namespace DirectX;
+
 class Animator {
 public:
     void SetModel(Model* m) { model = m; }
 
-    // クリップ再生
-    void Play(int index, bool loop) {
-        if (playing && animIndex == index && looping == loop) return;
-
-        playing = true; looping = loop; animIndex = index; seconds = 0.0f;
-    }
-    void Play(const char* name, bool loop) {
+    // 名前で再生
+    // blendTime を引数に追加
+    void Play(const char* name, bool loop, float blendTime = 0.2f) {
         if (!model) return;
         int idx = 0;
         const auto& anims = model->GetResource()->GetAnimations();
         for (const auto& a : anims) {
-            if (a.name == name) { Play(idx, loop); return; }
+            if (a.name == name) {
+                Play(idx, loop, blendTime);
+                return;
+            }
             ++idx;
         }
     }
 
-    // 経過時間更新＋ノード補間
+    // インデックスで再生
+    void Play(int index, bool loop, float blendSeconds = 0.2f) {
+        // 同じアニメーションを再生中ならリセットしない（重要）
+        if (playing && animIndex == index) {
+            looping = loop; // ループ設定のみ更新
+            return;
+        }
+
+        playing = true;
+        looping = loop;
+        animIndex = index;
+        seconds = 0.0f;
+
+        // ブレンド開始
+        currentBlendTime = 0.0f;
+        blendDuration = blendSeconds;
+    }
+
+    // ★復活: 以前のコードとの互換性のために追加
+    void SetBlendSeconds(float s) { blendDuration = s; }
+
+    // ★復活: 現在時間を取得
+    float GetCurrentSeconds() const { return seconds; }
+
+    // 更新処理
     void Update(float dt) {
         if (!model || !playing || animIndex < 0) return;
 
-        // ブレンド率（切替直後のスムーズ化）
-        float blend = 1.0f;
-        if (seconds < blendLen) {
-            blend = seconds / blendLen;
-            blend *= blend; // 二乗で立ち上がりを滑らかに
-        }
-
-        // アニメ取得
         const auto& anims = model->GetResource()->GetAnimations();
+        if (animIndex >= anims.size()) return;
         const auto& anim = anims.at(animIndex);
 
         // 時間進行
         seconds += dt;
+        currentBlendTime += dt; // ブレンド用時間は常に進める
+
+        // アニメーション再生位置の計算
+        float currentAnimTime = seconds;
         if (seconds >= anim.secondsLength) {
-            if (looping) seconds = 0.0f;
-            else { playing = false; seconds = anim.secondsLength; }
-        }
-
-        // キーフレーム探索
-        const auto& keys = anim.keyframes;
-        const int keyCount = static_cast<int>(keys.size());
-        for (int i = 0; i < keyCount - 1; ++i) {
-            const auto& k0 = keys[i];
-            const auto& k1 = keys[i + 1];
-            if (seconds >= k0.seconds && seconds < k1.seconds) {
-                float rate = (seconds - k0.seconds) / (k1.seconds - k0.seconds);
-
-                auto& nodes = model->GetNodes();
-                const int nodeCount = static_cast<int>(nodes.size());
-                for (int n = 0; n < nodeCount; ++n) {
-                    auto& node = nodes[n];
-                    const auto& nk0 = k0.nodeKeys[n];
-                    const auto& nk1 = k1.nodeKeys[n];
-
-                    using namespace DirectX;
-                    if (blend < 1.0f) {
-                        // 直前姿勢(node) → 新姿勢(nk1)へ “ブレンド”
-                        XMVECTOR S = XMVectorLerp(XMLoadFloat3(&node.scale), XMLoadFloat3(&nk1.scale), blend);
-                        XMVECTOR R = XMQuaternionSlerp(XMLoadFloat4(&node.rotate), XMLoadFloat4(&nk1.rotate), blend);
-                        XMVECTOR T = XMVectorLerp(XMLoadFloat3(&node.translate), XMLoadFloat3(&nk1.translate), blend);
-                        XMStoreFloat3(&node.scale, S);
-                        XMStoreFloat4(&node.rotate, R);
-                        XMStoreFloat3(&node.translate, T);
-                    }
-                    else {
-                        // 本来の補間（k0→k1 を rate で）
-                        XMVECTOR S = XMVectorLerp(XMLoadFloat3(&nk0.scale), XMLoadFloat3(&nk1.scale), rate);
-                        XMVECTOR R = XMQuaternionSlerp(XMLoadFloat4(&nk0.rotate), XMLoadFloat4(&nk1.rotate), rate);
-                        XMVECTOR T = XMVectorLerp(XMLoadFloat3(&nk0.translate), XMLoadFloat3(&nk1.translate), rate);
-                        XMStoreFloat3(&node.scale, S);
-                        XMStoreFloat4(&node.rotate, R);
-                        XMStoreFloat3(&node.translate, T);
-                    }
-                }
-                break; // 見つかったら抜ける
+            if (looping) {
+                currentAnimTime = fmod(seconds, anim.secondsLength);
+            }
+            else {
+                currentAnimTime = anim.secondsLength;
+                // ループしない場合は再生終了とみなすが、最後のポーズは維持
+                playing = false;
             }
         }
 
-        // ノード反映（親子合成やボーン行列を内部で更新）
+        // ブレンド率計算 (0.0 -> 1.0)
+        float blend = 1.0f;
+        if (blendDuration > 0.0f && currentBlendTime < blendDuration) {
+            blend = currentBlendTime / blendDuration;
+            // イージング（滑らかに変化）
+            blend = blend * blend * (3.0f - 2.0f * blend);
+        }
+
+        // キーフレーム補間計算
+        const auto& keys = anim.keyframes;
+        const int keyCount = static_cast<int>(keys.size());
+
+        // 時刻クランプ
+        if (currentAnimTime > anim.secondsLength) currentAnimTime = anim.secondsLength;
+
+        for (int i = 0; i < keyCount - 1; ++i) {
+            const auto& k0 = keys[i];
+            const auto& k1 = keys[i + 1];
+
+            if (currentAnimTime >= k0.seconds && currentAnimTime <= k1.seconds) {
+                float duration = k1.seconds - k0.seconds;
+                float rate = (duration > 0.0f) ? (currentAnimTime - k0.seconds) / duration : 0.0f;
+
+                auto& nodes = model->GetNodes();
+                const int nodeCount = static_cast<int>(nodes.size());
+
+                for (int n = 0; n < nodeCount; ++n) {
+                    auto& node = nodes[n];
+                    // リソース側のキー数が足りているかチェック
+                    if (n >= k0.nodeKeys.size() || n >= k1.nodeKeys.size()) continue;
+
+                    const auto& nk0 = k0.nodeKeys[n];
+                    const auto& nk1 = k1.nodeKeys[n];
+
+                    // ターゲット姿勢（新しいアニメーションの本来の姿）
+                    XMVECTOR targetS = XMVectorLerp(XMLoadFloat3(&nk0.scale), XMLoadFloat3(&nk1.scale), rate);
+                    XMVECTOR targetR = XMQuaternionSlerp(XMLoadFloat4(&nk0.rotate), XMLoadFloat4(&nk1.rotate), rate);
+                    XMVECTOR targetT = XMVectorLerp(XMLoadFloat3(&nk0.translate), XMLoadFloat3(&nk1.translate), rate);
+
+                    // ブレンド処理: 現在の姿勢(node) から ターゲット姿勢(target) へ徐々に移行
+                    if (blend < 1.0f) {
+                        XMVECTOR currentS = XMLoadFloat3(&node.scale);
+                        XMVECTOR currentR = XMLoadFloat4(&node.rotate);
+                        XMVECTOR currentT = XMLoadFloat3(&node.translate);
+
+                        XMStoreFloat3(&node.scale, XMVectorLerp(currentS, targetS, blend));
+                        XMStoreFloat4(&node.rotate, XMQuaternionSlerp(currentR, targetR, blend));
+                        XMStoreFloat3(&node.translate, XMVectorLerp(currentT, targetT, blend));
+                    }
+                    else {
+                        // ブレンド終了後はターゲット姿勢をそのまま適用
+                        XMStoreFloat3(&node.scale, targetS);
+                        XMStoreFloat4(&node.rotate, targetR);
+                        XMStoreFloat3(&node.translate, targetT);
+                    }
+                }
+                break;
+            }
+        }
+
         model->UpdateTransform();
     }
-
-    // 現在の再生時間を取得
-    float GetCurrentSeconds() const { return seconds; }
-
-    void SetBlendSeconds(float s) { blendLen = s; }
 
     bool IsPlaying() const { return playing; }
 
@@ -100,7 +141,10 @@ private:
     Model* model = nullptr;
     int    animIndex = -1;
     float  seconds = 0.0f;
-    float  blendLen = 0.2f;
     bool   looping = false;
     bool   playing = false;
+
+    // ブレンド用変数
+    float  currentBlendTime = 0.0f;
+    float  blendDuration = 0.2f;
 };

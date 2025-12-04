@@ -12,17 +12,28 @@
 #include "Barracks.h"
 #include "AllySlime.h"
 #include "SpriteManager.h"
+#include <cstdlib> // rand()用
+
 using namespace DirectX;
 
-// ベクトル演算用ヘルパー
 static inline XMFLOAT3 operator+(const XMFLOAT3& a, const XMFLOAT3& b) { return { a.x + b.x, a.y + b.y, a.z + b.z }; }
 static inline XMFLOAT3 operator-(const XMFLOAT3& a, const XMFLOAT3& b) { return { a.x - b.x, a.y - b.y, a.z - b.z }; }
 static inline XMFLOAT3 operator*(const XMFLOAT3& a, float s) { return { a.x * s, a.y * s, a.z * s }; }
 
 AllySlimeMelee::AllySlimeMelee(int formationIndex, Player* initLeader)
-    : index(formationIndex), leader(initLeader) // メンバ初期化リストでセット
+    : index(formationIndex), leader(initLeader)
 {
-    slimeModel = ModelManager::Instance().Load("Data/Model/Slime/Slime_R.mdl");
+    // ★修正1: Load ではなく CreateUniqueInstance を使い、個別のインスタンスを作成
+    auto modelPtr = ModelManager::Instance().CreateUniqueInstance("Data/Model/Slime/Slime_R.mdl");
+    slimeModel = modelPtr.release(); // 所有権を受け取る
+
+    // ★修正2: アニメーター初期化 (スペースありの正しい名前)
+    animator.SetModel(slimeModel);
+    animator.Play("kyara_taiki (1)", true);
+
+    // ★修正3: 開始時間をランダムにずらして、同期しないようにする
+    float randomOffset = static_cast<float>(rand() % 100) / 100.0f; // 0.0~1.0秒
+    animator.Update(randomOffset);
 
     scale = { 0.002f, 0.002f, 0.002f };
     radius = 0.6f;
@@ -42,8 +53,6 @@ AllySlimeMelee::AllySlimeMelee(int formationIndex, Player* initLeader)
     hpBarSprite = new Sprite(nullptr);
     type = Type::PlayerAttack;
 
-    // ★修正: 正しいリーダーの位置を初期位置にする
-    // (以前はここで leader が nullptr だったため Player::Instance() が使われていた)
     const Player& ref = (leader ? *leader : Player::Instance());
     position = ref.GetPosition();
 
@@ -54,10 +63,14 @@ AllySlimeMelee::AllySlimeMelee(int formationIndex, Player* initLeader)
 
 AllySlimeMelee::~AllySlimeMelee()
 {
-    // ★追加
     if (hpBarSprite) {
         delete hpBarSprite;
         hpBarSprite = nullptr;
+    }
+    // ★修正4: 独自インスタンスなので自分で削除する
+    if (slimeModel) {
+        delete slimeModel;
+        slimeModel = nullptr;
     }
     AllySlime::UnregisterAlly(this);
 }
@@ -82,15 +95,12 @@ void AllySlimeMelee::UpdateAnchor()
 
 void AllySlimeMelee::SearchTarget()
 {
-    // 既にターゲットがいれば何もしない
     if (!targetEnemy.expired() || !targetGimmic.expired()) return;
 
-    // 基準位置（リーダーの位置）
     const Player& ref = (leader ? *leader : Player::Instance());
     XMFLOAT3 center = ref.GetPosition();
     float minStartDistSq = searchRange * searchRange;
 
-    // 1. 敵を探す
     EnemyManager& em = EnemyManager::Instance();
     for (int i = 0; i < em.GetEnemyCount(); ++i)
     {
@@ -104,50 +114,38 @@ void AllySlimeMelee::SearchTarget()
         if (d2 < minStartDistSq)
         {
             minStartDistSq = d2;
-            targetEnemy = e; // weak_ptrとして保持
+            targetEnemy = e;
             targetGimmic.reset();
         }
     }
 
-    // 2. ギミック（壁・コア・櫓・兵舎）を探す
     GimmicManager& gm = GimmicManager::Instance();
     for (auto& g : gm.GetAll())
     {
         if (!g || !g->IsActive()) continue;
 
         bool isTarget = false;
-
-        // --- クラス名でターゲット判定 ---
-
-        // 壊せる壁
         if (g->class_name == "Gimmic_BreakWall")
         {
             auto wall = std::dynamic_pointer_cast<Gimmic_BreakWall>(g);
-            // 壊れていない壁だけ狙う
             if (wall && !wall->IsBroken()) isTarget = true;
         }
-        // コア
         else if (g->class_name == "Core")
         {
             auto core = std::dynamic_pointer_cast<Core>(g);
             if (core && core->GetHP() > 0.0f) isTarget = true;
         }
-        // ★追加: Yagura (櫓)
         else if (g->class_name == "Yagura")
         {
             auto yagura = std::dynamic_pointer_cast<Yagura>(g);
-            // Yagura.h では GetHp() (pが小文字) なので注意
             if (yagura && yagura->GetHp() > 0.0f) isTarget = true;
         }
-        // ★追加: Barracks (兵舎)
         else if (g->class_name == "Barracks")
         {
             auto barracks = std::dynamic_pointer_cast<Barracks>(g);
-            // 先ほど追加した GetHP() を使用
             if (barracks && barracks->GetHP() > 0.0f) isTarget = true;
         }
 
-        // ターゲット対象なら距離チェックして一番近いものを保存
         if (isTarget)
         {
             float dx = g->position.x - center.x;
@@ -158,7 +156,7 @@ void AllySlimeMelee::SearchTarget()
             {
                 minStartDistSq = d2;
                 targetGimmic = g;
-                targetEnemy.reset(); // 敵ターゲットは解除
+                targetEnemy.reset();
             }
         }
     }
@@ -166,11 +164,9 @@ void AllySlimeMelee::SearchTarget()
 
 void AllySlimeMelee::UpdateState(float elapsedTime)
 {
-    // ターゲットの有効性確認と座標更新
     bool hasTarget = false;
     float targetRadius = 0.5f;
 
-    // Enemyターゲット
     if (auto e = targetEnemy.lock())
     {
         if (!e->IsDestroyRequested())
@@ -181,66 +177,52 @@ void AllySlimeMelee::UpdateState(float elapsedTime)
         }
         else targetEnemy.reset();
     }
-    // Gimmicターゲット
     else if (auto g = targetGimmic.lock())
     {
         if (g->IsActive())
         {
-            if (g->IsActive())
-            {
-                targetPos = g->position;
-                targetRadius = 1.0f; // 仮の半径
+            targetPos = g->position;
+            targetRadius = 1.0f;
 
-                // --- 状態ごとの生存チェック ---
-                if (g->class_name == "Gimmic_BreakWall")
-                {
-                    if (dynamic_cast<Gimmic_BreakWall*>(g.get())->IsBroken()) hasTarget = false;
-                    else hasTarget = true;
-                }
-                else if (g->class_name == "Core")
-                {
-                    if (dynamic_cast<Core*>(g.get())->GetHP() <= 0) hasTarget = false;
-                    else hasTarget = true;
-                }
-                else if (g->class_name == "Yagura")
-                {
-                    if (dynamic_cast<Yagura*>(g.get())->GetHp() <= 0) hasTarget = false;
-                    else hasTarget = true;
-                }
-                else if (g->class_name == "Barracks")
-                {
-                    if (dynamic_cast<Barracks*>(g.get())->GetHP() <= 0) hasTarget = false;
-                    else hasTarget = true;
-                }
-                else
-                {
-                    // その他のギミックならActiveな限りターゲットとする
-                    hasTarget = true;
-                }
-
-                if (!hasTarget) targetGimmic.reset();
-            }
-            else
+            if (g->class_name == "Gimmic_BreakWall")
             {
-                targetGimmic.reset();
+                if (dynamic_cast<Gimmic_BreakWall*>(g.get())->IsBroken()) hasTarget = false;
+                else hasTarget = true;
             }
+            else if (g->class_name == "Core")
+            {
+                if (dynamic_cast<Core*>(g.get())->GetHP() <= 0) hasTarget = false;
+                else hasTarget = true;
+            }
+            else if (g->class_name == "Yagura")
+            {
+                if (dynamic_cast<Yagura*>(g.get())->GetHp() <= 0) hasTarget = false;
+                else hasTarget = true;
+            }
+            else if (g->class_name == "Barracks")
+            {
+                if (dynamic_cast<Barracks*>(g.get())->GetHP() <= 0) hasTarget = false;
+                else hasTarget = true;
+            }
+            else hasTarget = true;
+
+            if (!hasTarget) targetGimmic.reset();
         }
+        else targetGimmic.reset();
     }
 
-    // ステートマシン
     switch (state)
     {
     case State::Follow:
-        // ... (変更なし)
         if (hasTarget) {
             state = State::Chase;
         }
         else {
             SearchTarget();
-            // アンカーへ移動
             float dx = anchor.x - position.x;
             float dz = anchor.z - position.z;
             float d = sqrtf(dx * dx + dz * dz);
+            // 揺れ防止: 0.1f以下なら動かない
             if (d > 0.1f)
             {
                 Move(elapsedTime, dx / d, dz / d, moveSpeed);
@@ -250,7 +232,6 @@ void AllySlimeMelee::UpdateState(float elapsedTime)
         break;
 
     case State::Chase:
-        // ... (変更なし)
         if (!hasTarget) {
             state = State::Return;
         }
@@ -265,14 +246,15 @@ void AllySlimeMelee::UpdateState(float elapsedTime)
                 attackTimer = 0.0f;
             }
             else {
-                Move(elapsedTime, dx / d, dz / d, moveSpeed * 1.2f);
-                Turn(elapsedTime, dx / d, dz / d, turnSpeed);
+                if (d > 0.1f) {
+                    Move(elapsedTime, dx / d, dz / d, moveSpeed * 1.2f);
+                    Turn(elapsedTime, dx / d, dz / d, turnSpeed);
+                }
             }
         }
         break;
 
     case State::Attack:
-        // ... (変更なし)
         if (!hasTarget) {
             state = State::Return;
         }
@@ -294,16 +276,11 @@ void AllySlimeMelee::UpdateState(float elapsedTime)
         break;
 
     case State::Return:
-    {
-        // アンカーに戻る
         float dx = anchor.x - position.x;
         float dz = anchor.z - position.z;
         float d = sqrtf(dx * dx + dz * dz);
 
-        // 帰り道でも敵がいれば反応する
         SearchTarget();
-        // ここで targetGimmic.reset() しておかないと、壊れた壁を保持したままになり
-        // expired() が false を返してしまい、Chaseに戻ってしまう問題が解決します
         if (!targetEnemy.expired() || !targetGimmic.expired()) {
             state = State::Chase;
             break;
@@ -313,20 +290,19 @@ void AllySlimeMelee::UpdateState(float elapsedTime)
             state = State::Follow;
         }
         else {
-            Move(elapsedTime, dx / d, dz / d, moveSpeed);
-            Turn(elapsedTime, dx / d, dz / d, turnSpeed);
+            if (d > 0.1f) {
+                Move(elapsedTime, dx / d, dz / d, moveSpeed);
+                Turn(elapsedTime, dx / d, dz / d, turnSpeed);
+            }
         }
-    }
-    break;
+        break;
     }
 }
 
 void AllySlimeMelee::CheckAttackCollision()
 {
-    // 攻撃対象にダメージを与える
     if (auto e = targetEnemy.lock())
     {
-        // 簡易距離チェック
         float dx = e->GetPosition().x - position.x;
         float dz = e->GetPosition().z - position.z;
         float distSq = dx * dx + dz * dz;
@@ -334,21 +310,13 @@ void AllySlimeMelee::CheckAttackCollision()
 
         if (distSq <= hitRange * hitRange)
         {
-            // エネミーにダメージ
             e->ApplyDamage(attackDamage, 0.5f);
-            // ノックバック
-            //DirectX::XMFLOAT3 impulse = { dx * 5.0f, 2.0f, dz * 5.0f };
-            //e->AddImpulse(impulse);
         }
     }
     else if (auto g = targetGimmic.lock())
     {
-        // ギミックへの攻撃（壁やコア）
-        // ギミックは OnCollision で Type::PlayerAttack を判定しているものが多いので
-        // ここで直接 OnCollision を呼んでやる
         if (g->collider)
         {
-            // 衝突しているとみなして呼び出す
             g->OnCollision(this);
         }
     }
@@ -356,10 +324,45 @@ void AllySlimeMelee::CheckAttackCollision()
 
 void AllySlimeMelee::Update(float elapsedTime)
 {
+    animator.Update(elapsedTime);
+
+    // アニメーション制御
+    // isAction (攻撃中フラグ) の管理
+    if (isAction)
+    {
+        if (!animator.IsPlaying()) isAction = false;
+    }
+
+    if (state == State::Attack)
+    {
+        // 攻撃モーション (まだ再生してなければ)
+        if (!isAction)
+        {
+            isAction = true;
+            animator.Play("kyara_kugeki (1)", false);
+        }
+    }
+    else
+    {
+        // 移動・待機
+        if (!isAction)
+        {
+            float speedSq = velocity.x * velocity.x + velocity.z * velocity.z;
+            if (speedSq > 0.01f)
+            {
+                animator.Play("kyara_junp", true);
+            }
+            else
+            {
+                animator.Play("kyara_taiki (1)", true);
+            }
+        }
+    }
+
     if (leader && (!leader->IsActive() || leader->GetHealth() <= 0))
     {
-        OnDead(); // 死亡処理を実行
-        return;   // 更新をここで打ち切る
+        OnDead();
+        return;
     }
     UpdateAnchor();
     UpdateState(elapsedTime);
@@ -371,7 +374,6 @@ void AllySlimeMelee::Update(float elapsedTime)
 
 void AllySlimeMelee::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
-    // 通常色より少し赤っぽくして区別する
     DirectX::XMFLOAT4 baseColor = { 1.0f, 0.6f, 0.6f, 1.0f };
     renderer->Render(rc, transform, slimeModel, ShaderId::Lambert, GetDamageColor(baseColor));
 }
@@ -379,21 +381,19 @@ void AllySlimeMelee::Render(const RenderContext& rc, ModelRenderer* renderer)
 void AllySlimeMelee::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer)
 {
     Character::RenderDebugPrimitive(rc, renderer);
-    // アンカー位置
     renderer->RenderSphere(rc, anchor, 0.15f, { 1, 0, 0, 1 });
 
-    // 状態可視化
     if (state == State::Attack) {
         renderer->RenderSphere(rc, position, attackRange, { 1, 0, 0, 0.5f });
     }
 }
+
 void AllySlimeMelee::RenderUI(const RenderContext& rc, float x, float y, float size)
 {
     if (icon)
     {
         icon->Render(rc, x, y, 0.0f, size, size, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
 
-        // ★追加: HPバー描画
         if (hpBarSprite)
         {
             float barW = size;
@@ -404,9 +404,7 @@ void AllySlimeMelee::RenderUI(const RenderContext& rc, float x, float y, float s
             float hpRatio = (float)health / (float)maxHealth;
             hpRatio = std::clamp(hpRatio, 0.0f, 1.0f);
 
-            // 背景
             hpBarSprite->Render(rc, barX, barY, 0.0f, barW, barH, 0.0f, 0.2f, 0.2f, 0.2f, 1.0f);
-            // HPバー
             hpBarSprite->Render(rc, barX, barY, 0.0f, barW * hpRatio, barH, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
         }
     }
@@ -414,9 +412,6 @@ void AllySlimeMelee::RenderUI(const RenderContext& rc, float x, float y, float s
 
 void AllySlimeMelee::OnDead()
 {
-    // 1. 味方リストから削除（ヒーラーの対象などから外れる）
     AllySlime::UnregisterAlly(this);
-
-    // 2. 非アクティブ化（これでSceneGame::Update内の削除処理に引っかかり、消滅する）
     GameObject::SetActive(false);
 }
