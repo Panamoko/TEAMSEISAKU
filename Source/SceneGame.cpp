@@ -203,7 +203,7 @@ void SceneGame::Update(float elapsedTime)
 			}
 		}
 
-		// 全プレイヤー更新（入力は Player 側で“アクティブのみ”にガード）
+			// 全プレイヤー更新（入力は Player 側で“アクティブのみ”にガード）
 		for (auto& up : players) up->Update(scaledElapsedTime);
 
 		//エネミー更新処理
