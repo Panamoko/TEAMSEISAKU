@@ -359,6 +359,7 @@
     <ClInclude Include="Source\TutorialSprite.h">
       <Filter>Source\Sprite</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Dissolve.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -607,6 +608,9 @@
     <ClCompile Include="Source\TutorialSprite.cpp">
       <Filter>Source\Sprite</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Dissolve.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shader\Sprite.hlsli">
@@ -631,6 +635,9 @@
       <Filter>Shader</Filter>
     </None>
     <None Include="cpp.hint" />
+    <None Include="Shader\Dissolve.hlsli">
+      <Filter>Shader</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\SpriteVS.hlsl">
@@ -661,6 +668,12 @@
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="Shader\LambertVS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\DissolvePS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\DissolveVS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
   </ItemGroup>
