@@ -347,6 +347,15 @@
     <ClInclude Include="Source\PreparationPhase.h">
       <Filter>Source\Phase</Filter>
     </ClInclude>
+    <ClInclude Include="Source\PlayerHeal.h">
+      <Filter>Source\Character\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PlayerMelee.h">
+      <Filter>Source\Character\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PlayerShot.h">
+      <Filter>Source\Character\Player</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -582,6 +591,15 @@
     </ClCompile>
     <ClCompile Include="Source\PreparationPhase.cpp">
       <Filter>Source\Phase</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PlayerHeal.cpp">
+      <Filter>Source\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PlayerMelee.cpp">
+      <Filter>Source\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PlayerShot.cpp">
+      <Filter>Source\Character\Player</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -108,7 +108,7 @@ void EnemySlimeMelee::UpdateAttackState(float elapsedTime)
             pos.y = position.y + height * 0.5f;
             pos.z = position.z;
 
-            ProjectileStraite* projectile = new ProjectileStraite(&projectileManager, "Data/Model/Sword/RedSword.mdl");
+            ProjectileStraite* projectile = new ProjectileStraite(&projectileManager, "Data/Model/Sword/RedSword.mdl", GameObject::Type::EnemyAttack);
             projectile->type = Type::EnemyAttack;
             projectile->Launch(dir, pos);
 
