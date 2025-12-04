@@ -32,7 +32,8 @@ AllySlimeHeal::AllySlimeHeal(int formationIndex, Player* initLeader)
     scale = { 0.002f, 0.002f, 0.002f };
     radius = 0.5f;
     height = 1.0f;
-    maxHealth = 20;
+    maxHealth = 20;      // 任意の最大体力
+    health = maxHealth;  // 現在体力を最大値に合わせる
     icon = SpriteManager::Instance().Load("Data/Sprite/SLime_G.png");
     hpBarSprite = new Sprite(nullptr);
     // ★追加: コライダーの設定

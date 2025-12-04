@@ -28,7 +28,8 @@
 #include "PlayerHeal.h"
 #include "PlayerShot.h"
 
-static constexpr int kMaxAlliesPerPlayer = 6;
+static constexpr int kAutoSpawnLimit = 6;  // 自動スポーンの上限
+static constexpr int kMaxSquadSize = 9;    // 部隊の最大人数（ドラッグ＆ドロップ用）
 using namespace DirectX;
 
 float SceneGame::s_timeScale = 1.0f;
@@ -228,6 +229,26 @@ void SceneGame::Update(float elapsedTime)
 	}
 
 	UpdatePiP();
+	// PiP内部の描画領域を計算して渡す
+	{
+		const float pipW = 400.0f;
+		const float pipH = 225.0f;
+		const float tabW = 60.0f;
+		float margin = 10.0f;
+		float marginRight = tabW + margin;
+
+		float pipFrameX = isPipExpanded ? 0.0f : (-pipW + tabW);
+		float pipFrameY = 100.0f;
+
+		// RenderTextureが表示されている正確なスクリーン領域
+		float contentX = pipFrameX + margin;
+		float contentY = pipFrameY + margin;
+		float contentW = pipW - (margin + marginRight);
+		float contentH = pipH - (margin * 2.0f);
+
+		// ここで正しい領域を渡すことで、クリック判定がズレなくなります
+		UpdateDragDrop(contentX, contentY, contentW, contentH);
+	}
 }
 
 void SceneGame::Render()
@@ -304,7 +325,21 @@ void SceneGame::Render()
 				pipW - (margin + marginRight), pipH - (margin * 2.0f)
 			);
 		}
+		if (dragState.isDragging && dragState.draggedAlly)
+		{
+			// マウス位置を中心に描画
+			float iconSize = 100.0f; // 少し大きくしても良い
+			float dx = dragState.dragIconPos.x - iconSize * 0.5f;
+			float dy = dragState.dragIconPos.y - iconSize * 0.5f;
 
+			// Characterは汎用RenderUIを持っていないため、キャストして呼ぶ
+			// ※ RenderUIはRenderContextを受け取るので、ここでは rc をそのまま使う
+			// ※ 注意: RenderUIはZ深度テストを無効にしているか、Z=0で描画することを確認
+
+			if (auto* s = dynamic_cast<AllySlime*>(dragState.draggedAlly))      s->RenderUI(rc, dx, dy, iconSize);
+			else if (auto* h = dynamic_cast<AllySlimeHeal*>(dragState.draggedAlly))  h->RenderUI(rc, dx, dy, iconSize);
+			else if (auto* m = dynamic_cast<AllySlimeMelee*>(dragState.draggedAlly)) m->RenderUI(rc, dx, dy, iconSize);
+		}
 		if (isSceneStarting && dissolve)
 		{
 			// タイマーが Max(開始時) -> 0(終了時) へ減っていく
@@ -330,37 +365,34 @@ int SceneGame::CountAlliesFor(Player* leader) const
 
 void SceneGame::AddAllyStraightFor(Player* leader)
 {
-	if (CountAlliesFor(leader) >= kMaxAlliesPerPlayer) return;
+	// ★変更: kAutoSpawnLimit (6) を使用
+	if (CountAlliesFor(leader) >= kAutoSpawnLimit) return;
+
 	int slot = CountAlliesFor(leader);
-
-	// ★修正: コンストラクタに leader を渡す
 	auto p = std::make_unique<AllySlime>(slot, leader);
-	// p->SetLeader(leader); // コンストラクタで設定済みなので不要（残しても無害）
-
 	alliesStraight.emplace_back(std::move(p));
 }
 
 void SceneGame::AddAllyHomingFor(Player* leader)
 {
-	if (CountAlliesFor(leader) >= kMaxAlliesPerPlayer) return;
+	// ★変更: kAutoSpawnLimit (6) を使用
+	if (CountAlliesFor(leader) >= kAutoSpawnLimit) return;
+
 	int slot = CountAlliesFor(leader);
-
-	// ★修正
 	auto p = std::make_unique<AllySlimeHeal>(slot, leader);
-
 	alliesHoming.emplace_back(std::move(p));
 }
 
 void SceneGame::AddAllyMeleeFor(Player* leader)
 {
-	if (CountAlliesFor(leader) >= kMaxAlliesPerPlayer) return;
+	// ★変更: kAutoSpawnLimit (6) を使用
+	if (CountAlliesFor(leader) >= kAutoSpawnLimit) return;
+
 	int slot = CountAlliesFor(leader);
-
-	// ★修正
 	auto p = std::make_unique<AllySlimeMelee>(slot, leader);
-
 	alliesMelee.emplace_back(std::move(p));
 }
+
 int SceneGame::CountAlliesGlobal() const
 {
 	return static_cast<int>(alliesStraight.size() + alliesHoming.size() + alliesMelee.size());
@@ -372,6 +404,7 @@ void SceneGame::RenderPiP(ID3D11DeviceContext* dc)
 
 	Graphics& graphics = Graphics::Instance();
 
+	// 背景クリアとレンダーターゲットの有効化
 	pipRenderTarget->Clear(dc, 0.2f, 0.2f, 0.2f, 1.0f);
 	pipRenderTarget->Activate(dc);
 
@@ -387,40 +420,51 @@ void SceneGame::RenderPiP(ID3D11DeviceContext* dc)
 	float startY = 20.0f;
 
 	for (size_t i = 0; i < players.size(); ++i) {
-		// ★修正: players[i] は Character なので Player* にキャスト
+		// Character* を Player* にキャスト
 		Player* pLeader = dynamic_cast<Player*>(players[i].get());
 		if (!pLeader) continue;
 
+		// リーダーアイコンの描画位置
 		float currentY = startY + static_cast<float>(i) * (playerIconSize + padding);
 
+		// リーダー（プレイヤー）のUI描画
 		pLeader->RenderUI(rc, startX, currentY, playerIconSize);
 
+		// 味方スライムの描画開始X座標
 		float currentAllyX = startX + playerIconSize + 10.0f;
 		float allyYOffset = (playerIconSize - allyIconSize) * 0.5f;
 
-		for (auto& ally : alliesStraight) {
+		// ★修正: 味方アイコン描画用のヘルパーラムダ関数
+		// 引数を auto* にすることで、AllySlime* などの具体的な型を保持したまま受け取る
+		auto DrawAllyIcon = [&](auto* ally) {
+			// allyが有効、かつ現在のループのリーダーに所属している場合のみ処理
 			if (ally && ally->GetLeader() == pLeader) {
+
+				// ★ドラッグ中の処理: 
+				// 現在ドラッグしている対象の場合は描画をスキップする（マウスカーソル位置に描画するため）
+				// ただし、場所（隙間）は空けておくためにX座標の加算は行う
+				if (dragState.isDragging && dragState.draggedAlly == ally) {
+					currentAllyX += allyIconSize + 5.0f;
+					return;
+				}
+
+				// 味方アイコンの描画
 				ally->RenderUI(rc, currentAllyX, currentY + allyYOffset, allyIconSize);
+
+				// 次のアイコンのためにX座標を進める
 				currentAllyX += allyIconSize + 5.0f;
 			}
-		}
-		for (auto& ally : alliesHoming) {
-			if (ally && ally->GetLeader() == pLeader) {
-				ally->RenderUI(rc, currentAllyX, currentY + allyYOffset, allyIconSize);
-				currentAllyX += allyIconSize + 5.0f;
-			}
-		}
-		for (auto& ally : alliesMelee) {
-			if (ally && ally->GetLeader() == pLeader) {
-				ally->RenderUI(rc, currentAllyX, currentY + allyYOffset, allyIconSize);
-				currentAllyX += allyIconSize + 5.0f;
-			}
-		}
+			};
+
+		// 各味方リストに対してラムダ関数を実行
+		for (auto& ally : alliesStraight) DrawAllyIcon(ally.get());
+		for (auto& ally : alliesHoming)   DrawAllyIcon(ally.get());
+		for (auto& ally : alliesMelee)    DrawAllyIcon(ally.get());
 	}
 
+	// レンダーターゲットを無効化（バックバッファに戻す）
 	pipRenderTarget->Deactivate(dc);
 }
-REGISTER_SCENE(SceneGame);
 
 bool SceneGame::UpdatePiP()
 {
@@ -470,3 +514,161 @@ void SceneGame::UpdatePlayerSpawn()
 		}
 	}
 }
+
+void SceneGame::RebalanceFormation(Player* leader)
+{
+	if (!leader) return;
+
+	int currentIndex = 0;
+
+	// このリーダーに付いている味方を特定し、インデックスを 0, 1, 2... と振り直す
+	// (Straight -> Heal -> Melee の順に並べる例)
+
+	for (auto& a : alliesStraight) {
+		if (a->GetLeader() == leader) {
+			a->SetIndex(currentIndex);
+			currentIndex++;
+		}
+	}
+	for (auto& a : alliesHoming) {
+		if (a->GetLeader() == leader) {
+			a->SetIndex(currentIndex);
+			currentIndex++;
+		}
+	}
+	for (auto& a : alliesMelee) {
+		if (a->GetLeader() == leader) {
+			a->SetIndex(currentIndex);
+			currentIndex++;
+		}
+	}
+}
+
+// ★追加: ドラッグアンドドロップのメインロジック
+void SceneGame::UpdateDragDrop(float pipX, float pipY, float pipW, float pipH)
+{
+	Mouse& mouse = Input::Instance().GetMouse();
+	float mx = (float)mouse.GetPositionX();
+	float my = (float)mouse.GetPositionY();
+
+	// レンダーターゲットの解像度 (RenderTarget.cppの初期化サイズと合わせる)
+	const float rtWidth = 1280.0f;
+	const float rtHeight = 720.0f;
+
+	// マウス座標を、PiP内のローカル座標(0.0~1.0)に変換
+	// pipX, pipY はウィンドウ枠を除いた「中身」の左上座標である前提
+	float u = (mx - pipX) / pipW;
+	float v = (my - pipY) / pipH;
+
+	// レンダーターゲット上の絶対座標に変換
+	float localX = u * rtWidth;
+	float localY = v * rtHeight;
+
+	// UIパラメータ (RenderPiPと完全に一致させる)
+	float playerIconSize = 128.0f;
+	float allyIconSize = 100.0f;
+	float padding = 12.0f;
+	float startX = 20.0f;
+	float startY = 20.0f;
+
+	// --- ドラッグ開始 (左クリック) ---
+	if (mouse.GetButtonDown() & Mouse::BTN_LEFT)
+	{
+		// PiPの範囲外ならクリック判定しない
+		if (mx >= pipX && mx <= pipX + pipW && my >= pipY && my <= pipY + pipH)
+		{
+			for (size_t i = 0; i < players.size(); ++i)
+			{
+				Player* pLeader = dynamic_cast<Player*>(players[i].get());
+				if (!pLeader) continue;
+
+				float currentY = startY + static_cast<float>(i) * (playerIconSize + padding);
+				float currentAllyX = startX + playerIconSize + 10.0f;
+				float allyYOffset = (playerIconSize - allyIconSize) * 0.5f;
+				float allyY = currentY + allyYOffset;
+
+				// 味方アイコンの判定用ラムダ
+				auto CheckHit = [&](auto* ally) -> bool {
+					if (ally && ally->GetLeader() == pLeader) {
+						// アイコンの矩形判定
+						if (localX >= currentAllyX && localX <= currentAllyX + allyIconSize &&
+							localY >= allyY && localY <= allyY + allyIconSize)
+						{
+							// ヒット！ドラッグ開始
+							dragState.isDragging = true;
+							dragState.draggedAlly = ally; // ポインタ保存
+							dragState.oldLeader = pLeader;
+							dragState.dragIconPos = { mx, my };
+							return true;
+						}
+						// 次のアイコン位置へ
+						currentAllyX += allyIconSize + 5.0f;
+					}
+					return false;
+					};
+
+				// 全リスト走査
+				bool hit = false;
+				for (auto& a : alliesStraight) if (CheckHit(a.get())) { hit = true; break; }
+				if (hit) break;
+				for (auto& a : alliesHoming)   if (CheckHit(a.get())) { hit = true; break; }
+				if (hit) break;
+				for (auto& a : alliesMelee)    if (CheckHit(a.get())) { hit = true; break; }
+				if (hit) break;
+			}
+		}
+	}
+
+	// --- ドラッグ中 ---
+	if (dragState.isDragging)
+	{
+		// アイコン表示位置を更新
+		dragState.dragIconPos = { mx, my };
+
+		// ドロップ (左クリック離した)
+		if (mouse.GetButtonUp() & Mouse::BTN_LEFT)
+		{
+			// ドロップ先のリーダー判定
+			for (size_t i = 0; i < players.size(); ++i)
+			{
+				Player* pTarget = dynamic_cast<Player*>(players[i].get());
+				if (!pTarget) continue;
+
+				float targetY = startY + static_cast<float>(i) * (playerIconSize + padding);
+
+				// 判定エリア: プレイヤーアイコンのY座標の帯状のエリアにドロップしたらOKとする
+				// (横幅はPiP全体、高さはアイコン分)
+				if (localY >= targetY && localY <= targetY + playerIconSize &&
+					localX >= 0 && localX <= rtWidth)
+				{
+					// リーダーが異なる場合のみ移動処理
+					if (pTarget != dragState.oldLeader && dragState.draggedAlly)
+					{
+						// ★追加: 移動先(pTarget)の部隊人数が最大(9体)に達していないかチェック
+						if (CountAlliesFor(pTarget) < kMaxSquadSize)
+						{
+							// 1. リーダーを書き換え
+							if (auto* s = dynamic_cast<AllySlime*>(dragState.draggedAlly)) s->SetLeader(pTarget);
+							else if (auto* h = dynamic_cast<AllySlimeHeal*>(dragState.draggedAlly)) h->SetLeader(pTarget);
+							else if (auto* m = dynamic_cast<AllySlimeMelee*>(dragState.draggedAlly)) m->SetLeader(pTarget);
+
+							// 2. 隊列を再計算
+							RebalanceFormation(dragState.oldLeader);
+							RebalanceFormation(pTarget);
+						}
+						// ※ else の場合は「満員」なので移動させない（何もしない）
+					}
+					break;
+				}
+			}
+
+			// ドラッグ終了
+			dragState.isDragging = false;
+			dragState.draggedAlly = nullptr;
+			dragState.oldLeader = nullptr;
+		}
+	}
+}
+
+
+REGISTER_SCENE(SceneGame);

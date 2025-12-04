@@ -44,6 +44,22 @@ public:
 	void AddAllyMeleeFor(Player* leader);
 
 private:
+
+	//ドラッグアンドドロップ管理用構造体
+	struct DragState {
+		bool isDragging = false;           // ドラッグ中か
+		Character* draggedAlly = nullptr;  // 掴んでいる味方（ポインタ）
+		Player* oldLeader = nullptr;       // 元のリーダー
+		DirectX::XMFLOAT2 dragIconPos = { 0, 0 }; // ドラッグ中のアイコン表示位置
+	};
+	DragState dragState;
+
+	//ドラッグアンドドロップ更新処理
+	void UpdateDragDrop(float pipX, float pipY, float pipW, float pipH);
+
+	//隊列を整列させるヘルパー関数（リーダー変更後に隙間を詰める）
+	void RebalanceFormation(Player* leader);
+
 	void RenderPiP(ID3D11DeviceContext* dc);
 	bool UpdatePiP();
 	void UpdatePlayerSpawn(); // スポーン処理用
