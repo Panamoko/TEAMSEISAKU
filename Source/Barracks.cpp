@@ -65,7 +65,11 @@ void Barracks::Update(float elapsedTime)
 
     // --- ‚±‚±‚©‚ç‚ÍŠù‘¶‚Ìˆ— ---
 
-    spawn_timer += elapsedTime;
+    if (current_enemy_count < max_enemy_count)
+    {
+        spawn_timer += elapsedTime;
+    }
+
     current_enemy_count = static_cast<int>(spawned_enemies.size());
 
     if (current_enemy_count < max_enemy_count && spawn_timer >= spawn_interval)

@@ -347,6 +347,9 @@
     <ClInclude Include="Source\PreparationPhase.h">
       <Filter>Source\Phase</Filter>
     </ClInclude>
+    <ClInclude Include="Source\TutorialSprite.h">
+      <Filter>Source\Sprite</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -582,6 +585,9 @@
     </ClCompile>
     <ClCompile Include="Source\PreparationPhase.cpp">
       <Filter>Source\Phase</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TutorialSprite.cpp">
+      <Filter>Source\Sprite</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

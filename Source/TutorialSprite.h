@@ -6,6 +6,6 @@ class TutorialSprite :
 public:
 
 private:
+    int current_index;//Œ»İ•\¦‚µ‚Ä‚¢‚é‰æ‘œ‚Ì”Ô†
     std::vector<Sprite> sprite;
 };
-
