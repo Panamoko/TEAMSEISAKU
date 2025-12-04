@@ -21,4 +21,14 @@ private:
     std::vector<std::string> sprite_paths;
 
     bool end_sprite_namber;
+    std::vector<Sprite*> click_sprite;
+
+    float BUTTON_WIDTH;
+    float BUTTON_HEIGHT;
+    float BUTTON_Y;
+    float COLOR_R, COLOR_G, COLOR_B, COLOR_A;
+    float BACK_BUTTON_X;
+    float NEXT_BUTTON_X;
+    float next_image_coror_a;
+    float back_image_coror_a;
 };
