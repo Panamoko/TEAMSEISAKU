@@ -8,6 +8,12 @@
 #include "SpriteManager.h"
 #include "Collision.h" // IntersectPosSquare用
 #include <algorithm>
+#include "System/Audio.h"
+
+SceneTitle::SceneTitle()
+{
+	Audio::Instance().Initialize();
+}
 
 // 初期化
 void SceneTitle::Initialize()
@@ -36,6 +42,9 @@ void SceneTitle::Initialize()
 	isSceneChanging = false;
 	transitionTimer = 0.0f;
 	pendingNextScene = nullptr;
+
+	Stage_BGM = Audio::Instance().LoadAudioSource("Data/Sound/BGM_Title.wav");
+
 }
 
 // 終了化
@@ -44,11 +53,15 @@ void SceneTitle::Finalize()
 	// unique_ptr以外の後始末があればここに記述
 	// SpriteManagerからLoadしたポインタはManager管理ならdelete不要ですが、
 	// newした場合はdeleteが必要です。SpriteManagerの仕様に合わせます。
+
+	delete Stage_BGM;
 }
 
 // 更新処理
 void SceneTitle::Update(float elapsedTime)
 {
+	Stage_BGM->Play(true);
+
 	// 点滅処理
 	alpha_timer += elapsedTime;
 	if (std::fmod(alpha_timer, blink_interval * 2.0f) < blink_interval) render_color.w = 1.0f;
@@ -103,22 +116,25 @@ void SceneTitle::Update(float elapsedTime)
 			pendingNextScene = new SceneGame("scene_play");
 		}
 		// else if に変更して、Startが押されたらTutorial判定をスキップする
-		else
-		{
-			// 2. Tutorial ボタンの判定
-			bool hitTutorial = Collision::IntersectPosSquare(
-				mousePos,
-				{ tutorialButtonPos.x, tutorialButtonPos.y },
-				{ tutorialButtonSize.x, tutorialButtonSize.y }
-			);
+		
+		change_scene->Update(elapsedTime);
 
-			if (hitTutorial)
-			{
-				isSceneChanging = true;
-				transitionTimer = 0.0f;
-				pendingNextScene = new SceneGame("scene_tutorial");
-			}
-		}
+		//else
+		//{
+		//	// 2. Tutorial ボタンの判定
+		//	bool hitTutorial = Collision::IntersectPosSquare(
+		//		mousePos,
+		//		{ tutorialButtonPos.x, tutorialButtonPos.y },
+		//		{ tutorialButtonSize.x, tutorialButtonSize.y }
+		//	);
+
+		//	if (hitTutorial)
+		//	{
+		//		isSceneChanging = true;
+		//		transitionTimer = 0.0f;
+		//		pendingNextScene = new SceneGame("scene_tutorial");
+		//	}
+		//}
 	}
 }
 
@@ -153,11 +169,14 @@ void SceneTitle::Render()
 			0, 1, 1, 1, render_color.w);
 
 	// ★追加: Tutorial ボタン (こちらは点滅させず表示する例)
-	if (spriteTutorial)
-		spriteTutorial->Render(rc,
-			tutorialButtonPos.x, tutorialButtonPos.y, tutorialButtonPos.z,
-			tutorialButtonSize.x, tutorialButtonSize.y,
-			0, 1, 1, 1, 1.0f); // 常に表示
+	
+	change_scene->Render();
+
+	//if (spriteTutorial)
+	//	spriteTutorial->Render(rc,
+	//		tutorialButtonPos.x, tutorialButtonPos.y, tutorialButtonPos.z,
+	//		tutorialButtonSize.x, tutorialButtonSize.y,
+	//		0, 1, 1, 1, 1.0f); // 常に表示
 
 	// ディゾルブ演出 (最前面)
 	if (isSceneChanging && dissolve)

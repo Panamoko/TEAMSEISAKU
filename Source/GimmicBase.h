@@ -18,7 +18,8 @@ public:
 	virtual ~GimmicBase() = default;
 
 	//イベント関数
-	virtual void OnCollision(GameObject* objcts) override {};
+	virtual void OnCollision(GameObject* objcts) override;
+
 	//ギミック更新処理
 	virtual void Update(float elapsedTime) override {};
 

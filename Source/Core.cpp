@@ -36,6 +36,7 @@ Core::Core()
 	class_name = "Core";
 	scale = { 0.3f, 0.3f, 0.3f };
 	hp = 1500.0f;
+    hitSE[1] = Audio::Instance().LoadAudioSource("Data/Sound/SE_CoreBreak.wav");
 }
 
 Core::~Core()
@@ -121,6 +122,7 @@ void Core::Update(float elapsedTime)
     // HPチェック
     if (hp <= 0.0f)
     {
+        hitSE[1]->Play(false);
         // 死亡演出開始
         if (!isDying)
         {
@@ -207,6 +209,7 @@ void Core::OnCollision(GameObject* object)
 
     if (object->type == Type::PlayerAttack && invincible_timer <= 0.0f)
     {
+        hitSE[0]->Play(false);
         hp -= 10.0f;
         invincible_timer = 0.1f;
     }

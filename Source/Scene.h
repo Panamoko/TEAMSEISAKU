@@ -4,6 +4,7 @@
 #include <memory>
 #include <Editor.h>
 #include "GameObject.h"
+#include "System/Audio.h"
 
 // ÉVÅ[Éì
 class Scene

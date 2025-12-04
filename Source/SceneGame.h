@@ -23,6 +23,8 @@
 #include "PlayerMelee.h"
 #include "PlayerHeal.h"
 #include "PlayerShot.h"
+#include "TutorialSprite.h"
+#include <System/AudioSource.h>
 
 class SceneGame : public Scene
 {
@@ -84,6 +86,7 @@ private:
 
 	CameraController* cameraController = nullptr;
 	std::unique_ptr<PreparationPhase> preparation;
+	std::unique_ptr<TutorialSprite> tutorial_sprite;
 
 	static float s_timeScale;
 	static float s_slowTimer;
@@ -96,4 +99,9 @@ private:
 	bool isSceneStarting = true;        // 開始演出中フラグ
 	float startTransitionTimer = 0.0f;  // 演出タイマー
 	const float startTransitionDuration = 1.5f; // フェードインにかける時間
+
+	AudioSource* Stage_BGM = nullptr;
+	AudioSource* Clear_BGM = nullptr;
+	AudioSource* GameOver_BGM = nullptr;
+
 };

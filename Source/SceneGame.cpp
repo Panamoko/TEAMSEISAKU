@@ -82,12 +82,20 @@ void SceneGame::Initialize()
 
 	grid_map.Initialize(150, 150, 0.8f);
 
+	if (scene_name == "scene_tutorial")
+	{
+		// 新しいインスタンスを作成
+		tutorial_sprite = std::make_unique<TutorialSprite>();
+	}
+
+
 	// ディゾルブの初期化と開始設定
 	dissolve = std::make_unique<Dissolve>();
 	dissolve->Initialize(Graphics::Instance().GetDevice(), "Data/Sprite/DissolveNoise.png");
 
 	isSceneStarting = true; // フェードイン開始
 	startTransitionTimer = startTransitionDuration;
+
 }
 
 void SceneGame::Finalize()
@@ -96,6 +104,7 @@ void SceneGame::Finalize()
 	CollisionManager::Instance().Clear();
 	GimmicManager::Instance().Clear();
 	GameObjectManager::Instance().Clear();
+	delete Stage_BGM;
 
 	if (cameraController != nullptr)
 	{
@@ -171,6 +180,11 @@ void SceneGame::Update(float elapsedTime)
 
 	// キーボード切り替え
 	Player::UpdateActiveByKeyboard(players);
+
+	if (scene_name == "scene_tutorial" && tutorial_sprite)
+	{
+		tutorial_sprite->Update();
+	}
 
 	if (game_editor.PlayGame())
 	{
@@ -346,6 +360,11 @@ void SceneGame::Render()
 			// 閾値: 1.0(黒) -> 0.0(透明)
 			float t = std::clamp(startTransitionTimer / startTransitionDuration, 0.0f, 1.0f);
 			dissolve->Render(dc, t);
+		}
+
+		if (scene_name == "scene_tutorial" && tutorial_sprite)
+		{
+			tutorial_sprite->Render();
 		}
 	}
 }

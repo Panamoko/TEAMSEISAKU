@@ -12,6 +12,8 @@
 
 #include "Collider.h"
 #include "CollisionManager.h"
+#include "System/AudioResource.h"
+#include "System/Audio.h"
 
 struct Collider;
 struct OBB;
@@ -58,6 +60,8 @@ public:
 	static int nextID;//Ÿ‚ÌID‚ğÌ”Ô‚·‚é‚½‚ß‚ÌÃ“I•Ï”
 	DirectX::XMFLOAT3 mtd;
 	std::shared_ptr<GameObject> objects;
+
+	AudioSource* hitSE[2] = { nullptr,nullptr };
 
 
 	float weight;
