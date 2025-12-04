@@ -14,6 +14,7 @@ private:
     int current_index;//Œ»İ•\¦‚µ‚Ä‚¢‚é‰æ‘œ‚Ì”Ô†
     DirectX::XMFLOAT2 click_pos;
     DirectX::XMFLOAT2 click_size;
+    DirectX::XMFLOAT2 mouse_pos;
 
     std::vector<Sprite> sprite;
 };

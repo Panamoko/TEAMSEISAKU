@@ -356,6 +356,9 @@
     <ClInclude Include="Source\PlayerShot.h">
       <Filter>Source\Character\Player</Filter>
     </ClInclude>
+    <ClInclude Include="Source\TutorialSprite.h">
+      <Filter>Source\Sprite</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -600,6 +603,9 @@
     </ClCompile>
     <ClCompile Include="Source\PlayerShot.cpp">
       <Filter>Source\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TutorialSprite.cpp">
+      <Filter>Source\Sprite</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
