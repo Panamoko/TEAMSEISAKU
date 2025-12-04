@@ -23,8 +23,8 @@ static inline XMFLOAT3 operator+(const XMFLOAT3& a, const XMFLOAT3& b) { return 
 static inline XMFLOAT3 operator-(const XMFLOAT3& a, const XMFLOAT3& b) { return { a.x - b.x,a.y - b.y,a.z - b.z }; }
 static inline XMFLOAT3 operator*(const XMFLOAT3& a, float s) { return { a.x * s,a.y * s,a.z * s }; }
 
-AllySlimeHeal::AllySlimeHeal(int formationIndex)
-    : index(formationIndex)
+AllySlimeHeal::AllySlimeHeal(int formationIndex, Player* initLeader)
+    : index(formationIndex), leader(initLeader)
 {
     // ヒーラーっぽい色（例えば赤やピンク、緑など）のモデルがあれば差し替えると分かりやすいです
     slimeModel = ModelManager::Instance().Load("Data/Model/Slime/Slime_G.mdl");

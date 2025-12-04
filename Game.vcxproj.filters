@@ -347,8 +347,14 @@
     <ClInclude Include="Source\PreparationPhase.h">
       <Filter>Source\Phase</Filter>
     </ClInclude>
-    <ClInclude Include="Source\TutorialSprite.h">
-      <Filter>Source\Sprite</Filter>
+    <ClInclude Include="Source\PlayerHeal.h">
+      <Filter>Source\Character\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PlayerMelee.h">
+      <Filter>Source\Character\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PlayerShot.h">
+      <Filter>Source\Character\Player</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -586,8 +592,14 @@
     <ClCompile Include="Source\PreparationPhase.cpp">
       <Filter>Source\Phase</Filter>
     </ClCompile>
-    <ClCompile Include="Source\TutorialSprite.cpp">
-      <Filter>Source\Sprite</Filter>
+    <ClCompile Include="Source\PlayerHeal.cpp">
+      <Filter>Source\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PlayerMelee.cpp">
+      <Filter>Source\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PlayerShot.cpp">
+      <Filter>Source\Character\Player</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,7 @@
 #pragma once
 #include "Stage.h"
-#include "Player.h"
+#include "Player.h" // Player.hをインクルード
+#include "Character.h"
 #include "CameraController.h"
 #include "Scene.h"
 #include "Editor.h"
@@ -9,7 +10,7 @@
 #include "AllySlime.h"
 #include "AllySlimeHeal.h"
 #include "System/ModelRenderer.h"
-#include <cfloat>   // ← 追加（FLT_MAX 用）
+#include <cfloat>
 #include "GridMap.h"
 #include "Picking_Ray.h"
 #include "AllySlimeMelee.h"
@@ -17,54 +18,39 @@
 #include "System/RenderTarget.h"
 #include "PreparationPhase.h"
 
-class Player;
-class AllySlime;         // 既存＝直線弾
+// 派生クラスのインクルード
+#include "PlayerMelee.h"
+#include "PlayerHeal.h"
+#include "PlayerShot.h"
+
 class SceneGame : public Scene
 {
 public:
 	SceneGame(const std::string& name = "scene_play") { scene_name = name; };
-	//~SceneGame() {};
-	~SceneGame() override;	//Sceneクラスを継承し、overrideキーワードを付ける
+	~SceneGame() override;
 
-	// 初期化
-	//void Initialize();
 	void Initialize() override;
-
-	// 終了化
-	//void Finalize();
 	void Finalize() override;
-
-	// 更新処理
-	//void Update(float elapsedTime);
 	void Update(float elapsedTime) override;
-
-	// 描画処理
-	//void Render();
 	void Render() override;
-
-	// GUI描画
-	//void DrawGUI();
 	void DrawGUI() override;
 
-	// スローモーション設定
 	static void SetSlowMotion(float scale, float duration);
-
-	// 現在の時間スケールを取得 
 	static float GetTimeScale() { return s_timeScale; }
 
-private:
+	void AddAllyStraightFor(Player* leader);
+	void AddAllyHomingFor(Player* leader);
+	void AddAllyMeleeFor(Player* leader);
 
+private:
 	void RenderPiP(ID3D11DeviceContext* dc);
 	bool UpdatePiP();
-	// 既存の配列に加えて追加
-	std::vector<std::unique_ptr<AllySlimeMelee>> alliesMelee;
+	void UpdatePlayerSpawn(); // スポーン処理用
 
-	//近接スライム生成用
-	void AddAllyMeleeFor(Player* leader);
+	std::vector<std::unique_ptr<AllySlimeMelee>> alliesMelee;
 
 	editor game_editor;
 	std::vector<std::unique_ptr<Model>> models;
-	// 直線／追尾の別管理
 	std::vector<std::unique_ptr<AllySlime>>       alliesStraight;
 	std::vector<std::unique_ptr<AllySlimeHeal>> alliesHoming;
 	std::vector<std::shared_ptr<GameObject>> objects;
@@ -72,13 +58,9 @@ private:
 
 	Stage* stage = nullptr;
 	GridMap grid_map;
-	Picking_Ray pickingRay; // ← 追加: マウスピッキング用クラス
+	Picking_Ray pickingRay;
 
-	void AddAllyStraightFor(Player* leader);
-	void AddAllyHomingFor(Player* leader);
-
-	std::vector<std::unique_ptr<Player>> players;
-	std::vector<std::unique_ptr<AllySlime>> allies;
+	std::vector<std::shared_ptr<Character>> players;
 
 	int  CountAlliesFor(Player* leader) const;
 	int CountAlliesGlobal() const;
@@ -86,12 +68,10 @@ private:
 	CameraController* cameraController = nullptr;
 	std::unique_ptr<PreparationPhase> preparation;
 
-	// スロー管理用
-	static float s_timeScale;    // 現在の時間倍率 (1.0f が通常)
-	static float s_slowTimer;    // スロー解除までの実時間（秒）
+	static float s_timeScale;
+	static float s_slowTimer;
 
-	// ★追加: PiP用変数
-	RenderTarget* pipRenderTarget = nullptr; // ワイプ画面の描画先
-	bool isPipExpanded = false;              // 拡大表示中かどうか
-	Sprite* pipFrameSprite = nullptr;        // 枠線などを表示したい場合用（今回は空のSpriteで代用）
+	RenderTarget* pipRenderTarget = nullptr;
+	bool isPipExpanded = false;
+	Sprite* pipFrameSprite = nullptr;
 };

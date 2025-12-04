@@ -10,7 +10,7 @@ class GimmicBase;
 class AllySlimeMelee : public Character
 {
 public:
-    AllySlimeMelee(int formationIndex);
+    AllySlimeMelee(int formationIndex, Player* leader);
     ~AllySlimeMelee() override;
 
     // 基本更新・描画
