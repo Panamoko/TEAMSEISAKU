@@ -19,7 +19,7 @@ class ShapeRenderer;
 class AllySlimeHeal : public Character
 {
 public:
-    AllySlimeHeal(int formationIndex);
+    AllySlimeHeal(int formationIndex, Player* leader);
     ~AllySlimeHeal() override;
 
     // ŒöŠJ API

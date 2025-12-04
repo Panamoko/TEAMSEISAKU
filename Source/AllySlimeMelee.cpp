@@ -19,39 +19,37 @@ static inline XMFLOAT3 operator+(const XMFLOAT3& a, const XMFLOAT3& b) { return 
 static inline XMFLOAT3 operator-(const XMFLOAT3& a, const XMFLOAT3& b) { return { a.x - b.x, a.y - b.y, a.z - b.z }; }
 static inline XMFLOAT3 operator*(const XMFLOAT3& a, float s) { return { a.x * s, a.y * s, a.z * s }; }
 
-AllySlimeMelee::AllySlimeMelee(int formationIndex) : index(formationIndex)
+AllySlimeMelee::AllySlimeMelee(int formationIndex, Player* initLeader)
+    : index(formationIndex), leader(initLeader) // メンバ初期化リストでセット
 {
-    // 近接型は少し色を変えたいので、リソース共有しつつ後で色設定(もしあれば)
-    // ここでは通常のAllySlimeと同じモデルを使用
     slimeModel = ModelManager::Instance().Load("Data/Model/Slime/Slime_R.mdl");
 
-    // 少し大きくして近接タイプっぽくする
     scale = { 0.002f, 0.002f, 0.002f };
     radius = 0.6f;
     height = 1.0f;
-    maxHealth = 30; // 近接型なので少しタフに
+    maxHealth = 30;
     health = maxHealth;
-    // ★追加: コライダーの設定
+
     collider = std::make_unique<CylinderCollider>();
     collider->type = ColliderType::Cylinder;
     collider->owner = this;
-
-    // コライダーのサイズ設定 (モデルに合わせて調整)
     auto* cyl = static_cast<CylinderCollider*>(collider.get());
     cyl->radius = radius;
     cyl->height = height;
-    cyl->center = position; // 初期位置
+    cyl->center = position;
 
     icon = SpriteManager::Instance().Load("Data/Sprite/SLime_R.png");
     hpBarSprite = new Sprite(nullptr);
-    // 攻撃用として設定
     type = Type::PlayerAttack;
 
+    // ★修正: 正しいリーダーの位置を初期位置にする
+    // (以前はここで leader が nullptr だったため Player::Instance() が使われていた)
     const Player& ref = (leader ? *leader : Player::Instance());
     position = ref.GetPosition();
+
     UpdateTransform();
 
-    AllySlime::RegisterAlly(this); // 登録
+    AllySlime::RegisterAlly(this);
 }
 
 AllySlimeMelee::~AllySlimeMelee()

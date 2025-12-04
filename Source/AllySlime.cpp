@@ -46,8 +46,8 @@ const std::vector<Character*>& AllySlime::GetAllAllies()
     return s_allies;
 }
 // --- コンストラクタ（必要な初期化をまとめて実施） ---
-AllySlime::AllySlime(int formationIndex)
-    : index(formationIndex)
+AllySlime::AllySlime(int formationIndex, Player* initLeader)
+    : index(formationIndex), leader(initLeader)
 {
     // モデルは敵スライムと共通のものを小さくして利用
     slimeModel = ModelManager::Instance().Load("Data/Model/Slime/suraimukari.mdl");
@@ -59,15 +59,15 @@ AllySlime::AllySlime(int formationIndex)
     icon = SpriteManager::Instance().Load("Data/Sprite/SLime_B.png");
     hpBarSprite = new Sprite(nullptr);
 
-    if (leader || Player::GetActivePtr())
+    if (leader) // Player::Instance()フォールバックは残しても良いが、leaderを使う
     {
-        UpdateAnchor();     // anchor 座標を計算
-        position = anchor;  // その位置にワープ
+        UpdateAnchor();
+        position = anchor;
     }
-    else
+    else if (Player::GetActivePtr())
     {
-        // リーダーがいない場合はとりあえず原点など（通常ありえないが安全策）
-        position = { 0, 0, 0 };
+        const Player& ref = Player::Instance();
+        position = ref.GetPosition();
     }
     UpdateTransform();
 
