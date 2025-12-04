@@ -6,7 +6,7 @@ PlayerShot::~PlayerShot() {}
 
 void PlayerShot::Initialize()
 {
-    InitializeCommon("Data/Model/Slime/B_Player.mdl");
+    InitializeCommon("Data/Model/Slime/B_Player.mdl", "Data/Sprite/B_Player.png");
     color = { 1.0f, 1.0f, 1.0f, 1.0f };
 }
 

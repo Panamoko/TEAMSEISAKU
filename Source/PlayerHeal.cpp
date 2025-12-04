@@ -6,7 +6,7 @@ PlayerHeal::~PlayerHeal() {}
 
 void PlayerHeal::Initialize()
 {
-    InitializeCommon("Data/Model/Slime/G_Player.mdl");
+    InitializeCommon("Data/Model/Slime/G_Player.mdl", "Data/Sprite/G_Player.png");
     color = { 1.0f, 1.0f, 1.0f, 1.0f };
 }
 

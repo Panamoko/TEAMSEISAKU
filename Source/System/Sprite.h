@@ -54,9 +54,16 @@ public:
 		float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f
 	) const;
 private:
-	Microsoft::WRL::ComPtr<ID3D11VertexShader>			vertexShader;
-	Microsoft::WRL::ComPtr<ID3D11PixelShader>			pixelShader;
-	Microsoft::WRL::ComPtr<ID3D11InputLayout>			inputLayout;
+
+	// ★追加: 静的メンバとしてシェーダーと入力レイアウトを定義（共有リソース）
+	static Microsoft::WRL::ComPtr<ID3D11VertexShader> commonVertexShader;
+	static Microsoft::WRL::ComPtr<ID3D11PixelShader>  commonPixelShader;
+	static Microsoft::WRL::ComPtr<ID3D11InputLayout>  commonInputLayout;
+
+	// インスタンスごとのポインタ（これらは共有リソースを指す）
+	Microsoft::WRL::ComPtr<ID3D11VertexShader>          vertexShader;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader>           pixelShader;
+	Microsoft::WRL::ComPtr<ID3D11InputLayout>           inputLayout;
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer>				vertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	shaderResourceView;

@@ -36,11 +36,11 @@ const std::vector<Player*>& Player::GetAllPlayers() { return sAllPlayers; }
 
 void Player::Initialize()
 {
-    InitializeCommon("Data/Model/Slime/Player_Slime.mdl");
+    InitializeCommon("Data/Model/Slime/Player_Slime.mdl", "Data/Sprite/Player.png");
 }
 
 // ★共通初期化処理
-void Player::InitializeCommon(const char* modelPath)
+void Player::InitializeCommon(const char* modelPath, const char* iconPath)
 {
     model = ModelManager::Instance().CreateNewInstance(modelPath);
     scale = { 0.005f, 0.005f, 0.005f };
@@ -71,7 +71,7 @@ void Player::InitializeCommon(const char* modelPath)
     cylinder->radius = radius;
     CollisionManager::Instance().AddObject(this);
 
-    playerIcon = SpriteManager::Instance().Load("Data/Sprite/Player.png");
+    playerIcon = SpriteManager::Instance().Load(iconPath);
     hpBarSprite = new Sprite(nullptr);
 
     RegisterPlayer(this);
@@ -249,13 +249,22 @@ void Player::UpdateMoveToCore(float elapsedTime)
     if (!gridMap) return;
 
     pathRecalcTimer -= elapsedTime;
-    if (currentPath.empty() || pathRecalcTimer <= 0.0f)
+
+    // ★修正: タイマーが切れた時だけ再探索を行うように変更
+    // (currentPath.empty() だけを条件にしない)
+    if (pathRecalcTimer <= 0.0f)
     {
-        pathRecalcTimer = 0.5f;
-        auto start = gridMap->WorldToCell(position.x, position.z);
-        auto goal = gridMap->WorldToCell(core->position.x, core->position.z);
-        currentPath = aStar.FindPath(start.first, start.second, goal.first, goal.second, *gridMap);
-        if (!currentPath.empty()) pathIndex = (currentPath.size() > 1) ? 1 : 0;
+        pathRecalcTimer = 0.5f; // 0.5秒のインターバルを強制する
+
+        // 経路がない、または更新タイミングなら探索
+        if (currentPath.empty() || /* 必要ならここに距離チェックなどの条件を追加 */ true)
+        {
+            auto start = gridMap->WorldToCell(position.x, position.z);
+            auto goal = gridMap->WorldToCell(core->position.x, core->position.z);
+            currentPath = aStar.FindPath(start.first, start.second, goal.first, goal.second, *gridMap);
+
+            if (!currentPath.empty()) pathIndex = (currentPath.size() > 1) ? 1 : 0;
+        }
     }
 
     if (!currentPath.empty() && pathIndex < currentPath.size())
