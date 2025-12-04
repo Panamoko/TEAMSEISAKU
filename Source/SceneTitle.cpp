@@ -8,6 +8,7 @@
 #include "SpriteManager.h"
 #include "Collision.h" // IntersectPosSquare用
 #include <algorithm>
+#include "System/Audio.h"
 
 // 初期化
 void SceneTitle::Initialize()
@@ -36,6 +37,11 @@ void SceneTitle::Initialize()
 	isSceneChanging = false;
 	transitionTimer = 0.0f;
 	pendingNextScene = nullptr;
+
+	Audio::Instance().Initialize();
+
+	Stage_BGM = Audio::Instance().LoadAudioSource("Data/Sound/BGM_Title.wav");
+
 }
 
 // 終了化
@@ -44,11 +50,15 @@ void SceneTitle::Finalize()
 	// unique_ptr以外の後始末があればここに記述
 	// SpriteManagerからLoadしたポインタはManager管理ならdelete不要ですが、
 	// newした場合はdeleteが必要です。SpriteManagerの仕様に合わせます。
+
+	delete Stage_BGM;
 }
 
 // 更新処理
 void SceneTitle::Update(float elapsedTime)
 {
+	Stage_BGM->Play(true);
+
 	// 点滅処理
 	alpha_timer += elapsedTime;
 	if (std::fmod(alpha_timer, blink_interval * 2.0f) < blink_interval) render_color.w = 1.0f;

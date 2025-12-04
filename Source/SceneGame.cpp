@@ -22,6 +22,7 @@
 #include "SceneTitle.h"
 #include "SceneLoading.h"
 #include "SceneFactory.h"
+#include "System/Audio.h"
 
 // 派生クラスのインクルード
 #include "PlayerMelee.h"
@@ -95,6 +96,12 @@ void SceneGame::Initialize()
 
 	isSceneStarting = true; // フェードイン開始
 	startTransitionTimer = startTransitionDuration;
+
+	Audio::Instance().Initialize();
+
+	Stage_BGM = Audio::Instance().LoadAudioSource("Data/Sound/BGM_Play.wav");
+	//Clear_BGM = Audio::Instance().LoadAudioSource("Data/Sound/GameClear_BGM.wav");
+	//GameOver_BGM = Audio::Instance().LoadAudioSource("Data/Sound/GameOver_BGM.wav");
 }
 
 void SceneGame::Finalize()
@@ -103,6 +110,7 @@ void SceneGame::Finalize()
 	CollisionManager::Instance().Clear();
 	GimmicManager::Instance().Clear();
 	GameObjectManager::Instance().Clear();
+	delete Stage_BGM;
 
 	if (cameraController != nullptr)
 	{
@@ -145,6 +153,8 @@ void RemoveInactiveSharedObjects(std::vector<std::shared_ptr<T>>& objects)
 
 void SceneGame::Update(float elapsedTime)
 {
+	Stage_BGM->Play(true);
+
 	// 時間経過とともにタイマーを減らし、0になったらフラグを下ろす
 	if (isSceneStarting)
 	{
