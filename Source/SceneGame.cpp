@@ -80,6 +80,13 @@ void SceneGame::Initialize()
 	pipFrameSprite = SpriteManager::Instance().Load("Data/Sprite/Window.png");
 
 	grid_map.Initialize(150, 150, 0.8f);
+
+	// ディゾルブの初期化と開始設定
+	dissolve = std::make_unique<Dissolve>();
+	dissolve->Initialize(Graphics::Instance().GetDevice(), "Data/Sprite/DissolveNoise.png");
+
+	isSceneStarting = true; // フェードイン開始
+	startTransitionTimer = startTransitionDuration;
 }
 
 void SceneGame::Finalize()
@@ -130,6 +137,17 @@ void RemoveInactiveSharedObjects(std::vector<std::shared_ptr<T>>& objects)
 
 void SceneGame::Update(float elapsedTime)
 {
+	// 時間経過とともにタイマーを減らし、0になったらフラグを下ろす
+	if (isSceneStarting)
+	{
+		startTransitionTimer -= elapsedTime;
+		if (startTransitionTimer <= 0.0f)
+		{
+			startTransitionTimer = 0.0f;
+			isSceneStarting = false;
+		}
+	}
+
 	if (s_slowTimer > 0.0f)
 	{
 		s_slowTimer -= elapsedTime;
@@ -285,6 +303,14 @@ void SceneGame::Render()
 				pipX + margin, pipY + margin,
 				pipW - (margin + marginRight), pipH - (margin * 2.0f)
 			);
+		}
+
+		if (isSceneStarting && dissolve)
+		{
+			// タイマーが Max(開始時) -> 0(終了時) へ減っていく
+			// 閾値: 1.0(黒) -> 0.0(透明)
+			float t = std::clamp(startTransitionTimer / startTransitionDuration, 0.0f, 1.0f);
+			dissolve->Render(dc, t);
 		}
 	}
 }

@@ -134,6 +134,7 @@
     <ClInclude Include="Source\Collision.h" />
     <ClInclude Include="Source\CollisionManager.h" />
     <ClInclude Include="Source\Core.h" />
+    <ClInclude Include="Source\Dissolve.h" />
     <ClInclude Include="Source\Editor.h" />
     <ClInclude Include="Source\Enemy.h" />
     <ClInclude Include="Source\EnemyManager.h" />
@@ -225,6 +226,7 @@
     <ClCompile Include="Source\Collision.cpp" />
     <ClCompile Include="Source\CollisionManager.cpp" />
     <ClCompile Include="Source\Core.cpp" />
+    <ClCompile Include="Source\Dissolve.cpp" />
     <ClCompile Include="Source\Enemy.cpp" />
     <ClCompile Include="Source\EnemyManager.cpp" />
     <ClCompile Include="Source\EnemySlime.cpp" />
@@ -289,6 +291,7 @@
   <ItemGroup>
     <None Include="cpp.hint" />
     <None Include="Shader\Basic.hlsli" />
+    <None Include="Shader\Dissolve.hlsli" />
     <None Include="Shader\Lambert.hlsli" />
     <None Include="Shader\Scene.hlsli" />
     <None Include="Shader\ShapeRenderer.hlsli" />
@@ -304,6 +307,13 @@
     <FxCompile Include="Shader\BasicVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shader\DissolvePS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shader\DissolveVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="Shader\LambertPS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
