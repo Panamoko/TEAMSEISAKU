@@ -7,6 +7,7 @@
 Cannon::Cannon()
 {
     class_name = "Cannon";
+    model = ModelManager::Instance().Load("Data/Model/bilud/cannon.mdl");
 
     //Šî‘bİ’è
 	hp = 50.0f;
@@ -15,6 +16,7 @@ Cannon::Cannon()
 	attac_timer = 0.0f;
 	power = 10.0f;
 	speed = 3.0f;
+    scale = { 0.5f,0.5f,0.5f };
 
     //“–‚½‚è”»’è‚Ìí—Şİ’è
     collider = std::make_unique<CylinderCollider>();
