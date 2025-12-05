@@ -23,7 +23,7 @@ void SceneTitle::Initialize()
 
 	// ボタン用スプライトと座標設定
 	spriteStart = SpriteManager::Instance().Load("Data/Sprite/GameStage.png");
-	startButtonPos = { 430, 370, 0 };
+	startButtonPos = { 650, 650, 0 };
 	startButtonSize = { 500, 300, 0 };
 
 	// ★追加: チュートリアルボタン
