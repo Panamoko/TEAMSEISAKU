@@ -55,6 +55,8 @@ OBB GameObject::GetOBB() const
 
 GameObject::GameObject() :name("Empty")
 {
+
+	//a
 	id = nextID;
 	nextID++;
 	position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
