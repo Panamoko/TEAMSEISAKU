@@ -150,48 +150,91 @@ bool EnemySlime::GetStrategicTarget(DirectX::XMFLOAT3& outPos)
 	Core* core = Core::Instance();
 	if (!core || core->GetHP() <= 0.0f) return false;
 
-	// 1. コア周辺の8方向エリアで、プレイヤー・味方の数をカウント
-	int sectorCounts[8] = { 0 };
-	DirectX::XMFLOAT3 corePos = core->position;
-
-	auto CountUnit = [&](const DirectX::XMFLOAT3& pos) {
-		float dx = pos.x - corePos.x;
-		float dz = pos.z - corePos.z;
-		float angle = atan2f(dx, dz); // (x, z) 0時方向=0, 時計回り
-		if (angle < 0.0f) angle += DirectX::XM_2PI;
-		int sector = static_cast<int>(angle / (DirectX::XM_PI / 4.0f));
-		sector = std::clamp(sector, 0, 7);
-		sectorCounts[sector]++;
-		};
+	// ---------------------------------------------------------
+	// ★追加: コア防衛優先ロジック
+	// コアの一定範囲内にプレイヤーがいたら、即座にその地点を目標にする
+	// ---------------------------------------------------------
+	const float kDefenseRange = 25.0f; // 防衛反応する距離 (コアからの距離)
+	float closestDistSq = FLT_MAX;
+	DirectX::XMFLOAT3 defenseTarget = { 0,0,0 };
+	bool isEmergency = false;
 
 	const auto& players = Player::GetAllPlayers();
-	for (const auto* p : players) { if (p && p->GetHealth() > 0) CountUnit(p->GetPosition()); }
-	const auto& allies = AllySlime::GetAllAllies();
-	for (const auto* a : allies) { if (a && a->GetHealth() > 0) CountUnit(a->GetPosition()); }
-
-	// 最も敵が多いセクターを探す
-	int maxSector = 0;
-	int maxCount = -1;
-	for (int i = 0; i < 8; ++i)
+	for (const auto* p : players)
 	{
-		if (sectorCounts[i] > maxCount) {
-			maxCount = sectorCounts[i];
-			maxSector = i;
+		if (!p || p->GetHealth() <= 0) continue;
+
+		// プレイヤーとコアの距離をチェック
+		float d2 = MathUtils::DistSqXZ(p->GetPosition(), core->position);
+
+		// 危険範囲内ならターゲット候補にする
+		if (d2 < kDefenseRange * kDefenseRange)
+		{
+			if (d2 < closestDistSq)
+			{
+				closestDistSq = d2;
+				defenseTarget = p->GetPosition();
+				isEmergency = true;
+			}
 		}
 	}
 
-	if (maxCount <= 0) return false; // 敵がいなければ戦略移動不要
-
-	// 2. ターゲット地点（激戦区の中心）を決定
-	float targetAngle = maxSector * (DirectX::XM_PI / 4.0f) + (DirectX::XM_PI / 8.0f);
-	float distFromCore = 15.0f; // コアから少し離れた位置で迎撃
-
 	DirectX::XMFLOAT3 strategicPos;
-	strategicPos.x = corePos.x + sinf(targetAngle) * distFromCore;
-	strategicPos.y = position.y;
-	strategicPos.z = corePos.z + cosf(targetAngle) * distFromCore;
 
-	// 3. 自分はこの地点に近い「選抜メンバー（上位4体）」か？
+	if (isEmergency)
+	{
+		// 緊急事態：一番近い侵入者の位置を目標とする
+		strategicPos = defenseTarget;
+	}
+	else
+	{
+		// ---------------------------------------------------------
+		// ▼ 既存ロジック: コアが安全なら、密度の高い激戦区へ向かう
+		// ---------------------------------------------------------
+
+		// 1. コア周辺の8方向エリアで、プレイヤー・味方の数をカウント
+		int sectorCounts[8] = { 0 };
+		DirectX::XMFLOAT3 corePos = core->position;
+
+		auto CountUnit = [&](const DirectX::XMFLOAT3& pos) {
+			float dx = pos.x - corePos.x;
+			float dz = pos.z - corePos.z;
+			float angle = atan2f(dx, dz); // (x, z) 0時方向=0, 時計回り
+			if (angle < 0.0f) angle += DirectX::XM_2PI;
+			int sector = static_cast<int>(angle / (DirectX::XM_PI / 4.0f));
+			sector = std::clamp(sector, 0, 7);
+			sectorCounts[sector]++;
+			};
+
+		for (const auto* p : players) { if (p && p->GetHealth() > 0) CountUnit(p->GetPosition()); }
+		const auto& allies = AllySlime::GetAllAllies();
+		for (const auto* a : allies) { if (a && a->GetHealth() > 0) CountUnit(a->GetPosition()); }
+
+		// 最も敵が多いセクターを探す
+		int maxSector = 0;
+		int maxCount = -1;
+		for (int i = 0; i < 8; ++i)
+		{
+			if (sectorCounts[i] > maxCount) {
+				maxCount = sectorCounts[i];
+				maxSector = i;
+			}
+		}
+
+		if (maxCount <= 0) return false; // 敵がいなければ戦略移動不要
+
+		// 2. ターゲット地点（激戦区の中心）を決定
+		float targetAngle = maxSector * (DirectX::XM_PI / 4.0f) + (DirectX::XM_PI / 8.0f);
+		float distFromCore = 15.0f; // コアから少し離れた位置で迎撃
+
+		strategicPos.x = corePos.x + sinf(targetAngle) * distFromCore;
+		strategicPos.y = position.y;
+		strategicPos.z = corePos.z + cosf(targetAngle) * distFromCore;
+	}
+
+	// ---------------------------------------------------------
+	// 3. 自分はこの地点に近い「選抜メンバー（上位N体）」か？
+	// ---------------------------------------------------------
 	struct Candidate { Enemy* enemy; float distSq; };
 	std::vector<Candidate> candidates;
 
@@ -212,7 +255,9 @@ bool EnemySlime::GetStrategicTarget(DirectX::XMFLOAT3& outPos)
 
 	// 上位に入っているかチェック
 	bool isElite = false;
-	int limit = 4;
+	// ★変更: 緊急時(防衛)なら反応する数を増やす (4体 -> 8体など)
+	int limit = isEmergency ? 8 : 4;
+
 	for (int i = 0; i < (int)candidates.size(); ++i)
 	{
 		if (i >= limit) break;
@@ -224,12 +269,8 @@ bool EnemySlime::GetStrategicTarget(DirectX::XMFLOAT3& outPos)
 
 	if (isElite)
 	{
-		// ★修正: ランダムではなく、IDに基づいた「固定的」な分散座標を生成する
-		// これにより、同じセクターを目指している限り、フレーム毎に目的地がブレることがなくなる
-
-		// IDを使って 0.0 ~ 2PI の角度オフセットを作る
+		// IDに基づいた「固定的」な分散座標を生成
 		float angleOffset = (float)(GetID() % 8) * (DirectX::XM_2PI / 8.0f);
-		// IDを使って 半径を少しばらけさせる (3.0m ~ 5.0m)
 		float radiusOffset = 3.0f + (float)(GetID() % 3);
 
 		strategicPos.x += sinf(angleOffset) * radiusOffset;
