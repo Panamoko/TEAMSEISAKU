@@ -87,6 +87,7 @@ void SceneGame::Initialize()
 
 	pipRenderTarget = new RenderTarget(1280, 720);
 	pipFrameSprite = SpriteManager::Instance().Load("Data/Sprite/PiP.png");
+	tab_sprite = SpriteManager::Instance().Load("Data/Sprite/Tab.png");
 
 	grid_map.Initialize(150, 150, 0.8f);
 
@@ -159,6 +160,16 @@ void RemoveInactiveSharedObjects(std::vector<std::shared_ptr<T>>& objects)
 
 void SceneGame::Update(float elapsedTime)
 {
+
+	if (Input::Instance().GetKeyboard().IsKeyPushed(VK_TAB) && !is_pouse)
+	{
+		is_pouse = true;
+	}
+	else if (Input::Instance().GetKeyboard().IsKeyPushed(VK_TAB) && is_pouse)
+	{
+		is_pouse = false;
+	}
+
 	Stage_BGM->Play(true);
 	// 時間経過とともにタイマーを減らし、0になったらフラグを下ろす
 	if (isSceneStarting)
@@ -185,124 +196,132 @@ void SceneGame::Update(float elapsedTime)
 		target.y += 0.5f;
 		cameraController->SetTarget(target);
 	}
-	cameraController->Update(elapsedTime);
-
-	// スポーン処理
-	pickingRay.Update();
-	UpdatePlayerSpawn();
-
-	// ★追加: 右クリックでエフェクト再生テスト
-	Mouse& mouse = Input::Instance().GetMouse();
-	if (mouse.GetButtonDown() & Mouse::BTN_RIGHT) // 右クリック
+		cameraController->Update(elapsedTime);
+	if (!is_pouse)
 	{
-		// ピッキングレイ（カメラからマウス位置へ伸びる線）を取得
-		DirectX::XMFLOAT3 rayOrigin = pickingRay.GetRayOrigin();
-		DirectX::XMFLOAT3 rayDir = pickingRay.GetRayDirection();
 
-		// 地面(Y=0)との交差判定（簡易計算）
-		// レイの方程式: P = Origin + t * Dir
-		// Y = Origin.y + t * Dir.y = 0 となる t を求める
-		if (std::abs(rayDir.y) > 0.001f) // ゼロ除算防止
+
+		// スポーン処理
+		pickingRay.Update();
+		UpdatePlayerSpawn();
+
+		// ★追加: 右クリックでエフェクト再生テスト
+		Mouse& mouse = Input::Instance().GetMouse();
+		if (mouse.GetButtonDown() & Mouse::BTN_RIGHT) // 右クリック
 		{
-			float t = -rayOrigin.y / rayDir.y;
-			if (t > 0.0f)
+			// ピッキングレイ（カメラからマウス位置へ伸びる線）を取得
+			DirectX::XMFLOAT3 rayOrigin = pickingRay.GetRayOrigin();
+			DirectX::XMFLOAT3 rayDir = pickingRay.GetRayDirection();
+
+			// 地面(Y=0)との交差判定（簡易計算）
+			// レイの方程式: P = Origin + t * Dir
+			// Y = Origin.y + t * Dir.y = 0 となる t を求める
+			if (std::abs(rayDir.y) > 0.001f) // ゼロ除算防止
 			{
-				// 交点座標を計算
-				DirectX::XMFLOAT3 hitPos;
-				hitPos.x = rayOrigin.x + t * rayDir.x;
-				hitPos.y = 0.0f; // 地面の高さ
-				hitPos.z = rayOrigin.z + t * rayDir.z;
-
-				// エフェクト再生！
-				EffectManager::Instance().Play("Hit", hitPos);
-			}
-		}
-	}
-
-	// キーボード切り替え
-	Player::UpdateActiveByKeyboard(players);
-
-	if (scene_name == "scene_tutorial" && tutorial_sprite)
-	{
-		tutorial_sprite->Update();
-	}
-
-	if (game_editor.PlayGame())
-	{
-		stage->Update(scaledElapsedTime);
-		StageManager::Instance().Update(scaledElapsedTime);
-
-		// マップ情報セット & 更新
-		for (auto& character : players)
-		{
-			// Characterとして扱う（共通）
-			// Player型にキャストしてマップをセット
-			if (auto p = std::dynamic_pointer_cast<Player>(character)) {
-				p->SetGridMap(&grid_map);
-			}
-
-			// 更新
-			character->Update(scaledElapsedTime);
-
-			// 自動スポーン処理 (Player型であれば)
-			if (auto p = std::dynamic_pointer_cast<Player>(character))
-			{
-				if (p->UpdateAutoSpawn(scaledElapsedTime))
+				float t = -rayOrigin.y / rayDir.y;
+				if (t > 0.0f)
 				{
-					p->SpawnAlly(this);
+					// 交点座標を計算
+					DirectX::XMFLOAT3 hitPos;
+					hitPos.x = rayOrigin.x + t * rayDir.x;
+					hitPos.y = 0.0f; // 地面の高さ
+					hitPos.z = rayOrigin.z + t * rayDir.z;
+
+					// エフェクト再生！
+					EffectManager::Instance().Play("Hit", hitPos);
 				}
 			}
 		}
 
-		EnemyManager& em = EnemyManager::Instance();
-		int enemyCount = em.GetEnemyCount();
-		for (int i = 0; i < enemyCount; ++i)
+		// キーボード切り替え
+		Player::UpdateActiveByKeyboard(players);
+
+		if (scene_name == "scene_tutorial" && tutorial_sprite)
 		{
-			auto enemy = em.GetEnemy(i);
-			if (auto slime = std::dynamic_pointer_cast<EnemySlime>(enemy))
-			{
-				slime->SetGridMap(&grid_map);
-			}
+			tutorial_sprite->Update();
 		}
 
-		EnemyManager::Instance().Update(scaledElapsedTime);
-		GimmicManager::Instance().Update(scaledElapsedTime);
+		if (game_editor.PlayGame())
+		{
+			stage->Update(scaledElapsedTime);
+			StageManager::Instance().Update(scaledElapsedTime);
 
-		for (auto& a : alliesStraight) a->Update(scaledElapsedTime);
-		for (auto& a : alliesHoming)  a->Update(scaledElapsedTime);
-		for (auto& a : alliesMelee)   a->Update(scaledElapsedTime);
+			// マップ情報セット & 更新
+			for (auto& character : players)
+			{
+				// Characterとして扱う（共通）
+				// Player型にキャストしてマップをセット
+				if (auto p = std::dynamic_pointer_cast<Player>(character)) {
+					p->SetGridMap(&grid_map);
+				}
 
-		CollisionManager::Instance().CheckAllCollision();
+				// 更新
+				character->Update(scaledElapsedTime);
 
-		// ★修正: ここで定義した RemoveInactiveSharedObjects を呼ぶ
-		RemoveInactiveSharedObjects(players);
+				// 自動スポーン処理 (Player型であれば)
+				if (auto p = std::dynamic_pointer_cast<Player>(character))
+				{
+					if (p->UpdateAutoSpawn(scaledElapsedTime))
+					{
+						p->SpawnAlly(this);
+					}
+				}
+			}
 
-		RemoveInactiveObjects(alliesStraight);
-		RemoveInactiveObjects(alliesHoming);
-		RemoveInactiveObjects(alliesMelee);
-		grid_map.Build(GameObjectManager::Instance().GetAllObjects());
+			EnemyManager& em = EnemyManager::Instance();
+			int enemyCount = em.GetEnemyCount();
+			for (int i = 0; i < enemyCount; ++i)
+			{
+				auto enemy = em.GetEnemy(i);
+				if (auto slime = std::dynamic_pointer_cast<EnemySlime>(enemy))
+				{
+					slime->SetGridMap(&grid_map);
+				}
+			}
+
+			EnemyManager::Instance().Update(scaledElapsedTime);
+			GimmicManager::Instance().Update(scaledElapsedTime);
+
+			for (auto& a : alliesStraight) a->Update(scaledElapsedTime);
+			for (auto& a : alliesHoming)  a->Update(scaledElapsedTime);
+			for (auto& a : alliesMelee)   a->Update(scaledElapsedTime);
+
+			CollisionManager::Instance().CheckAllCollision();
+
+			// ★修正: ここで定義した RemoveInactiveSharedObjects を呼ぶ
+			RemoveInactiveSharedObjects(players);
+
+			RemoveInactiveObjects(alliesStraight);
+			RemoveInactiveObjects(alliesHoming);
+			RemoveInactiveObjects(alliesMelee);
+			grid_map.Build(GameObjectManager::Instance().GetAllObjects());
+		}
+
+		UpdatePiP();
+		// PiP内部の描画領域を計算して渡す
+		{
+			const float pipW = 400.0f;
+			const float pipH = 225.0f;
+			const float tabW = 60.0f;
+			float margin = 10.0f;
+			float marginRight = tabW + margin;
+
+			float pipFrameX = isPipExpanded ? 0.0f : (-pipW + tabW);
+			float pipFrameY = 100.0f;
+
+			// RenderTextureが表示されている正確なスクリーン領域
+			float contentX = pipFrameX + margin;
+			float contentY = pipFrameY + margin;
+			float contentW = pipW - (margin + marginRight);
+			float contentH = pipH - (margin * 2.0f);
+
+			// ここで正しい領域を渡すことで、クリック判定がズレなくなります
+			UpdateDragDrop(contentX, contentY, contentW, contentH);
+		}
 	}
-
-	UpdatePiP();
-	// PiP内部の描画領域を計算して渡す
+	else
 	{
-		const float pipW = 400.0f;
-		const float pipH = 225.0f;
-		const float tabW = 60.0f;
-		float margin = 10.0f;
-		float marginRight = tabW + margin;
-
-		float pipFrameX = isPipExpanded ? 0.0f : (-pipW + tabW);
-		float pipFrameY = 100.0f;
-
-		// RenderTextureが表示されている正確なスクリーン領域
-		float contentX = pipFrameX + margin;
-		float contentY = pipFrameY + margin;
-		float contentW = pipW - (margin + marginRight);
-		float contentH = pipH - (margin * 2.0f);
-
-		// ここで正しい領域を渡すことで、クリック判定がズレなくなります
-		UpdateDragDrop(contentX, contentY, contentW, contentH);
+		change_title.Update(elapsedTime);
 	}
 }
 
@@ -407,6 +426,19 @@ void SceneGame::Render()
 		{
 			tutorial_sprite->Render();
 		}
+
+		if (is_pouse)
+		{
+			change_title.Render();
+		}
+
+		tab_sprite->Render(
+			rc,
+			1500, 50, 0,
+			300, 200,
+			0,
+			1, 1, 1, 1
+		);
 	}
 }
 

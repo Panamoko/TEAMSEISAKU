@@ -16,7 +16,7 @@ ChangeSceneSytem::ChangeSceneSytem()
 	sprite_vector[0] = SpriteManager::Instance().Load("Data/Sprite/Tutorial.png");
 	sprite_vector[1] = SpriteManager::Instance().Load("Data/Sprite/Stage01.png");
 	position.x = 650.0f;
-	position.y = 250.0f;
+	position.y = 550.0f;
 	size = { 512.0f,700.0f };
 	sprite_width = size.x;
 	sprite_height = size.y;

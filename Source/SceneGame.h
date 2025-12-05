@@ -24,6 +24,7 @@
 #include "PlayerHeal.h"
 #include "PlayerShot.h"
 #include "TutorialSprite.h"
+#include "ChangeTitleSystem.h"
 #include <System/AudioSource.h>
 
 class SceneGame : public Scene
@@ -78,6 +79,7 @@ private:
 	Stage* stage = nullptr;
 	GridMap grid_map;
 	Picking_Ray pickingRay;
+	ChangeTitleSystem change_title;
 
 	std::vector<std::shared_ptr<Character>> players;
 
@@ -94,6 +96,7 @@ private:
 	RenderTarget* pipRenderTarget = nullptr;
 	bool isPipExpanded = false;
 	Sprite* pipFrameSprite = nullptr;
+	Sprite* tab_sprite = nullptr;
 
 	std::unique_ptr<Dissolve> dissolve;
 	bool isSceneStarting = true;        // 開始演出中フラグ
@@ -103,4 +106,6 @@ private:
 	AudioSource* Stage_BGM = nullptr;
 	AudioSource* Clear_BGM = nullptr;
 	AudioSource* GameOver_BGM = nullptr;
+
+	bool is_pouse = false;
 };

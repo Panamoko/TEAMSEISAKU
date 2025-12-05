@@ -7,16 +7,16 @@
 TutorialSprite::TutorialSprite()
 {
 	click_pos = { 0.0f,0.0f };
-	click_size = { 450.0f,250.0f };
-	position = { 20.0f,340.0f };
+	click_size = { 550.0f,300.0f };
+	position = { 20.0f,500.0f };
 	color = { 1.0f,1.0f,1.0f,0.8f };
 
 	BUTTON_WIDTH = 200.0f;
 	BUTTON_HEIGHT = 100.0f;
-	BUTTON_Y = 600.0f;
+	BUTTON_Y = 800.0f;
 	COLOR_R = 1.0f, COLOR_G = 1.0f, COLOR_B = 1.0f, COLOR_A = 1.0f;
 	BACK_BUTTON_X = 50.0f;
-	NEXT_BUTTON_X = 250.0f;
+	NEXT_BUTTON_X = 350.0f;
 	next_image_coror_a = 0.7f;
 	back_image_coror_a = 0.7f;
 
