@@ -6,9 +6,9 @@
 
 ChangeTitleSystem::ChangeTitleSystem()
 {
-	//sprite_vector[0] = SpriteManager::Instance().Load();
-	position = { 540,400 };
-	size = { 300.0f,100.0f };
+	sprite_vector[0] = SpriteManager::Instance().Load("Data/Sprite/back_title.png");
+	position = { 650,400 };
+	size = { 600.0f,300.0f };
 	color = { 1.0f,1.0f,1.0f,0.7f };
 }
 
