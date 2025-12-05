@@ -103,5 +103,5 @@ private:
 	AudioSource* Stage_BGM = nullptr;
 	AudioSource* Clear_BGM = nullptr;
 	AudioSource* GameOver_BGM = nullptr;
-
+	bool is_pouse;
 };

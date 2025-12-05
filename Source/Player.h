@@ -3,6 +3,7 @@
 #include "Character.h"
 #include <vector>
 #include <memory>
+#include <string> // ★追加: stringを使うため
 #include "Animator.h"
 #include "AStar.h"
 #include "System/Sprite.h"
@@ -28,8 +29,6 @@ public:
 	static void UnregisterPlayer(Player* player);
 	static const std::vector<Player*>& GetAllPlayers();
 
-	// --- 基本機能 ---
-	// ★修正: 派生クラスでオーバーライドするために virtual をつける
 	virtual void Initialize();
 
 	void Finalize();
@@ -39,41 +38,35 @@ public:
 	void RenderUI(const RenderContext& rc, float x, float y, float size = 128.0f);
 	void OnCollision(GameObject* object) override;
 
-	// --- 派生クラスでオーバーライドする味方生成関数 ---
 	virtual void SpawnAlly(SceneGame* scene);
 
-	// --- 共通設定 ---
 	void SetGridMap(const GridMap* map) { gridMap = map; }
 	void RequestPathRecalculation();
 	bool IsPlayerActive() const;
 
-	// SceneGameから呼べるように public に移動
 	bool UpdateAutoSpawn(float elapsedTime);
 
-	// shared_ptr に統一して扱いやすくする
 	static void UpdateSpawn(std::vector<std::shared_ptr<Character>>& players, const Picking_Ray& pickingRay);
-
-	// キーボード切り替え用
 	static bool UpdateActiveByKeyboard(const std::vector<std::shared_ptr<Character>>& players);
 
 protected:
-	// 共通初期化用関数
 	void InitializeCommon(const char* modelPath, const char* iconPath);
 
 	void OnLanding() override;
 	void OnDead() override;
 
-	// 入力・移動
 	void InputMove(float elapsedTime);
 	void InputJump();
 	DirectX::XMFLOAT3 GetMoveVec() const;
 
-	// AI・自動生成
-	void UpdateMoveToCore(float elapsedTime);
+	bool UpdateMoveToCore(float elapsedTime);
 
 protected:
 	Model* model = nullptr;
 	Animator animator;
+
+	// ★追加: 現在再生中のアニメーション名を記録する変数
+	std::string currentAnim = "";
 
 	// パラメータ
 	float moveSpeed = 5.0f;
@@ -82,15 +75,12 @@ protected:
 	int jumpCount = 0;
 	int jumpLimit = 2;
 
-	// ボーン情報
 	int headBoneIndex = -1;
 	int crownNodeIndex = -1;
 
-	// 自動スポーン設定
 	float spawnTimer = 0.0f;
 	float spawnInterval = 3.0f;
 
-	// AI・経路探索
 	const GridMap* gridMap = nullptr;
 	AStar aStar;
 	std::vector<std::pair<int, int>> currentPath;
@@ -99,7 +89,6 @@ protected:
 	float autoMoveSpeedRate = 0.8f;
 	float autoMoveTurnRate = 1.0f;
 
-	// UI
 	Sprite* playerIcon = nullptr;
 	Sprite* hpBarSprite = nullptr;
 	CylinderCollider* cylinder = nullptr;
