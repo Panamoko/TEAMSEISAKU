@@ -299,8 +299,9 @@ void Character::OnCollision(GameObject* object)
 	// 1. 基底クラス(GameObject)の処理を呼び出す（位置補正/MTD押し出しなど）
 	GameObject::OnCollision(object);
 
-	// 2. 「敵の攻撃」に当たった場合の共通ダメージ処理
-	// 条件: 自分自身が「敵」ではなく、かつ相手が「敵の攻撃」である場合
+	// ---------------------------------------------------------
+	//  プレイヤー・味方が「敵の攻撃」に当たった場合
+	// ---------------------------------------------------------
 	if (this->type != Type::Enemy && object->type == Type::EnemyAttack)
 	{
 		// 相手をProjectileにキャストして攻撃力などを取得
@@ -314,6 +315,31 @@ void Character::OnCollision(GameObject* object)
 		// ダメージを適用（無敵時間 0.5秒）
 		if (ApplyDamage(damage, 0.5f))
 		{
+			if (proj)
+			{
+				proj->Destroy();
+			}
+		}
+	}
+
+	// ---------------------------------------------------------
+	//  エネミーが「プレイヤー/味方の攻撃」に当たった場合
+	// ---------------------------------------------------------
+	if (this->type == Type::Enemy && object->type == Type::PlayerAttack)
+	{
+		// 相手を弾(Projectile)としてキャストして攻撃力を取得
+		Projectile* proj = dynamic_cast<Projectile*>(object);
+		int damage = 10; // デフォルトダメージ
+		if (proj)
+		{
+			damage = proj->GetDamage();
+		}
+
+		// ダメージ適用 (無敵時間 0.2秒)
+		// ※エネミーは連続ヒットしても良い場合が多いので無敵時間は短めに
+		if (ApplyDamage(damage, 0.2f))
+		{
+			// 当たった弾を消す
 			if (proj)
 			{
 				proj->Destroy();

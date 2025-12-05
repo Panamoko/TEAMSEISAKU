@@ -43,7 +43,7 @@ protected:
 	bool GetStrategicTarget(DirectX::XMFLOAT3& outPos);
 
 	// 経路探索を用いて目標地点へ移動
-	void MoveToTarget(float elapsedTime, float moveSpeedRate, float turnSpeedRate);
+	bool MoveToTarget(float elapsedTime, float moveSpeedRate, float turnSpeedRate);
 
 	// 味方同士の分離行動（重なり防止）
 	void ApplySeparationForce(float elapsedTime);

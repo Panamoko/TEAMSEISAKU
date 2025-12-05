@@ -50,6 +50,8 @@ EnemySlime::EnemySlime(const char* modelPath)
 	radius = 0.5f;
 	height = 1.0f;
 	type = Type::Enemy;
+	maxHealth = 20;
+	health = maxHealth;
 
 	// コライダー設定
 	collider = std::make_unique<CylinderCollider>();
@@ -344,15 +346,19 @@ void EnemySlime::SetWanderState()
 
 void EnemySlime::UpdateWanderState(float elapsedTime)
 {
-	// ★修正: 到着判定を少し甘くする (半径 0.5f -> 1.5f)
-	// 4体が密集しても、お互いに押し合って到着判定が出ない状況を防ぐ
+	// 到着判定
 	if (MathUtils::DistSqXZ(targetPosition, position) < 1.5f * 1.5f)
 	{
 		SetIdleState();
 		return;
 	}
 
-	MoveToTarget(elapsedTime, 1.0f, 1.0f);
+	// 移動不能なら即座に待機へ（次のフレームで再索敵/再行動）
+	if (!MoveToTarget(elapsedTime, 1.0f, 1.0f))
+	{
+		SetIdleState();
+		return;
+	}
 
 	if (targetUpdateTimer <= 0.0f)
 	{
@@ -367,8 +373,7 @@ void EnemySlime::UpdateWanderState(float elapsedTime)
 		DirectX::XMFLOAT3 newStrategicPos;
 		if (GetStrategicTarget(newStrategicPos))
 		{
-			// ★修正: 固定オフセット化したので、ここでは単純に「場所が変わったか」だけ見ればOK
-			// セクターが変われば大きく座標が変わるので、閾値は適度な大きさ(例: 25.0f = 5m)で良い
+			// 固定オフセット化したので、ここでは単純に「場所が変わったか」だけ見ればOK
 			float distSq = MathUtils::DistSqXZ(targetPosition, newStrategicPos);
 			if (distSq > 25.0f)
 			{
@@ -476,7 +481,7 @@ void EnemySlime::UpdateAttackState(float elapsedTime)
 // ----------------------------------------------------------------------------
 
 // A*を使った移動処理
-void EnemySlime::MoveToTarget(float elapsedTime, float moveSpeedRate, float turnSpeedRate)
+bool EnemySlime::MoveToTarget(float elapsedTime, float moveSpeedRate, float turnSpeedRate)
 {
 	float vx = 0.0f, vz = 0.0f;
 	bool shouldMove = false;
@@ -485,12 +490,11 @@ void EnemySlime::MoveToTarget(float elapsedTime, float moveSpeedRate, float turn
 	{
 		pathRecalcTimer -= elapsedTime;
 
-		// ★変更: 目的地が動いたかチェック
+		// 目的地が動いたかチェック
 		float distToPrev = MathUtils::DistSqXZ(targetPosition, prevTargetPos);
 		bool targetMoved = (distToPrev > 1.0f); // 1.0m以上ずれたら再計算
 
 		// 経路がない、または目的地が変わった場合のみ計算する
-		// (0.5秒ごとの定期更新は、目的地が変わらない限り行わない)
 		if (currentPath.empty() || targetMoved)
 		{
 			// 少し待機時間を持たせる（連続呼び出し防止）
@@ -509,11 +513,24 @@ void EnemySlime::MoveToTarget(float elapsedTime, float moveSpeedRate, float turn
 					start.first, start.second
 				);
 
-				//currentPath = rawPath.empty() ? rawPath : aStar.SmoothPath(rawPath, *gridMap);
 				currentPath = rawPath;
 
+				// 経路再計算の結果、経路が見つからなかった場合の即時判定
+				if (currentPath.empty())
+				{
+					// ゴールに十分近いか？(2.0m^2 = 4.0)
+					float d2 = MathUtils::DistSqXZ(position, targetPosition);
+					if (d2 > 4.0f)
+					{
+						// さらに視線も通っていないなら到達不能とみなす
+						if (!HasLineOfSight(gridMap, position, targetPosition))
+						{
+							return false; // × 到達不能
+						}
+					}
+				}
+
 				// パスインデックスの初期化ロジック
-				// (前回実装した「内積判定」などはそのままでOK)
 				pathIndex = 0;
 				if (!currentPath.empty())
 				{
@@ -525,8 +542,6 @@ void EnemySlime::MoveToTarget(float elapsedTime, float moveSpeedRate, float turn
 						float d = MathUtils::DistSqXZ(position, nodePos);
 						if (d < minDistSq)
 						{
-							// 自分の位置から少し浮かせた高さ(y+0.5)で判定するとより安全ですが、
-							// ここではXZ平面のグリッド判定(HasLineOfSight)を使います。
 							if (HasLineOfSight(gridMap, position, nodePos))
 							{
 								minDistSq = d;
@@ -576,8 +591,24 @@ void EnemySlime::MoveToTarget(float elapsedTime, float moveSpeedRate, float turn
 			// 経路なし or 到着済みなら直進トライ
 			float dx = targetPosition.x - position.x;
 			float dz = targetPosition.z - position.z;
-			float dist = sqrtf(dx * dx + dz * dz);
-			if (dist > 0.001f) { vx = dx / dist; vz = dz / dist; shouldMove = true; }
+			float distSq = dx * dx + dz * dz;
+
+			// まだ到着していない（距離がある）場合
+			if (distSq > 0.5f * 0.5f)
+			{
+				// ★修正: 直進する前に「壁がないか」チェックする
+				if (HasLineOfSight(gridMap, position, targetPosition))
+				{
+					// 視線が通るなら直進トライ
+					float dist = sqrtf(distSq);
+					if (dist > 0.001f) { vx = dx / dist; vz = dz / dist; shouldMove = true; }
+				}
+				else
+				{
+					// 距離があるのに経路がなく、視線も通らない ＝ 壁に阻まれている
+					return false; // × 到達不能
+				}
+			}
 		}
 	}
 	else if (moveSpeedRate > 0.0f)
@@ -594,6 +625,8 @@ void EnemySlime::MoveToTarget(float elapsedTime, float moveSpeedRate, float turn
 		Move(elapsedTime, vx, vz, moveSpeed * moveSpeedRate);
 		Turn(elapsedTime, vx, vz, turnSpeed * turnSpeedRate);
 	}
+
+	return true; // 〇 移動成功 or 到着済み
 }
 
 void EnemySlime::SetTerritory(const DirectX::XMFLOAT3& origin, float range)
