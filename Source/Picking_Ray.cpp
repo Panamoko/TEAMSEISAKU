@@ -1,5 +1,6 @@
 #include "Picking_Ray.h"
 #include <Windows.h>
+#include "System/Graphics.h"
 
 
 Picking_Ray::Picking_Ray()
@@ -11,6 +12,11 @@ Picking_Ray::Picking_Ray()
 
 void Picking_Ray::Update()
 {
+	// 毎フレーム、現在の画面サイズをGraphicsから取得して更新する
+	Graphics& graphics = Graphics::Instance();
+	screen_width = graphics.GetScreenWidth();
+	screen_height = graphics.GetScreenHeight();
+
 	//Cameraクラスから値を取得
 	camera_position = Camera::Instance().GetEye();
 	up = Camera::Instance().GetUp();
