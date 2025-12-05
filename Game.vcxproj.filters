@@ -94,6 +94,9 @@
     <Filter Include="Source\Effect">
       <UniqueIdentifier>{5e864a7b-3c2d-4237-91d3-7684b32e07be}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Keyboard">
+      <UniqueIdentifier>{d7380ce5-f95f-4997-a288-8bd4c9fcf284}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\imgui-docking\imconfig.h">
@@ -366,6 +369,9 @@
     <ClInclude Include="Source\EffectManager.h">
       <Filter>Source\Effect</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Keyboard.h">
+      <Filter>Source\Keyboard</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -619,6 +625,9 @@
     </ClCompile>
     <ClCompile Include="Source\EffectManager.cpp">
       <Filter>Source\Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Keyboard.cpp">
+      <Filter>Source\Keyboard</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

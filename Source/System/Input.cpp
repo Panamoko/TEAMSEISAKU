@@ -5,6 +5,9 @@ void Input::Initialize(HWND hWnd)
 {
 	gamePad = std::make_unique<GamePad>();
 	mouse = std::make_unique<Mouse>(hWnd);
+	keyboard = std::make_unique<Keyboard>();
+
+	keyboard->Initialize();
 }
 
 // 更新処理
@@ -12,6 +15,7 @@ void Input::Update()
 {
 	gamePad->Update();
 	mouse->Update();
+	keyboard->Update();
 }
 
 // ★追加: マウスのX軸移動量
