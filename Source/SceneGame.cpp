@@ -86,7 +86,7 @@ void SceneGame::Initialize()
 	Serializer::LoadScene(objects, sprites2d, scene_file_name);
 
 	pipRenderTarget = new RenderTarget(1280, 720);
-	pipFrameSprite = SpriteManager::Instance().Load("Data/Sprite/Window.png");
+	pipFrameSprite = SpriteManager::Instance().Load("Data/Sprite/PiP.png");
 
 	grid_map.Initialize(150, 150, 0.8f);
 
