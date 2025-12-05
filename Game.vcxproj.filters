@@ -372,6 +372,9 @@
     <ClInclude Include="Source\Keyboard.h">
       <Filter>Source\Keyboard</Filter>
     </ClInclude>
+    <ClInclude Include="Source\ChangeTitleSystem.h">
+      <Filter>Source\ChangeSceneSytem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -628,6 +631,9 @@
     </ClCompile>
     <ClCompile Include="Source\Keyboard.cpp">
       <Filter>Source\Keyboard</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ChangeTitleSystem.cpp">
+      <Filter>Source\ChangeSceneSytem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
