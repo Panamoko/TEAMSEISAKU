@@ -3,6 +3,7 @@
 #include <memory>
 #include "System/GamePad.h"
 #include "System/Mouse.h"
+#include "Keyboard.h"
 
 // インプット
 class Input
@@ -37,8 +38,10 @@ public:
 	// マウスのY軸移動量（前フレームとの差分）
 	float GetMouseDY() const;
 
+	Keyboard& GetKeyboard() { return *keyboard; }
 
 private:
 	std::unique_ptr<GamePad>	gamePad;
 	std::unique_ptr<Mouse>		mouse;
+	std::unique_ptr<Keyboard>	keyboard;
 };

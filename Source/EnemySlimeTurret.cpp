@@ -10,6 +10,10 @@ EnemySlimeTurret::EnemySlimeTurret()
 {
     class_name = "EnemySlimeTurret";
     searchRange = 15.0f;
+
+    maxHealth = 60;
+    health = maxHealth;
+
     targetUpdateTimer = MathUtils::RandomRenge(0.0f, 0.2f); // タイマー初期化
     SetIdleState();
 }

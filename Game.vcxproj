@@ -153,6 +153,7 @@
     <ClInclude Include="Source\Gimmic_BreakWall.h" />
     <ClInclude Include="Source\GridMap.h" />
     <ClInclude Include="Source\ITargetable.h" />
+    <ClInclude Include="Source\Keyboard.h" />
     <ClInclude Include="Source\MathUtils.h" />
     <ClInclude Include="Source\ModelManager.h" />
     <ClInclude Include="Source\Picking_Ray.h" />
@@ -243,6 +244,7 @@
     <ClCompile Include="Source\GimmicManager.cpp" />
     <ClCompile Include="Source\Gimmic_BreakWall.cpp" />
     <ClCompile Include="Source\GridMap.cpp" />
+    <ClCompile Include="Source\Keyboard.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\MathUtils.cpp" />
     <ClCompile Include="Source\ModelManager.cpp" />

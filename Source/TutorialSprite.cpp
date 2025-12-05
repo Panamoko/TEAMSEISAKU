@@ -8,8 +8,8 @@ TutorialSprite::TutorialSprite()
 {
 	click_pos = { 0.0f,0.0f };
 	click_size = { 450.0f,250.0f };
-	position = { 40.0f,350.0f };
-	color = { 1.0f,1.0f,1.0f,1.0f };
+	position = { 20.0f,340.0f };
+	color = { 1.0f,1.0f,1.0f,0.8f };
 
 	BUTTON_WIDTH = 200.0f;
 	BUTTON_HEIGHT = 100.0f;
