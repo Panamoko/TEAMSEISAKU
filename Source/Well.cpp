@@ -58,7 +58,7 @@ void Well::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer
 
 void Well::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
-    renderer->Render(rc, transform, model, ShaderId::Lambert,color);
+    renderer->Render(rc, transform, model, ShaderId::Lambert, color);
 }
 
 REGISTER_GAMEOBJECT(Well);
