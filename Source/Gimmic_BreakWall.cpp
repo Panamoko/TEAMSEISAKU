@@ -18,6 +18,8 @@ Gimmic_BreakWall::Gimmic_BreakWall()
 {
 	class_name = "Gimmic_BreakWall";
 	model = ModelManager::Instance().Load("Data/Model/bilud/saku.mdl");
+    model = ModelManager::Instance().Load("Data/Model/bilud/Well.mdl");
+    model = ModelManager::Instance().Load("Data/Model/bilud/Straw bag.mdl");
 
     collider = std::make_unique<OBB>();
     collider->type = ColliderType::OBB;
