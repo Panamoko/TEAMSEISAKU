@@ -415,7 +415,18 @@ bool Player::UpdateMoveToCore(float elapsedTime)
 
 void Player::Render(const RenderContext& rc, ModelRenderer* renderer)
 {
-    if (model) renderer->Render(rc, transform, model, ShaderId::Lambert, GetDamageColor());
+    // 通常のダメージ点滅色を取得
+    DirectX::XMFLOAT4 drawColor = GetDamageColor();
+
+    // ★追加: 操作中のプレイヤーなら、リムライト用のフラグ(a=2.0)を立てる
+    // (ダメージを受けていない時のみ適用。ダメージ赤点滅を優先)
+    if (IsPlayerActive() && invincibleTimer <= 0.0f)
+    {
+        // RGBはそのまま(1.0)、Alphaを2.0にしてシェーダーに通知
+        drawColor = { 1.0f, 1.0f, 1.0f, 2.0f };
+    }
+
+    if (model) renderer->Render(rc, transform, model, ShaderId::Lambert, drawColor);
 }
 
 void Player::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer)
@@ -451,17 +462,38 @@ void Player::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* render
 void Player::RenderUI(const RenderContext& rc, float x, float y, float size)
 {
     if (playerIcon)
+    {
+        // ★追加: 操作中のプレイヤーなら、背後に強調表示を描画
+        if (IsPlayerActive())
+        {
+            float outlineSize = size * 1.1f; // 少し大きく
+            float offset = (outlineSize - size) * 0.5f;
+
+            // 黄色で強調表示 (RGB=1,1,0)
+            playerIcon->Render(rc,
+                x - offset, y - offset, 0.0f,
+                outlineSize, outlineSize,
+                0.0f,
+                1.0f, 1.0f, 0.0f, 1.0f // 黄色
+            );
+        }
+
+        // 通常のアイコン描画
         playerIcon->Render(rc, x, y, 0.0f, size, size, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-    if (hpBarSprite) {
-        float barW = size;
-        float barH = 10.0f;
-        float barX = x;
-        float barY = y - barH - 5.0f;
-        float hpRatio = std::clamp((float)health / (float)maxHealth, 0.0f, 1.0f);
-        hpBarSprite->Render(rc, barX, barY, 0.0f, barW, barH, 0.0f, 0.2f, 0.2f, 0.2f, 1.0f);
-        float r = (hpRatio < 0.3f) ? 1.0f : 0.0f;
-        float g = (hpRatio < 0.3f) ? 0.0f : 1.0f;
-        hpBarSprite->Render(rc, barX, barY, 0.0f, barW * hpRatio, barH, 0.0f, r, g, 0.0f, 1.0f);
+
+        if (hpBarSprite)
+        {
+            // ... (HPバーの描画処理、変更なし) ...
+            float barW = size;
+            float barH = 10.0f;
+            float barX = x;
+            float barY = y - barH - 5.0f;
+            float hpRatio = std::clamp((float)health / (float)maxHealth, 0.0f, 1.0f);
+            hpBarSprite->Render(rc, barX, barY, 0.0f, barW, barH, 0.0f, 0.2f, 0.2f, 0.2f, 1.0f);
+            float r = (hpRatio < 0.3f) ? 1.0f : 0.0f;
+            float g = (hpRatio < 0.3f) ? 0.0f : 1.0f;
+            hpBarSprite->Render(rc, barX, barY, 0.0f, barW * hpRatio, barH, 0.0f, r, g, 0.0f, 1.0f);
+        }
     }
 }
 

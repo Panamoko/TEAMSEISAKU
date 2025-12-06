@@ -5,6 +5,7 @@
 #include "BasicShader.h"
 #include "LambertShader.h"
 #include <filesystem>
+#include "Camera.h"
 
 // コンストラクタ
 ModelRenderer::ModelRenderer(ID3D11Device* device)
@@ -111,6 +112,10 @@ void ModelRenderer::BeginFrame(const RenderContext& rc)
 		cbScene.lightDirection.x = rc.lightDirection.x;
 		cbScene.lightDirection.y = rc.lightDirection.y;
 		cbScene.lightDirection.z = rc.lightDirection.z;
+
+		DirectX::XMFLOAT3 eye = Camera::Instance().GetEye();
+		cbScene.cameraPosition = { eye.x, eye.y, eye.z, 1.0f };
+
 		dc->UpdateSubresource(sceneConstantBuffer.Get(), 0, 0, &cbScene, 0, 0);
 	}
 
