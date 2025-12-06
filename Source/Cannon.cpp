@@ -10,7 +10,7 @@ Cannon::Cannon()
     model = ModelManager::Instance().Load("Data/Model/bilud/cannon.mdl");
 
     //基礎設定
-	hp = 50.0f;
+	hp = 200.0f;
 	attac_interval = 3.0f;
 	attac_territory = 15.0f;
 	attac_timer = 0.0f;
@@ -112,7 +112,7 @@ void Cannon::Update(float elapsedTime)
                 };
 
                 //ProjectileStraiteのインスタンスを生成
-                ProjectileStraite* stratite = new ProjectileStraite(&projectileManager, "Data/Model/Sword/Sword.mdl", type = Type::EnemyAttack);
+                ProjectileStraite* stratite = new ProjectileStraite(&projectileManager, "Data/Model/Slime/Bullet.mdl", type = Type::EnemyAttack, 1.0f);
 
                 stratite->Launch(launch_direction, { launch_position.x - 0.3f,launch_position.y + 1.0f,launch_position.z });
 
@@ -278,7 +278,7 @@ void Cannon::OnCollision(GameObject* object)
     if (object->type == Type::PlayerAttack && invincible_timer <= 0.0f)
     {
         hitSE[0]->Play(false);
-        hp -= 20.0f;
+        hp -= 10.0f;
         invincible_timer = 0.1f;
     }
 }
