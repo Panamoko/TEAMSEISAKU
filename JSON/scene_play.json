@@ -506,9 +506,9 @@
             "model_path": "Data/Model/bilud/ie.mdl",
             "name": "ie",
             "position": [
-                -19.399999618530273,
+                -26.799999237060547,
                 0.0,
-                -0.30000001192092896
+                17.700000762939453
             ],
             "rotation": [
                 0.0,
@@ -564,9 +564,9 @@
             "model_path": "Data/Model/bilud/ie.mdl",
             "name": "ie2",
             "position": [
-                18.600000381469727,
+                25.0,
                 0.0,
-                -0.6000000238418579
+                -16.399999618530273
             ],
             "rotation": [
                 0.0,
@@ -635,6 +635,64 @@
                 0.10000000149011612,
                 0.05000000074505806,
                 0.10000000149011612
+            ],
+            "type": 1
+        },
+        {
+            "class_name": "Cannon",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 81,
+            "mesh_index": 6,
+            "model_path": "Data/Model/bilud/cannon.mdl",
+            "name": "cannon",
+            "position": [
+                24.399999618530273,
+                0.0,
+                -23.200000762939453
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                0.5,
+                0.5,
+                0.5
+            ],
+            "type": 1
+        },
+        {
+            "class_name": "Cannon",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 82,
+            "mesh_index": 6,
+            "model_path": "Data/Model/bilud/cannon.mdl",
+            "name": "cannon2",
+            "position": [
+                -25.799999237060547,
+                0.0,
+                24.200000762939453
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                0.5,
+                0.5,
+                0.5
             ],
             "type": 1
         }
