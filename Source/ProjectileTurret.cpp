@@ -9,11 +9,11 @@ ProjectileTurret::ProjectileTurret(ProjectileManager* manager)
     : Projectile(manager)
 {
     // モデル読み込み
-    auto resource = ModelManager::Instance().GetResource("Data/Model/Sword/RedSword.mdl");
-    model = new Model(resource, "Data/Model/Sword/RedSword.mdl");
+    auto resource = ModelManager::Instance().GetResource("Data/Model/Slime/Bullet.mdl");
+    model = new Model(resource, "Data/Model/Slime/Bullet.mdl");
 
     // スケール・当たり判定
-    scale = { 2.0f, 2.0f, 2.0f }; // 少し大きめ
+    scale = { 0.15f, 0.15f, 0.15f }; // 少し大きめ
     radius = 0.5f;
     type = Type::EnemyAttack;
 
