@@ -47,6 +47,7 @@ void Gimmic_BreakWall::OnCollision(GameObject* objects)
 
     if (objects->type == Type::PlayerAttack && invincible_timer <= 0.0f)
     {
+        hitSE[0]->Play(false);
         hp--;
         invincible_timer = 0.1f;
     }

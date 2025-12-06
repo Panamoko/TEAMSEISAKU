@@ -120,6 +120,7 @@ void Yagura::OnCollision(GameObject* object)
 {
 	if (object->type == Type::PlayerAttack && invincible_timer <= 0.0f)
 	{
+		hitSE[0]->Play(false);
 		hp -= 10.0f;
 		invincible_timer = 0.1f;
 	}
