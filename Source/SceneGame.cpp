@@ -109,7 +109,7 @@ void SceneGame::Initialize()
 	Stage_BGM = Audio::Instance().LoadAudioSource("Data/Sound/BGM_Play.wav");
 
 	// エフェクトの読み込み
-	EffectManager::Instance().Load("Hit", L"Data/Effect/Hit.efk");
+	EffectManager::Instance().Load("Hit", L"Data/Effect/flre_B.efk");
 }
 
 void SceneGame::Finalize()
