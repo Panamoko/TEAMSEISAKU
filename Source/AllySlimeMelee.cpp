@@ -13,6 +13,8 @@
 #include "AllySlime.h"
 #include "SpriteManager.h"
 #include <cstdlib> // rand()用
+// ★追加: Colliderの定義が必要なため念のため確認（既存コードで使えているなら不要だが明示的が良い）
+#include "Collider.h"
 
 using namespace DirectX;
 
@@ -182,7 +184,16 @@ void AllySlimeMelee::UpdateState(float elapsedTime)
         if (g->IsActive())
         {
             targetPos = g->position;
-            targetRadius = 1.0f;
+            targetRadius = 1.0f; // デフォルト
+
+            // ★修正: コライダーを持っている場合はその半径を使用する
+            // これによりCore(半径3.5)などの大きなオブジェクトにめり込まずに停止できる
+            if (g->collider && g->collider->type == ColliderType::Cylinder)
+            {
+                auto* cyl = static_cast<CylinderCollider*>(g->collider.get());
+                targetRadius = cyl->radius;
+            }
+            // OBBなどの場合は必要に応じて追加（今はCylinderが主）
 
             if (g->class_name == "Gimmic_BreakWall")
             {
@@ -240,6 +251,8 @@ void AllySlimeMelee::UpdateState(float elapsedTime)
             float dz = targetPos.z - position.z;
             float d = sqrtf(dx * dx + dz * dz);
 
+            // ★修正: targetRadiusを含めた距離判定になるため、Core(3.5)なら
+            // 1.5 + 3.5 + 0.6 = 5.6 の距離で停止・攻撃開始する
             float range = attackRange + targetRadius + radius;
             if (d <= range) {
                 state = State::Attack;

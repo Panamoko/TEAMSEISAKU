@@ -192,10 +192,10 @@ void AllySlime::AutoAttackUpdate(float elapsedTime)
     if (len < 0.001f) return;
     dir.x /= len; dir.y /= len; dir.z /= len;
 
-    auto* proj = new ProjectileStraite(&projectileManager);
+    auto* proj = new ProjectileStraite(&projectileManager, "Data/Model/Slime/Bullet.mdl", Type::PlayerAttack, 0.15f);
     proj->Launch(dir, pos);
 
-    // ★追加: 攻撃アニメーション
+    // 攻撃アニメーション
     // AllySlime.h に isAction がない場合は追加してください
     // isAction = true;
     animator.Play("kyara_kugeki (1)", false);
@@ -210,8 +210,6 @@ void AllySlime::OnCollision(GameObject* object)
 
 void AllySlime::CollisionProjectilesVsEnemies()
 {
-    // (省略なしで記述が必要であれば元のコードを貼り付けてください。ここでは長いので元のままでOKです)
-    // ... (元の実装と同じ) ...
     EnemyManager& em = EnemyManager::Instance();
     const int projectileCount = projectileManager.GetProjectileCount();
     const int enemyCount = em.GetEnemyCount();
