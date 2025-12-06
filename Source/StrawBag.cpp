@@ -4,6 +4,8 @@
 
 StrawBag::StrawBag()
 {
+    class_name = "StrawBag";
+
     collider = std::make_unique<OBB>();
     collider->type = ColliderType::OBB;
     obb = static_cast<OBB*>(collider.get());

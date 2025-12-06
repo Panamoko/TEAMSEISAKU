@@ -4,6 +4,8 @@
 
 Well::Well()
 {
+    class_name = "Well";
+
     collider = std::make_unique<CylinderCollider>();
     collider->type = ColliderType::Cylinder;
     cylinder = static_cast<CylinderCollider*>(collider.get());
