@@ -204,6 +204,7 @@
     <ClInclude Include="Source\System\ShapeRenderer.h" />
     <ClInclude Include="Source\System\Sprite.h" />
     <ClInclude Include="Source\TutorialSprite.h" />
+    <ClInclude Include="Source\Well.h" />
     <ClInclude Include="Source\Yagura.h" />
   </ItemGroup>
   <ItemGroup>
@@ -292,6 +293,7 @@
     <ClCompile Include="Source\System\ShapeRenderer.cpp" />
     <ClCompile Include="Source\System\Sprite.cpp" />
     <ClCompile Include="Source\TutorialSprite.cpp" />
+    <ClCompile Include="Source\Well.cpp" />
     <ClCompile Include="Source\Yagura.cpp" />
   </ItemGroup>
   <ItemGroup>

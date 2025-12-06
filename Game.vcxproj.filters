@@ -375,6 +375,9 @@
     <ClInclude Include="Source\ChangeTitleSystem.h">
       <Filter>Source\ChangeSceneSytem</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Well.h">
+      <Filter>Source\Gimmic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -634,6 +637,9 @@
     </ClCompile>
     <ClCompile Include="Source\ChangeTitleSystem.cpp">
       <Filter>Source\ChangeSceneSytem</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Well.cpp">
+      <Filter>Source\Gimmic</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
