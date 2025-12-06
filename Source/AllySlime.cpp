@@ -7,6 +7,7 @@
 #include "GimmicManager.h"
 #include "Gimmic_BreakWall.h"
 #include "Core.h"
+#include "EffectManager.h"
 #include <cmath>
 #include <cfloat>
 #include "SpriteManager.h"

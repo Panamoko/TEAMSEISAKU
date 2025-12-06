@@ -74,6 +74,24 @@ void EffectManager::Stop(Effekseer::Handle handle)
     }
 }
 
+// 行列更新の実装
+void EffectManager::SetMatrix(Effekseer::Handle handle, const DirectX::XMFLOAT4X4& m)
+{
+    if (manager != nullptr)
+    {
+        // DirectXの行列(4x4) を Effekseerの行列(4x3) に変換して適用
+        Effekseer::Matrix43 effekseerMatrix;
+        for (int r = 0; r < 4; ++r)
+        {
+            for (int c = 0; c < 3; ++c)
+            {
+                effekseerMatrix.Value[r][c] = m.m[r][c];
+            }
+        }
+        manager->SetMatrix(handle, effekseerMatrix);
+    }
+}
+
 void EffectManager::Update(float elapsedTime)
 {
     // マネージャーの更新 (単位はフレーム。60fps想定なら elapsedTime * 60.0f)

@@ -2,6 +2,7 @@
 #include "Collision.h"
 #include "Collider.h"
 #include "ModelManager.h"
+#include "EffectManager.h"
 
 //ProjectileStraite::ProjectileStraite()
 //{
@@ -35,6 +36,11 @@ ProjectileStraite::ProjectileStraite(ProjectileManager* manager, const char* mod
 // デストラクタ
 ProjectileStraite::~ProjectileStraite()
 {
+	// 弾が消えるときにエフェクトも停止させる
+	if (effectHandle != -1)
+	{
+		EffectManager::Instance().Stop(effectHandle);
+	}
 	delete model;
 }
 
@@ -63,6 +69,12 @@ void ProjectileStraite::Update(float elapsedTime)
 	// オブジェクト行列を更新
 	UpdateTransform();
 
+	// エフェクトの位置・回転を弾の行列に同期させる
+	if (effectHandle != -1)
+	{
+		EffectManager::Instance().SetMatrix(effectHandle, transform);
+	}
+
 	// モデル行列更新
 	model->UpdateTransform();
 }
@@ -78,4 +90,12 @@ void ProjectileStraite::Launch(const DirectX::XMFLOAT3& direction, const DirectX
 {
 	this->direction = direction;
 	this->position = position;
+
+	// 発射と同時にエフェクト再生
+	// ここで再生することで、弾の寿命とエフェクトの寿命をリンクさせます
+	effectHandle = EffectManager::Instance().Play("SlimeAttack", position);
+
+	// 初回の位置合わせ
+	UpdateTransform();
+	EffectManager::Instance().SetMatrix(effectHandle, transform);
 }
