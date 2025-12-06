@@ -88,6 +88,7 @@ void SceneGame::Initialize()
 	pipRenderTarget = new RenderTarget(1280, 720);
 	pipFrameSprite = SpriteManager::Instance().Load("Data/Sprite/PiP.png");
 	tab_sprite = SpriteManager::Instance().Load("Data/Sprite/Tab.png");
+	camera_sprite = SpriteManager::Instance().Load("Data/Sprite/Camera_UI.png");
 
 	grid_map.Initialize(150, 150, 0.8f);
 
@@ -436,6 +437,14 @@ void SceneGame::Render()
 			rc,
 			1500, 50, 0,
 			300, 200,
+			0,
+			1, 1, 1, 1
+		);
+
+		camera_sprite->Render(
+			rc,
+			1600, 900, 0,
+			200, 128,
 			0,
 			1, 1, 1, 1
 		);
