@@ -496,7 +496,7 @@ void EnemySlime::UpdateAttackState(float elapsedTime)
 		DirectX::XMFLOAT3 dir = { sinf(angle.y), 0.0f, cosf(angle.y) };
 		DirectX::XMFLOAT3 pos = { position.x, position.y + height * 0.5f, position.z };
 
-		ProjectileStraite* projectile = new ProjectileStraite(&projectileManager, "Data/Model/Slime/Bullet.mdl");
+		ProjectileStraite* projectile = new ProjectileStraite(&projectileManager, "Data/Model/Slime/Bullet.mdl", 0.15f);
 		projectile->type = Type::EnemyAttack;
 		projectile->Launch(dir, pos);
 
