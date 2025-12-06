@@ -9,32 +9,32 @@ class Gimmic_BreakWall : public GimmicBase
 public:
 	Gimmic_BreakWall();
 
-	// 衝突処理
+	// 衝突�E琁E
 	void OnCollision(GameObject* objects) override;
 
-	// ギミック更新処理
+	// ギミック更新処琁E
 	void Update(float elapsedTime)override;
 
-	// 描画処理
+	// 描画処琁E
 	void Render(const RenderContext& rc, ModelRenderer* renderer) override;
 
-	// デバッグ描画
+	// チE��チE��描画
 	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) override;
 
 	bool OnImGui();
 
-	bool IsBroken() const { return isBroken; } // 攻撃対象判定用
+	bool IsBroken() const { return isBroken; } // 攻撁E��象判定用
 
-private:
-	bool isBroken = false; // 壊れているかどうか
+protected:
+	bool isBroken = false; // 壊れてぁE��かどぁE��
 
 	float maxHp = 2.0f; 
-	float respawnTime = 5.0f; // リスポーンするまでの時間 (5秒)
-	float respawnTimer = 0.0f; // リスポーンタイマー
+	float respawnTime = 5.0f; // リスポ�Eンするまでの時間 (5私E
+	float respawnTimer = 0.0f; // リスポ�Eンタイマ�E
 
-	bool isRespawning = false;      // フェードイン中か
-	float fadeInDuration = 1.5f;    // フェードインにかかる時間（1.5秒）
-	float fadeInTimer = 0.0f;       // フェードイン用タイマー
+	bool isRespawning = false;      // フェードイン中ぁE
+	float fadeInDuration = 1.5f;    // フェードインにかかる時間！E.5秒！E
+	float fadeInTimer = 0.0f;       // フェードイン用タイマ�E
 
 	DirectX::XMFLOAT3 halfSize;
 	DirectX::XMFLOAT3 size;
