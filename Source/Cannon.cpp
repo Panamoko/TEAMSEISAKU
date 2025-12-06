@@ -112,7 +112,7 @@ void Cannon::Update(float elapsedTime)
                 };
 
                 //ProjectileStraiteのインスタンスを生成
-                ProjectileStraite* stratite = new ProjectileStraite(&projectileManager, "Data/Model/Sword/Sword.mdl", type = Type::EnemyAttack);
+                ProjectileStraite* stratite = new ProjectileStraite(&projectileManager, "Data/Model/Slime/Bullet.mdl", type = Type::EnemyAttack, 1.0f);
 
                 stratite->Launch(launch_direction, { launch_position.x - 0.3f,launch_position.y + 1.0f,launch_position.z });
 
