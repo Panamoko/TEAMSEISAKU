@@ -12,15 +12,14 @@
 //	scale.x = scale.y = scale.z = 0.5f;
 //}
 
-ProjectileStraite::ProjectileStraite(ProjectileManager* manager, const char* modelPath, Type type_)
+ProjectileStraite::ProjectileStraite(ProjectileManager* manager, const char* modelPath, Type type_, float scale_)
 	:Projectile(manager)	//基底クラスのコンストラクタを呼び出す
 {
 	auto resource = ModelManager::Instance().GetResource(modelPath);
 	model = new Model(resource, modelPath);
 
 	// 表示サイズを調整
-//	scale.x = scale.y = scale.z = 0.5f;
-	scale.x = scale.y = scale.z = 3.0f;
+	scale.x = scale.y = scale.z = scale_;
 
 	type = type_;
 

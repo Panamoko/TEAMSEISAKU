@@ -29,6 +29,8 @@ public:
 	static void UnregisterPlayer(Player* player);
 	static const std::vector<Player*>& GetAllPlayers();
 
+	static void ResetSpawnCount();
+
 	virtual void Initialize();
 
 	void Finalize();
@@ -96,4 +98,6 @@ protected:
 private:
 	static Player* sActive;
 	static std::vector<Player*> sAllPlayers;
+
+	static int s_spawnCount;
 };

@@ -372,7 +372,7 @@ void SceneGame::Render()
 	{
 		for (auto& character : players) character->RenderDebugPrimitive(rc, shapeRenderer);
 		EnemyManager::Instance().RenderDebugPrimitive(rc, shapeRenderer);
-		GimmicManager::Instance().RenderDebugPrimitive(rc, shapeRenderer);
+		//GimmicManager::Instance().RenderDebugPrimitive(rc, shapeRenderer);
 	}
 
 	// 2Dスプライト描画
