@@ -927,6 +927,180 @@
                 0.03999999910593033
             ],
             "type": 1
+        },
+        {
+            "class_name": "Gimmic_BreakWall",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 204,
+            "mesh_index": 4,
+            "model_path": "Data/Model/bilud/saku.mdl",
+            "name": "saku21",
+            "position": [
+                -0.800000011920929,
+                0.0,
+                30.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                0.10000000149011612,
+                0.05000000074505806,
+                0.10000000149011612
+            ],
+            "type": 1
+        },
+        {
+            "class_name": "Gimmic_BreakWall",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 205,
+            "mesh_index": 4,
+            "model_path": "Data/Model/bilud/saku.mdl",
+            "name": "saku22",
+            "position": [
+                -1.0,
+                0.0,
+                -28.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                0.10000000149011612,
+                0.05000000074505806,
+                0.10000000149011612
+            ],
+            "type": 1
+        },
+        {
+            "class_name": "Gimmic_BreakWall",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 206,
+            "mesh_index": 4,
+            "model_path": "Data/Model/bilud/saku.mdl",
+            "name": "saku23",
+            "position": [
+                28.0,
+                0.0,
+                1.2000000476837158
+            ],
+            "rotation": [
+                0.0,
+                90.0,
+                0.0
+            ],
+            "scale": [
+                0.10000000149011612,
+                0.05000000074505806,
+                0.10000000149011612
+            ],
+            "type": 1
+        },
+        {
+            "class_name": "Gimmic_BreakWall",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 207,
+            "mesh_index": 4,
+            "model_path": "Data/Model/bilud/saku.mdl",
+            "name": "saku24",
+            "position": [
+                -30.0,
+                0.0,
+                1.0
+            ],
+            "rotation": [
+                0.0,
+                90.0,
+                0.0
+            ],
+            "scale": [
+                0.10000000149011612,
+                0.05000000074505806,
+                0.10000000149011612
+            ],
+            "type": 1
+        },
+        {
+            "class_name": "Gimmic_BreakWall",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 208,
+            "mesh_index": 4,
+            "model_path": "Data/Model/bilud/saku.mdl",
+            "name": "saku25",
+            "position": [
+                -23.600000381469727,
+                0.0,
+                18.600000381469727
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                0.10000000149011612,
+                0.05000000074505806,
+                0.10000000149011612
+            ],
+            "type": 1
+        },
+        {
+            "class_name": "Gimmic_BreakWall",
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "id": 209,
+            "mesh_index": 4,
+            "model_path": "Data/Model/bilud/saku.mdl",
+            "name": "saku26",
+            "position": [
+                -17.200000762939453,
+                0.0,
+                24.200000762939453
+            ],
+            "rotation": [
+                0.0,
+                90.0,
+                0.0
+            ],
+            "scale": [
+                0.10000000149011612,
+                0.05000000074505806,
+                0.10000000149011612
+            ],
+            "type": 1
         }
     ]
 }
