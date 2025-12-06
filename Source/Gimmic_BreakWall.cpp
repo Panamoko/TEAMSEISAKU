@@ -29,7 +29,7 @@ Gimmic_BreakWall::Gimmic_BreakWall()
     scale.y = 0.05f;
     scale.z = 0.1f;
 
-    maxHp = 2.0f; 
+    maxHp = 12.0f; 
     hp = maxHp;
     isBroken = false;
     isRespawning = false;

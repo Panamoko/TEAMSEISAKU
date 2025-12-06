@@ -12,7 +12,7 @@ Barracks::Barracks()
     model = ModelManager::Instance().Load("Data/Model/bilud/ie2.mdl");
 
 	//Šî‘bÝ’è
-	hp = 10.0f;
+	hp = 18.0f;
 	spawn_interval = 5.0f;
 	spawn_timer = 0.0f;
 	current_enemy_count = 0;
@@ -147,7 +147,7 @@ void Barracks::OnCollision(GameObject* object)
 {
     if (object->type == Type::PlayerAttack && invincible_timer <= 0.0f)
     {
-        hp -= 2.5f;
+        hp -= 1.0f;
         invincible_timer = 0.1f;
     }
 }

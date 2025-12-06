@@ -10,7 +10,7 @@ Cannon::Cannon()
     model = ModelManager::Instance().Load("Data/Model/bilud/cannon.mdl");
 
     //Šî‘bÝ’è
-	hp = 50.0f;
+	hp = 200.0f;
 	attac_interval = 3.0f;
 	attac_territory = 15.0f;
 	attac_timer = 0.0f;
@@ -278,7 +278,7 @@ void Cannon::OnCollision(GameObject* object)
     if (object->type == Type::PlayerAttack && invincible_timer <= 0.0f)
     {
         hitSE[0]->Play(false);
-        hp -= 20.0f;
+        hp -= 10.0f;
         invincible_timer = 0.1f;
     }
 }
