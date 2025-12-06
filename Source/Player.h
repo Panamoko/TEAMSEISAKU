@@ -51,6 +51,7 @@ public:
 	static void UpdateSpawn(std::vector<std::shared_ptr<Character>>& players, const Picking_Ray& pickingRay);
 	static bool UpdateActiveByKeyboard(const std::vector<std::shared_ptr<Character>>& players);
 
+	int GetDamage() { return attacDamage; }
 protected:
 	void InitializeCommon(const char* modelPath, const char* iconPath);
 
@@ -90,6 +91,8 @@ protected:
 	float pathRecalcTimer = 0.0f;
 	float autoMoveSpeedRate = 0.8f;
 	float autoMoveTurnRate = 1.0f;
+
+	int attacDamage;
 
 	Sprite* playerIcon = nullptr;
 	Sprite* hpBarSprite = nullptr;
