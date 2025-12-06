@@ -3,6 +3,7 @@
 #include <EffekseerRendererDX11.h>
 #include <string>
 #include <map>
+#include <vector>
 #include <d3d11.h>
 #include <DirectXMath.h>
 
@@ -26,7 +27,10 @@ public:
     void Load(const std::string& name, const std::wstring& path);
 
     // エフェクト再生 (戻り値はハンドル。停止などに使う)
-    Effekseer::Handle Play(const std::string& name, const DirectX::XMFLOAT3& position);
+    Effekseer::Handle Play(const std::string& name, const DirectX::XMFLOAT3& position, float frameDuration = 0.0f);
+
+    // 任意のエフェクトを停止させる関数
+    void Stop(Effekseer::Handle handle);
 
     // 全停止
     void StopAll();
@@ -40,4 +44,11 @@ private:
 
     // 読み込んだエフェクトのキャッシュ
     std::map<std::string, ::Effekseer::EffectRef> effects;
+
+    // 再生中のエフェクトを管理する構造体
+    struct ActiveEffect {
+        Effekseer::Handle handle;
+        float remainingFrames; // 残りフレーム数
+    };
+    std::vector<ActiveEffect> activeEffects; // 管理リスト
 };

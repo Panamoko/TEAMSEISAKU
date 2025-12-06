@@ -7,6 +7,7 @@
 #include <cfloat>
 #include <cmath>
 #include <cstdlib>
+#include "EffectManager.h"
 
 using namespace DirectX;
 
@@ -107,6 +108,10 @@ void AllySlimeHeal::UpdateHealing(float elapsedTime)
         if ((dx * dx + dz * dz) <= rangeSq)
         {
             p->Heal(10);
+
+            // プレイヤーの位置で回復エフェクト再生
+            EffectManager::Instance().Play("Heal", p->GetPosition(), 30.0f);
+
             healedAny = true;
         }
     }
@@ -122,6 +127,10 @@ void AllySlimeHeal::UpdateHealing(float elapsedTime)
         if ((dx * dx + dz * dz) <= rangeSq)
         {
             a->Heal(1);
+
+            // 味方の位置で回復エフェクト再生
+            EffectManager::Instance().Play("Heal", a->GetPosition(), 30.0f);
+
             healedAny = true;
         }
     }

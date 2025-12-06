@@ -77,7 +77,7 @@ void Barracks::Update(float elapsedTime)
         spawn_timer = 0.0f;
 
         // 近距離型を生成
-        enemys = std::make_shared<EnemySlimeMelee>();
+        enemys = std::make_shared<EnemySlime>();
 
         enemys->SetPosition(spawn_positon);         // ずらした位置に配置
         enemys->SetTerritory(spawn_positon, 20.0f); // 縄張りもそこを中心に
