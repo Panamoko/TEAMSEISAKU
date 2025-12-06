@@ -273,16 +273,17 @@ void Player::RequestPathRecalculation() { pathRecalcTimer = 0.0f; currentPath.cl
 bool Player::UpdateMoveToCore(float elapsedTime)
 {
     Core* core = Core::Instance();
-    // コアが無い、破壊されている場合は動かない
+    // コアが無い、死んでいる場合は動かない
     if (!core || core->GetHP() <= 0.0f) { Move(elapsedTime, 0, 0, 0); return false; }
     if (!gridMap) return false;
 
-    // --- 1. 経路の定期更新 (A* to Core) ---
+    // --- 1. 経路の定期更新 ---
     pathRecalcTimer -= elapsedTime;
     if (pathRecalcTimer <= 0.0f)
     {
         pathRecalcTimer = 0.5f;
 
+        // 常に再計算を行う
         auto start = gridMap->WorldToCell(position.x, position.z);
         auto goal = gridMap->WorldToCell(core->position.x, core->position.z);
 
@@ -295,13 +296,13 @@ bool Player::UpdateMoveToCore(float elapsedTime)
 
     // --- 2. 移動実行 ---
 
-    // ■ ケースA: コアへの経路が見つかっている場合
+    // ■ パターンA: コアへの経路が見つかっている場合（通常移動）
     if (!currentPath.empty() && pathIndex < currentPath.size())
     {
         auto [cx, cz] = currentPath[pathIndex];
         DirectX::XMFLOAT3 targetPos = gridMap->GetWorldPosition(cx, cz);
 
-        // 次の経由地点に到達したらインデックスを進める
+        // 次の地点に到達したらインデックスを進める
         float dx = targetPos.x - position.x;
         float dz = targetPos.z - position.z;
         if ((dx * dx + dz * dz) < 0.25f)
@@ -313,41 +314,63 @@ bool Player::UpdateMoveToCore(float elapsedTime)
             }
         }
 
-        // --- 敵による足止め判定 (既存処理) ---
+        // --- 索敵処理 (詳細版) ---
+        // 近くに敵がいて、かつ視線が通る場合は立ち止まる
         bool isBlockedByEnemy = false;
         EnemyManager& enemyMgr = EnemyManager::Instance();
         int enemyCount = enemyMgr.GetEnemyCount();
-        float searchRadiusSq = 6.0f * 6.0f; // 半径6.0
+        float searchRadius = 6.0f;
+        float searchRadiusSq = searchRadius * searchRadius;
 
-        // 簡易視線チェック
-        auto HasLineOfSightGrid = [&](const DirectX::XMFLOAT3& s, const DirectX::XMFLOAT3& e) {
-            // ... (簡易化のため省略、必要なら前のコードのHasLineOfSightGridを入れてください)
-            // ここでは距離判定だけに依存せず、厳密にやるなら前回の処理を使ってください
-            return true;
+        // 視線チェック用ラムダ式（壁越し判定）
+        auto HasLineOfSightGrid = [&](const DirectX::XMFLOAT3& startPos, const DirectX::XMFLOAT3& endPos) -> bool {
+            auto c1 = gridMap->WorldToCell(startPos.x, startPos.z);
+            auto c2 = gridMap->WorldToCell(endPos.x, endPos.z);
+            int x0 = c1.first, z0 = c1.second;
+            int x1 = c2.first, z1 = c2.second;
+            int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+            int dz = abs(z1 - z0), sz = z0 < z1 ? 1 : -1;
+            int err = dx - dz;
+            while (true) {
+                if (gridMap->IsBlocked(x0, z0)) return false; // 壁がある
+                if (x0 == x1 && z0 == z1) break;
+                int e2 = 2 * err;
+                if (e2 > -dz) { err -= dz; x0 += sx; }
+                if (e2 < dx) { err += dx; z0 += sz; }
+            }
+            return true; // 壁がない
             };
-        // ※以前のラムダ式が長いため省略していますが、元のロジックが必要なら維持してください
-        // ここでは「移動」に焦点を当てています
 
         for (int i = 0; i < enemyCount; ++i)
         {
             auto enemy = enemyMgr.GetEnemy(i);
             if (!enemy) continue;
-            float edx = position.x - enemy->position.x;
-            float edz = position.z - enemy->position.z;
-            if ((edx * edx + edz * edz) < searchRadiusSq) {
-                // 近くに敵がいれば止まる（攻撃は別処理）
-                isBlockedByEnemy = true;
-                break;
+
+            DirectX::XMFLOAT3 ePos = enemy->GetPosition();
+            float pdx = position.x - ePos.x;
+            float pdz = position.z - ePos.z;
+            float distSq = pdx * pdx + pdz * pdz;
+
+            // 範囲内に敵がいる場合
+            if (distSq < searchRadiusSq)
+            {
+                // 壁越しでなければ「敵に阻まれている」とみなす
+                if (HasLineOfSightGrid(position, ePos))
+                {
+                    isBlockedByEnemy = true;
+                    break;
+                }
             }
         }
 
         if (isBlockedByEnemy)
         {
+            // 敵がいるので待機
             Move(elapsedTime, 0, 0, 0);
             return false;
         }
 
-        // 経路に沿って移動
+        // 移動処理
         float vx = targetPos.x - position.x;
         float vz = targetPos.z - position.z;
         float dist = sqrtf(vx * vx + vz * vz);
@@ -359,19 +382,20 @@ bool Player::UpdateMoveToCore(float elapsedTime)
             return true;
         }
     }
-    // ■ ケースB: 経路が見つからない（囲われている）場合 -> 一番近い壁へ直進
+    // ■ パターンB: 経路が見つからない（＝完全に囲われている）場合
     else
     {
+        // 一番近い壁を探して直進する
         float minDistSq = FLT_MAX;
         std::shared_ptr<Gimmic_BreakWall> targetWall = nullptr;
 
-        // 全ギミックから一番近い「壊れていない壁」を探す
         auto& gimmics = GimmicManager::Instance().GetAll();
         for (auto& g : gimmics)
         {
             if (g->class_name == "Gimmic_BreakWall")
             {
                 auto wall = std::dynamic_pointer_cast<Gimmic_BreakWall>(g);
+                // まだ壊れていない壁を対象にする
                 if (wall && !wall->IsBroken())
                 {
                     float dx = position.x - wall->position.x;
@@ -387,20 +411,19 @@ bool Player::UpdateMoveToCore(float elapsedTime)
             }
         }
 
-        // 壁が見つかったら、その方向へ単純移動
+        // 壁が見つかれば、そこへ向かう
         if (targetWall)
         {
             float dx = targetWall->position.x - position.x;
             float dz = targetWall->position.z - position.z;
             float dist = sqrtf(dx * dx + dz * dz);
 
-            // 壁に密着する手前まで移動し続ける
             if (dist > 0.5f)
             {
                 float vx = dx / dist;
                 float vz = dz / dist;
 
-                // 経路探索なしで直進
+                // 経路探索なしで直進移動
                 Move(elapsedTime, vx, vz, moveSpeed);
                 Turn(elapsedTime, vx, vz, turnSpeed);
                 return true;
@@ -408,7 +431,7 @@ bool Player::UpdateMoveToCore(float elapsedTime)
         }
     }
 
-    // 移動すべき場所がない
+    // 移動先がない、または到着済み
     Move(elapsedTime, 0, 0, 0);
     return false;
 }
@@ -449,14 +472,14 @@ void Player::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* render
 
     // ★修正: 索敵範囲のデバッグ表示
     // 経路がある時だけ表示（AI移動中のみ確認したい場合）
-    if (!currentPath.empty() && pathIndex < currentPath.size())
-    {
-        // 古いコード（targetPosへの描画）は削除しました
+    //if (!currentPath.empty() && pathIndex < currentPath.size())
+    //{
+    //    // 古いコード（targetPosへの描画）は削除しました
 
-        // プレイヤー中心の索敵範囲 (半径3.0f) を赤枠で表示
-        // ロジック側の searchRadius と同じ大きさにします
-        renderer->RenderSphere(rc, position, 6.0f, { 1.0f, 0.0f, 0.0f, 1.0f });
-    }
+    //    // プレイヤー中心の索敵範囲 (半径3.0f) を赤枠で表示
+    //    // ロジック側の searchRadius と同じ大きさにします
+    //    renderer->RenderSphere(rc, position, 6.0f, { 1.0f, 0.0f, 0.0f, 1.0f });
+    //}
 }
 
 void Player::RenderUI(const RenderContext& rc, float x, float y, float size)
