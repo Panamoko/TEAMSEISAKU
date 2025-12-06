@@ -378,6 +378,7 @@
     <ClInclude Include="Source\Well.h">
       <Filter>Source\Gimmic</Filter>
     </ClInclude>
+    <ClInclude Include="Source\StrawBag.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui-docking\imgui.cpp">
@@ -640,6 +641,9 @@
     </ClCompile>
     <ClCompile Include="Source\Well.cpp">
       <Filter>Source\Gimmic</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\StrawBag.cpp">
+      <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
