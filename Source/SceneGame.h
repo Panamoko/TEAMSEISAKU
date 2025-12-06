@@ -97,6 +97,7 @@ private:
 	bool isPipExpanded = false;
 	Sprite* pipFrameSprite = nullptr;
 	Sprite* tab_sprite = nullptr;
+	Sprite* camera_sprite = nullptr;
 
 	std::unique_ptr<Dissolve> dissolve;
 	bool isSceneStarting = true;        // 開始演出中フラグ
