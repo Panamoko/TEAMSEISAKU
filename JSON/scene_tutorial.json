@@ -414,35 +414,6 @@
                 1.0,
                 1.0
             ],
-            "id": 24,
-            "mesh_index": 4,
-            "model_path": "Data/Model/bilud/saku.mdl",
-            "name": "saku13",
-            "position": [
-                10.5,
-                0.0,
-                -28.0
-            ],
-            "rotation": [
-                0.0,
-                0.0,
-                0.0
-            ],
-            "scale": [
-                0.10000000149011612,
-                0.05000000074505806,
-                0.10000000149011612
-            ],
-            "type": 1
-        },
-        {
-            "class_name": "Gimmic_BreakWall",
-            "color": [
-                1.0,
-                1.0,
-                1.0,
-                1.0
-            ],
             "id": 25,
             "mesh_index": 4,
             "model_path": "Data/Model/bilud/saku.mdl",
@@ -567,35 +538,6 @@
                 -30.0,
                 0.0,
                 12.600000381469727
-            ],
-            "rotation": [
-                0.0,
-                90.0,
-                0.0
-            ],
-            "scale": [
-                0.10000000149011612,
-                0.05000000074505806,
-                0.10000000149011612
-            ],
-            "type": 1
-        },
-        {
-            "class_name": "Gimmic_BreakWall",
-            "color": [
-                1.0,
-                1.0,
-                1.0,
-                1.0
-            ],
-            "id": 46,
-            "mesh_index": 4,
-            "model_path": "Data/Model/bilud/saku.mdl",
-            "name": "saku19",
-            "position": [
-                -30.0,
-                0.0,
-                1.0
             ],
             "rotation": [
                 0.0,
