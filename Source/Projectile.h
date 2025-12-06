@@ -3,6 +3,7 @@
 #include "GameObject.h"
 #include "System/ModelRenderer.h"
 #include "System/ShapeRenderer.h"
+#include <Effekseer.h>
 
 //前方宣言
 class ProjectileManager;//相互インクルードしないように前方宣言する
@@ -59,4 +60,7 @@ protected:
 	float radius = 0.5f;
 
 	int damage = 10;
+
+	// 再生中のエフェクトID (-1は無効値)
+	Effekseer::Handle effectHandle = -1;
 };

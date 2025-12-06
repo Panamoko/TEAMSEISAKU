@@ -7,6 +7,7 @@
 #include "GimmicManager.h"
 #include "Gimmic_BreakWall.h"
 #include "Core.h"
+#include "EffectManager.h"
 #include <cmath>
 #include <cfloat>
 #include "SpriteManager.h"
@@ -228,6 +229,12 @@ void AllySlime::CollisionProjectilesVsEnemies()
                 enemy->GetPosition(), enemy->GetRadius(), enemy->GetHeight(), outPos);
 
             if (!hit) continue;
+
+            // エフェクト設定
+            Effekseer::Handle handle = EffectManager::Instance().Play("SlimeAttack", outPos);
+            EffectManager::Instance().SetScale(handle, 0.05f, 0.05f, 0.05f);
+            EffectManager::Instance().Skip(handle, 151.0f);
+
             if (enemy->ApplyDamage(5, 0.5f)) {}
             projectile->Destroy();
             break;
@@ -253,6 +260,11 @@ void AllySlime::CollisionProjectilesVsEnemies()
             }
 
             if (hit) {
+                // エフェクト設定
+                Effekseer::Handle handle = EffectManager::Instance().Play("SlimeAttack", projectile->GetPosition());
+                EffectManager::Instance().SetScale(handle, 0.05f, 0.05f, 0.05f);
+                EffectManager::Instance().Skip(handle, 151.0f);
+
                 gimmic->OnCollision(projectile);
                 projectile->Destroy();
                 break;

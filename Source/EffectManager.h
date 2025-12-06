@@ -32,6 +32,15 @@ public:
     // 任意のエフェクトを停止させる関数
     void Stop(Effekseer::Handle handle);
 
+    // 指定フレーム分だけエフェクトを進行させる（頭出し用）
+    void Skip(Effekseer::Handle handle, float frames);
+
+    // スケール設定
+    void SetScale(Effekseer::Handle handle, float x, float y, float z);
+
+    // エフェクトの行列（位置・回転・スケール）を更新する
+    void SetMatrix(Effekseer::Handle handle, const DirectX::XMFLOAT4X4& matrix);
+
     // 全停止
     void StopAll();
 
