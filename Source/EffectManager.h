@@ -32,6 +32,9 @@ public:
     // 任意のエフェクトを停止させる関数
     void Stop(Effekseer::Handle handle);
 
+    // スケール設定
+    void SetScale(Effekseer::Handle handle, float x, float y, float z);
+
     // エフェクトの行列（位置・回転・スケール）を更新する
     void SetMatrix(Effekseer::Handle handle, const DirectX::XMFLOAT4X4& matrix);
 

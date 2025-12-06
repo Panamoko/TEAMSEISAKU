@@ -111,7 +111,7 @@ void SceneGame::Initialize()
 	// エフェクトの読み込み
 	EffectManager::Instance().Load("Hit", L"Data/Effect/flre_B.efk");
 	EffectManager::Instance().Load("Heal", L"Data/Effect/Heel.efk");
-	EffectManager::Instance().Load("SlimeAttack", L"Data/Effect/flre_B.efk");
+	EffectManager::Instance().Load("SlimeAttack", L"Data/Effect/Slime_Attack.efk");
 }
 
 void SceneGame::Finalize()

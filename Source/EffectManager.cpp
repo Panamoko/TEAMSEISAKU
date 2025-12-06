@@ -74,6 +74,15 @@ void EffectManager::Stop(Effekseer::Handle handle)
     }
 }
 
+// スケール設定の実装
+void EffectManager::SetScale(Effekseer::Handle handle, float x, float y, float z)
+{
+    if (manager != nullptr)
+    {
+        manager->SetScale(handle, x, y, z);
+    }
+}
+
 // 行列更新の実装
 void EffectManager::SetMatrix(Effekseer::Handle handle, const DirectX::XMFLOAT4X4& m)
 {

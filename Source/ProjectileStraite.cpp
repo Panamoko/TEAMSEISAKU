@@ -90,9 +90,10 @@ void ProjectileStraite::Launch(const DirectX::XMFLOAT3& direction, const DirectX
 	this->direction = direction;
 	this->position = position;
 
-	// 発射と同時にエフェクト再生
-	// ここで再生することで、弾の寿命とエフェクトの寿命をリンクさせます
-	effectHandle = EffectManager::Instance().Play("SlimeAttack", position);
+	//// 発射と同時にエフェクト再生
+	//// ここで再生することで、弾の寿命とエフェクトの寿命をリンクさせます
+	//effectHandle = EffectManager::Instance().Play("SlimeAttack", position);
+	//EffectManager::Instance().SetScale(effectHandle, 0.5f, 0.5f, 0.5f);
 
 	// 初回の位置合わせ
 	UpdateTransform();
