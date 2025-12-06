@@ -230,8 +230,10 @@ void AllySlime::CollisionProjectilesVsEnemies()
 
             if (!hit) continue;
 
+            // エフェクト設定
             Effekseer::Handle handle = EffectManager::Instance().Play("SlimeAttack", outPos);
             EffectManager::Instance().SetScale(handle, 0.05f, 0.05f, 0.05f);
+            EffectManager::Instance().Skip(handle, 151.0f);
 
             if (enemy->ApplyDamage(5, 0.5f)) {}
             projectile->Destroy();
@@ -258,7 +260,11 @@ void AllySlime::CollisionProjectilesVsEnemies()
             }
 
             if (hit) {
-                EffectManager::Instance().Play("SlimeAttack", projectile->GetPosition());
+                // エフェクト設定
+                Effekseer::Handle handle = EffectManager::Instance().Play("SlimeAttack", projectile->GetPosition());
+                EffectManager::Instance().SetScale(handle, 0.05f, 0.05f, 0.05f);
+                EffectManager::Instance().Skip(handle, 151.0f);
+
                 gimmic->OnCollision(projectile);
                 projectile->Destroy();
                 break;

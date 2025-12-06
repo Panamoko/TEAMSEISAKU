@@ -74,6 +74,20 @@ void EffectManager::Stop(Effekseer::Handle handle)
     }
 }
 
+// Skip関数の実装
+void EffectManager::Skip(Effekseer::Handle handle, float frames)
+{
+    if (manager != nullptr)
+    {
+        // 指定したハンドルのエフェクトを frames 分だけ更新（早送り）する
+        int steps = static_cast<int>(frames);
+        for (int i = 0; i < steps; ++i)
+        {
+            manager->UpdateHandle(handle, 1.0f);
+        }
+    }
+}
+
 // スケール設定の実装
 void EffectManager::SetScale(Effekseer::Handle handle, float x, float y, float z)
 {

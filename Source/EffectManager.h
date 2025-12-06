@@ -32,6 +32,9 @@ public:
     // 任意のエフェクトを停止させる関数
     void Stop(Effekseer::Handle handle);
 
+    // 指定フレーム分だけエフェクトを進行させる（頭出し用）
+    void Skip(Effekseer::Handle handle, float frames);
+
     // スケール設定
     void SetScale(Effekseer::Handle handle, float x, float y, float z);
 
