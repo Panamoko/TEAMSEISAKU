@@ -9,35 +9,31 @@ class Gimmic_BreakWall : public GimmicBase
 public:
 	Gimmic_BreakWall();
 
-	// è¡çªå‡¦ç†
 	void OnCollision(GameObject* objects) override;
 
-	// ã‚®ãƒŸãƒƒã‚¯æ›´æ–°å‡¦ç†
 	void Update(float elapsedTime)override;
 
-	// æç”»å‡¦ç†
 	void Render(const RenderContext& rc, ModelRenderer* renderer) override;
 
-	// ãƒ‡ãƒãƒƒã‚°æç”»
 	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) override;
 
 	bool OnImGui();
 
-	bool IsBroken() const { return isBroken; } // æ”»æ’ƒå¯¾è±¡åˆ¤å®šç”¨
+	bool IsBroken() const { return isBroken; }
 
-private:
-	bool isBroken = false; // å£Šã‚Œã¦ã„ã‚‹ã‹ã©ã†ã‹
+protected:
+	bool isBroken = false;//•Ç‚ª‰ó‚ê‚½‚©‚Ç‚¤‚©
 
-	float maxHp = 2.0f; 
-	float respawnTime = 5.0f; // ãƒªã‚¹ãƒãƒ¼ãƒ³ã™ã‚‹ã¾ã§ã®æ™‚é–“ (5ç§’)
-	float respawnTimer = 0.0f; // ãƒªã‚¹ãƒãƒ¼ãƒ³ã‚¿ã‚¤ãƒãƒ¼
+	float maxHp = 2.0f; //Å‘å‘Ï‹v—Í
+	float respawnTime = 5.0f;//ƒŠƒXƒ|[ƒ“‚ğŠJn‚·‚é‚Ü‚Å‚ÌŠÔ
+	float respawnTimer = 0.0f;//ƒŠƒXƒ|[ƒ“‚Ü‚Å‚Ìc‚èŠÔ
 
-	bool isRespawning = false;      // ãƒ•ã‚§ãƒ¼ãƒ‰ã‚¤ãƒ³ä¸­ã‹
-	float fadeInDuration = 1.5f;    // ãƒ•ã‚§ãƒ¼ãƒ‰ã‚¤ãƒ³ã«ã‹ã‹ã‚‹æ™‚é–“ï¼ˆ1.5ç§’ï¼‰
-	float fadeInTimer = 0.0f;       // ãƒ•ã‚§ãƒ¼ãƒ‰ã‚¤ãƒ³ç”¨ã‚¿ã‚¤ãƒãƒ¼
+	bool isRespawning = false;//•Ç‚ªƒŠƒXƒ|[ƒ“ˆ—’†‚©‚Ç‚¤‚©‚ğ¦‚·ƒtƒ‰ƒO
+	float fadeInDuration = 1.5f;//ƒŠƒXƒ|[ƒ“‚ÌƒtƒF[ƒhƒCƒ“‚É‚©‚©‚éŠÔ
+	float fadeInTimer = 0.0f;//ƒtƒF[ƒhƒCƒ“‚ÌŒo‰ßŠÔ‚ğƒJƒEƒ“ƒg‚·‚éƒ^ƒCƒ}[
 
-	DirectX::XMFLOAT3 halfSize;
-	DirectX::XMFLOAT3 size;
+	DirectX::XMFLOAT3 halfSize;//•Ç‚Ì”¼•ª‚ÌƒTƒCƒY
+	DirectX::XMFLOAT3 size;//•Ç‚Ì‘S‘Ì‚ÌƒTƒCƒY
 
 	OBB* box;
 };

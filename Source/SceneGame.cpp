@@ -109,7 +109,8 @@ void SceneGame::Initialize()
 	Stage_BGM = Audio::Instance().LoadAudioSource("Data/Sound/BGM_Play.wav");
 
 	// エフェクトの読み込み
-	EffectManager::Instance().Load("Hit", L"Data/Effect/Hit.efk");
+	EffectManager::Instance().Load("Hit", L"Data/Effect/flre_B.efk");
+	EffectManager::Instance().Load("Heal", L"Data/Effect/Heel.efk");
 }
 
 void SceneGame::Finalize()
@@ -370,6 +371,7 @@ void SceneGame::Render()
 	{
 		for (auto& character : players) character->RenderDebugPrimitive(rc, shapeRenderer);
 		EnemyManager::Instance().RenderDebugPrimitive(rc, shapeRenderer);
+		GimmicManager::Instance().RenderDebugPrimitive(rc, shapeRenderer);
 	}
 
 	// 2Dスプライト描画

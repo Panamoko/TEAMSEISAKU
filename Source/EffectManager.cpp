@@ -49,19 +49,55 @@ void EffectManager::Load(const std::string& name, const std::wstring& path)
     }
 }
 
-Effekseer::Handle EffectManager::Play(const std::string& name, const DirectX::XMFLOAT3& position)
+Effekseer::Handle EffectManager::Play(const std::string& name, const DirectX::XMFLOAT3& position, float frameDuration)
 {
     if (effects.find(name) == effects.end()) return -1;
 
     // 再生
     Effekseer::Handle handle = manager->Play(effects[name], position.x, position.y, position.z);
+
+    // 寿命が設定されている場合、リストに登録
+    if (frameDuration > 0.0f)
+    {
+        activeEffects.push_back({ handle, frameDuration });
+    }
+
     return handle;
+}
+
+// 停止処理の実装
+void EffectManager::Stop(Effekseer::Handle handle)
+{
+    if (manager != nullptr)
+    {
+        manager->StopEffect(handle);
+    }
 }
 
 void EffectManager::Update(float elapsedTime)
 {
     // マネージャーの更新 (単位はフレーム。60fps想定なら elapsedTime * 60.0f)
-    manager->Update(elapsedTime * 60.0f);
+    float deltaFrames = elapsedTime * 60.0f;
+    manager->Update(deltaFrames);
+
+    // 寿命管理の更新
+    // リストを巡回し、時間が来たものを停止してリストから削除する
+    for (auto it = activeEffects.begin(); it != activeEffects.end(); )
+    {
+        it->remainingFrames -= deltaFrames;
+
+        if (it->remainingFrames <= 0.0f)
+        {
+            // 指定フレーム経過したので停止
+            manager->StopEffect(it->handle);
+            // リストから削除
+            it = activeEffects.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
 }
 
 void EffectManager::Render()

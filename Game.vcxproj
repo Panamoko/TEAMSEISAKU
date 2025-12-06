@@ -181,6 +181,7 @@
     <ClInclude Include="Source\SpriteResource.h" />
     <ClInclude Include="Source\Stage.h" />
     <ClInclude Include="Source\StageManager.h" />
+    <ClInclude Include="Source\StrawBag.h" />
     <ClInclude Include="Source\System\Audio.h" />
     <ClInclude Include="Source\System\AudioResource.h" />
     <ClInclude Include="Source\System\AudioSource.h" />
@@ -204,6 +205,7 @@
     <ClInclude Include="Source\System\ShapeRenderer.h" />
     <ClInclude Include="Source\System\Sprite.h" />
     <ClInclude Include="Source\TutorialSprite.h" />
+    <ClInclude Include="Source\Well.h" />
     <ClInclude Include="Source\Yagura.h" />
   </ItemGroup>
   <ItemGroup>
@@ -273,6 +275,7 @@
     <ClCompile Include="Source\SpriteResource.cpp" />
     <ClCompile Include="Source\Stage.cpp" />
     <ClCompile Include="Source\StageManager.cpp" />
+    <ClCompile Include="Source\StrawBag.cpp" />
     <ClCompile Include="Source\System\Audio.cpp" />
     <ClCompile Include="Source\System\AudioResource.cpp" />
     <ClCompile Include="Source\System\AudioSource.cpp" />
@@ -292,6 +295,7 @@
     <ClCompile Include="Source\System\ShapeRenderer.cpp" />
     <ClCompile Include="Source\System\Sprite.cpp" />
     <ClCompile Include="Source\TutorialSprite.cpp" />
+    <ClCompile Include="Source\Well.cpp" />
     <ClCompile Include="Source\Yagura.cpp" />
   </ItemGroup>
   <ItemGroup>
