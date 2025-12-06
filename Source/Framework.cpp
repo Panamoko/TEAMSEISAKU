@@ -82,7 +82,7 @@ void Framework::Render(float elapsedTime)
 	ID3D11DeviceContext* dc = Graphics::Instance().GetDeviceContext();
 
 	// 画面クリア
-	Graphics::Instance().Clear(0.529f, 0.808f, 0.922f, 1.0f);
+	Graphics::Instance().Clear(0.235f, 0.765f, 1.0f, 1.0f);
 
 	// レンダーターゲット設定
 	Graphics::Instance().SetRenderTargets();
