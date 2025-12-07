@@ -37,7 +37,7 @@ Core::Core()
 
 	class_name = "Core";
 	scale = { 0.3f, 0.3f, 0.3f };
-	hp = 1500.0f;
+	hp = 1000.0f;
     hitSE[1] = Audio::Instance().LoadAudioSource("Data/Sound/SE_CoreBreak.wav");
 
     // 演出用画像の読み込み
