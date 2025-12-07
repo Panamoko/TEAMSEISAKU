@@ -695,7 +695,7 @@ void SceneGame::UpdatePlayerSpawn()
 
 			if (scene_name == "scene_play")
 			{
-				limitRange = 55.0f; // scene_play ‚Ì‚Í”ÍˆÍ‚ğL‚°‚é (•Ç‚ÌˆÊ’u‚É‡‚í‚¹‚Ä’²®‚µ‚Ä‚­‚¾‚³‚¢)
+				limitRange = 60.0f; // scene_play ‚Ì‚Í”ÍˆÍ‚ğL‚°‚é (•Ç‚ÌˆÊ’u‚É‡‚í‚¹‚Ä’²®‚µ‚Ä‚­‚¾‚³‚¢)
 			}
 
 			// šC³: Œˆ’è‚µ‚½”ÍˆÍ‚ğ“n‚·
