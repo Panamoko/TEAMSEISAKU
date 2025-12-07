@@ -31,6 +31,9 @@ public:
 
 	static void ResetSpawnCount();
 
+	// Œ»İ‚Ì¶¬‰ñ”‚ğæ“¾‚·‚éŠÖ”
+	static int GetSpawnCount() { return s_spawnCount; }
+
 	virtual void Initialize();
 
 	void Finalize();
@@ -59,7 +62,6 @@ protected:
 	void OnDead() override;
 
 	void InputMove(float elapsedTime);
-	void InputJump();
 	DirectX::XMFLOAT3 GetMoveVec() const;
 
 	bool UpdateMoveToCore(float elapsedTime);

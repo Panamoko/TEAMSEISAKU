@@ -5,15 +5,15 @@
 
 // コンストラクタ
 EnemySlimeMelee::EnemySlimeMelee()
-    : EnemySlime("Data/Model/chara/nico3.mdl")
+	: EnemySlime("Data/Model/Slime/Slime_R2.mdl")
 {
-    class_name = "EnemySlimeMelee";
+	class_name = "EnemySlimeMelee";
 
 	maxHealth = 40;
 	health = maxHealth;
 
-    // 生成直後にすぐ索敵が走るようにタイマーをリセット、または少しずらす
-    targetUpdateTimer = MathUtils::RandomRenge(0.0f, 0.2f);
+	// 生成直後にすぐ索敵が走るようにタイマーをリセット、または少しずらす
+	targetUpdateTimer = MathUtils::RandomRenge(0.0f, 0.2f);
 }
 
 // デストラクタ
@@ -24,9 +24,12 @@ EnemySlimeMelee::~EnemySlimeMelee()
 // 攻撃ステートへ偏移
 void EnemySlimeMelee::SetAttackState(Character* target)
 {
-    // 基底クラスの処理を呼ぶ
-    EnemySlime::SetAttackState(target);
-    animator.Play("NIC_Fwd_Run", true);
+	// 基底クラスの処理を呼ぶ
+	EnemySlime::SetAttackState(target);
+	// ★削除: animator.Play("NIC_Fwd_Run", true);
+
+	// タイマーリセット
+	motionTimer = 0.0f;
 }
 
 // 攻撃ステート更新処理
@@ -35,36 +38,30 @@ void EnemySlimeMelee::UpdateAttackState(float elapsedTime)
 	// 1. 現在のターゲットの生存確認
 	if (targetCharacter)
 	{
-		// ターゲットが死んでいたら（HP<=0）、ターゲットを外して即座に再索敵させる
 		if (targetCharacter->GetHealth() <= 0)
 		{
 			targetCharacter = nullptr;
-			targetUpdateTimer = 0.0f; // タイマーを0にして下のif文で即座に索敵させる
+			targetUpdateTimer = 0.0f;
 		}
 	}
 
-	// 2. 定期的なターゲット再評価 (0.5秒ごと または ターゲット不在時)
+	// 2. 定期的なターゲット再評価
 	if (targetUpdateTimer <= 0.0f || !targetCharacter)
 	{
 		targetUpdateTimer = 0.5f;
-
-		// 新しいターゲットを探す
 		Character* newTarget = SearchTarget();
 
 		if (newTarget)
 		{
-			// 新しいターゲットが見つかったら更新
 			targetCharacter = newTarget;
 		}
 		else if (!targetCharacter)
 		{
-			// ターゲットがいなくて、新規も見つからないなら待機へ戻る
 			SetIdleState();
 			return;
 		}
 	}
 
-	// 念のためターゲット有効チェック
 	if (!targetCharacter)
 	{
 		SetIdleState();
@@ -84,32 +81,34 @@ void EnemySlimeMelee::UpdateAttackState(float elapsedTime)
 	if (distSq > (attackRange * attackRange))
 	{
 		// 範囲外：追いかける
-		animator.Play("NIC_Fwd_Run", true);
+		// ★削除: animator.Play("NIC_Fwd_Run", true);
 
-		// ★修正: 移動できなければ諦めてターゲット解除
+		// 移動できなければ諦めてターゲット解除
 		if (!MoveToTarget(elapsedTime, 1.0f, 1.0f))
 		{
-			// 壁に引っかかったのでターゲット情報を捨てて待機に戻る
-			// これにより次のフレームで再ターゲットが走る
 			targetCharacter = nullptr;
 			SetIdleState();
 			return;
 		}
 
 		isAttackFired = false;
+		motionTimer = 0.0f; // 追いかけている間は攻撃モーションタイマーを進めない（またはリセット）
 	}
 	else
 	{
 		// 範囲内：攻撃
-		animator.Play("NIC_Attack", true);
+		// ★削除: animator.Play("NIC_Attack", true);
 
-		// 攻撃中は移動しないので戻り値チェック不要（旋回のみ）
+		// 攻撃中は移動しない（旋回のみ）
 		MoveToTarget(elapsedTime, 0.0f, 1.0f);
 
-		float currentAnimTime = animator.GetCurrentSeconds();
-		float fireTimingSeconds = 12.0f / 30.0f;
+		// ★修正: タイマーベースの攻撃判定
+		motionTimer += elapsedTime;
 
-		if (!isAttackFired && currentAnimTime >= fireTimingSeconds)
+		const float attackCycle = 1.0f;  // 攻撃間隔
+		const float hitTime = 0.4f;      // ダメージ発生タイミング
+
+		if (!isAttackFired && motionTimer >= hitTime)
 		{
 			const float invincibleTime = 0.5f;
 			targetCharacter->ApplyDamage(attackDamage, invincibleTime);
@@ -131,8 +130,10 @@ void EnemySlimeMelee::UpdateAttackState(float elapsedTime)
 			isAttackFired = true;
 		}
 
-		if (currentAnimTime < fireTimingSeconds && isAttackFired)
+		// サイクル完了でリセット
+		if (motionTimer >= attackCycle)
 		{
+			motionTimer -= attackCycle;
 			isAttackFired = false;
 		}
 	}

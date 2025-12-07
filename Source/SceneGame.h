@@ -109,4 +109,13 @@ private:
 	AudioSource* GameOver_BGM = nullptr;
 
 	bool is_pouse = false;
+
+	// ゲームオーバー演出用
+	bool isGameOver = false;        // ゲームオーバーになったか
+	float gameOverTimer = 0.0f;     // ゲームオーバー後の経過時間
+	Sprite* gameOverSprite = nullptr; // ゲームオーバー画像 (もしあれば)
+
+	// ロゴのアニメーション座標と角度
+	float gameOverLogoY = -300.0f;    // ロゴのY座標
+	float gameOverLogoAngle = 0.0f;   // ロゴの回転角度
 };

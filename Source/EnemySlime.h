@@ -4,9 +4,11 @@
 #include "Enemy.h"
 #include "ProjectileManager.h"
 #include "Editor.h"
-#include "Animator.h"
 #include "AStar.h"
 #include "GridMap.h"
+
+// ★削除: Animator.h のインクルード
+// #include "Animator.h"
 
 class Player;
 
@@ -15,7 +17,7 @@ class EnemySlime : public Enemy
 {
 public:
 	// --- コンストラクタ / デストラクタ ---
-	EnemySlime(const char* modelPath = "Data/Model/chara/nico.mdl");
+	EnemySlime(const char* modelPath = "Data/Model/Slime/Slime_B2.mdl");
 	~EnemySlime() override;
 
 	// --- 基本更新・描画 ---
@@ -84,19 +86,25 @@ protected:
 	DirectX::XMFLOAT3 targetPosition = { 0,0,0 }; // 現在の目的地
 	DirectX::XMFLOAT3 territoryOrigin = { 0,0,0 };// 縄張りの中心
 	float territoryRange = 10.0f;                 // 縄張りの半径
-	float searchRange = 5.0f;                     // 索敵半径
+	float searchRange = 10.0f;                     // 索敵半径
 
 	// 速度設定
-	float moveSpeed = 2.0f;
+	float moveSpeed = 5.0f;
 	float turnSpeed = DirectX::XMConvertToRadians(360);
 
 	// タイマー
 	float stateTimer = 0.0f;        // ステート維持用
 	float targetUpdateTimer = 0.0f; // 索敵・思考の間隔用
 
+	// アニメーションの代わりとなる動作タイマー
+	float motionTimer = 0.0f;       // 攻撃モーション等の経過時間計測用
+
 	// --- コンポーネント・オブジェクト ---
 	ProjectileManager projectileManager;
-	Animator animator;
+
+	// ★削除: Animator
+	// Animator animator;
+
 	AStar aStar;
 	const GridMap* gridMap = nullptr;
 
