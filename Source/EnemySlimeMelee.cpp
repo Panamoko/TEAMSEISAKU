@@ -5,7 +5,7 @@
 
 // コンストラクタ
 EnemySlimeMelee::EnemySlimeMelee()
-    : EnemySlime("Data/Model/chara/nico3.mdl")
+    : EnemySlime("Data/Model/Slime/Slime_R2.mdl")
 {
     class_name = "EnemySlimeMelee";
 

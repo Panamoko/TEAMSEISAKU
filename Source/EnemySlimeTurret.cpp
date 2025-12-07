@@ -6,7 +6,7 @@
 
 // コンストラクタ
 EnemySlimeTurret::EnemySlimeTurret()
-    : EnemySlime("Data/Model/chara/nico2.mdl")
+    : EnemySlime("Data/Model/Slime/Slime_G2.mdl")
 {
     class_name = "EnemySlimeTurret";
     searchRange = 15.0f;

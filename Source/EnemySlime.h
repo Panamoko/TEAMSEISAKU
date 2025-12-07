@@ -15,7 +15,7 @@ class EnemySlime : public Enemy
 {
 public:
 	// --- コンストラクタ / デストラクタ ---
-	EnemySlime(const char* modelPath = "Data/Model/chara/nico.mdl");
+	EnemySlime(const char* modelPath = "Data/Model/Slime/Slime_B2.mdl");
 	~EnemySlime() override;
 
 	// --- 基本更新・描画 ---
