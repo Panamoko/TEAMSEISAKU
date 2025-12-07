@@ -39,7 +39,7 @@ const std::vector<Player*>& Player::GetAllPlayers() { return sAllPlayers; }
 
 void Player::Initialize()
 {
-    InitializeCommon("Data/Model/Slime/Player_Slime.mdl", "Data/Sprite/Player.png");
+    InitializeCommon("Data/Model/Slime/Slime_R.mdl", "Data/Sprite/Player.png");
 }
 
 // 共通初期化処理
