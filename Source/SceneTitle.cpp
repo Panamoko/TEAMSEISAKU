@@ -138,11 +138,6 @@ void SceneTitle::Update(float elapsedTime)
 {
 	Stage_BGM->Play(true);
 
-	// Startボタンの点滅タイマー
-	alpha_timer += elapsedTime;
-	if (std::fmod(alpha_timer, blink_interval * 2.0f) < blink_interval) render_color.w = 1.0f;
-	else render_color.w = 0.0f;
-
 	// カメラ演出タイマー
 	cameraTimer += elapsedTime;
 	XMFLOAT3 baseEye = { 0.0f, 5.0f, -8.0f };
@@ -172,8 +167,8 @@ void SceneTitle::Update(float elapsedTime)
 	DirectX::XMFLOAT2 mousePos = { static_cast<float>(mouse.GetPositionX()), static_cast<float>(mouse.GetPositionY()) };
 
 	// 各ボタンのホバー判定
-	isStartHover = Collision::IntersectPosSquare(mousePos, { startButtonPos.x, startButtonPos.y }, { startButtonSize.x, startButtonSize.y });
-	isTutorialHover = Collision::IntersectPosSquare(mousePos, { tutorialButtonPos.x, tutorialButtonPos.y }, { tutorialButtonSize.x, tutorialButtonSize.y });
+	isStartHover = Collision::IntersectPosSquare(mousePos, { startButtonPos.x, startButtonPos.y + 100.0f }, { startButtonSize.x - 80.0f, startButtonSize.y - 200.0f });
+	isTutorialHover = Collision::IntersectPosSquare(mousePos, { tutorialButtonPos.x, tutorialButtonPos.y + 100.0f }, { tutorialButtonSize.x - 80.0f, tutorialButtonSize.y - 200.0f});
 
 	// クリック判定
 	if (mouse.GetButtonDown() & Mouse::BTN_LEFT)
