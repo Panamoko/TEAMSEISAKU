@@ -4,7 +4,7 @@
 ProjectileHoming::ProjectileHoming(ProjectileManager* manager)
     :Projectile(manager)
 {
-	const char* path = "Data/Model/Sword/Sword.mdl";
+	const char* path = "Data/Model/Sword/Bullet.mdl";
 	auto resource = ModelManager::Instance().GetResource(path);
 	model = new Model(resource, path);
 
