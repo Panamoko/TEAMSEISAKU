@@ -108,6 +108,10 @@ void SceneGame::Initialize()
 
 	Stage_BGM = Audio::Instance().LoadAudioSource("Data/Sound/BGM_Play.wav");
 
+	// ゲームオーバー変数の初期化
+	isGameOver = false;
+	gameOverTimer = 0.0f;
+
 	// エフェクトの読み込み
 	EffectManager::Instance().Load("Heal", L"Data/Effect/Heel.efk");
 	EffectManager::Instance().Load("SlimeAttack", L"Data/Effect/Slime_Attack.efk");
@@ -269,6 +273,32 @@ void SceneGame::Update(float elapsedTime)
 			grid_map.Build(GameObjectManager::Instance().GetAllObjects());
 		}
 
+		// ★追加: ゲームオーバー判定と遷移処理
+		if (!isGameOver)
+		{
+			// プレイヤーリストが空（＝全滅）になったらゲームオーバー開始
+			if (players.empty())
+			{
+				isGameOver = true;
+				gameOverTimer = 0.0f;
+
+				// BGMがあれば再生
+				// if (GameOver_BGM) GameOver_BGM->Play(false);
+			}
+		}
+		else
+		{
+			// ゲームオーバー演出中
+			gameOverTimer += elapsedTime;
+
+			// 3秒待ったらタイトルへ戻る
+			if (gameOverTimer > 3.0f)
+			{
+				SceneManager::Instance().ChangeScene(new SceneLoading(new SceneTitle()));
+				return; // これ以降の処理をしないようにリターン
+			}
+		}
+
 		UpdatePiP();
 		// PiP内部の描画領域を計算して渡す
 		{
@@ -391,6 +421,21 @@ void SceneGame::Render()
 		{
 			Core::Instance()->RenderUI(rc);
 		}
+
+		// ゲームオーバー画像の描画
+		if (isGameOver && gameOverSprite)
+		{
+			float sw = Graphics::Instance().GetScreenWidth();
+			float sh = Graphics::Instance().GetScreenHeight();
+			// 画面中央に表示
+			gameOverSprite->Render(
+				rc,
+				(sw - 600) / 2, (sh - 300) / 2, 0, // 座標 (画像サイズに合わせて調整)
+				600, 300,                          // サイズ
+				0, 1, 1, 1, 1
+			);
+		}
+
 		if (isSceneStarting && dissolve)
 		{
 			// タイマーが Max(開始時) -> 0(終了時) へ減っていく
