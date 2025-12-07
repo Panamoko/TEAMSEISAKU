@@ -74,6 +74,47 @@ void EffectManager::Stop(Effekseer::Handle handle)
     }
 }
 
+// Skip関数の実装
+void EffectManager::Skip(Effekseer::Handle handle, float frames)
+{
+    if (manager != nullptr)
+    {
+        // 指定したハンドルのエフェクトを frames 分だけ更新（早送り）する
+        int steps = static_cast<int>(frames);
+        for (int i = 0; i < steps; ++i)
+        {
+            manager->UpdateHandle(handle, 1.0f);
+        }
+    }
+}
+
+// スケール設定の実装
+void EffectManager::SetScale(Effekseer::Handle handle, float x, float y, float z)
+{
+    if (manager != nullptr)
+    {
+        manager->SetScale(handle, x, y, z);
+    }
+}
+
+// 行列更新の実装
+void EffectManager::SetMatrix(Effekseer::Handle handle, const DirectX::XMFLOAT4X4& m)
+{
+    if (manager != nullptr)
+    {
+        // DirectXの行列(4x4) を Effekseerの行列(4x3) に変換して適用
+        Effekseer::Matrix43 effekseerMatrix;
+        for (int r = 0; r < 4; ++r)
+        {
+            for (int c = 0; c < 3; ++c)
+            {
+                effekseerMatrix.Value[r][c] = m.m[r][c];
+            }
+        }
+        manager->SetMatrix(handle, effekseerMatrix);
+    }
+}
+
 void EffectManager::Update(float elapsedTime)
 {
     // マネージャーの更新 (単位はフレーム。60fps想定なら elapsedTime * 60.0f)
