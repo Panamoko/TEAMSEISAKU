@@ -59,6 +59,8 @@ void SceneGame::Initialize()
 	Player::SetActive(nullptr);
 	players.clear();
 
+	Player::ResetSpawnCount();
+
 	Graphics& graphics = Graphics::Instance();
 	Camera& camera = Camera::Instance();
 
@@ -111,6 +113,10 @@ void SceneGame::Initialize()
 	// ゲームオーバー変数の初期化
 	isGameOver = false;
 	gameOverTimer = 0.0f;
+	gameOverLogoY = -300.0f; // 画面外からスタート
+	gameOverLogoAngle = 0.0f;
+
+	gameOverSprite = SpriteManager::Instance().Load("Data/Sprite/Game_Over.png");
 
 	// エフェクトの読み込み
 	EffectManager::Instance().Load("Heal", L"Data/Effect/Heel.efk");
@@ -277,25 +283,69 @@ void SceneGame::Update(float elapsedTime)
 		if (!isGameOver)
 		{
 			// プレイヤーリストが空（＝全滅）になったらゲームオーバー開始
-			if (players.empty())
+			if (players.empty() && Player::GetSpawnCount() >= 5) 
 			{
 				isGameOver = true;
 				gameOverTimer = 0.0f;
-
-				// BGMがあれば再生
-				// if (GameOver_BGM) GameOver_BGM->Play(false);
 			}
 		}
 		else
-		{
-			// ゲームオーバー演出中
+		{// --- 演出更新 ---
 			gameOverTimer += elapsedTime;
 
-			// 3秒待ったらタイトルへ戻る
-			if (gameOverTimer > 3.0f)
+			float screenH = Graphics::Instance().GetScreenHeight();
+			float targetY = (screenH / 2.0f) - 150.0f; // 画面中央（目標）
+
+			// 1. 落下アニメーション (2.0秒かけてゆっくり落ちる)
+			float dropDuration = 2.0f;
+
+			if (gameOverTimer < dropDuration)
+			{
+				float t = gameOverTimer / dropDuration;
+
+				// EaseOutBounce (重いものが落ちるようなバウンド)
+				// 手動計算でバウンド感を調整
+				float n1 = 7.5625f;
+				float d1 = 2.75f;
+				float ease = 0.0f;
+				if (t < 1.0f / d1) {
+					ease = n1 * t * t;
+				}
+				else if (t < 2.0f / d1) {
+					t -= 1.5f / d1;
+					ease = n1 * t * t + 0.75f;
+				}
+				else if (t < 2.5f / d1) {
+					t -= 2.25f / d1;
+					ease = n1 * t * t + 0.9375f;
+				}
+				else {
+					t -= 2.625f / d1;
+					ease = n1 * t * t + 0.984375f;
+				}
+
+				gameOverLogoY = std::lerp(-300.0f, targetY, ease);
+				gameOverLogoAngle = 0.0f;
+			}
+			else
+			{
+				// 2. 落下後の「弱々しい」待機アニメーション
+				// 落下終了からの時間
+				float floatTime = gameOverTimer - dropDuration;
+
+				// Y軸: ゆっくり小さく沈むような動き (Speed 1.0, 幅 5.0)
+				// クリア時は Speed 2.0, 幅 15.0 だったので、かなり弱めています
+				gameOverLogoY = targetY + sinf(floatTime * 1.0f) * 5.0f;
+
+				// 回転: 風に揺れる枯れ葉のようにゆらゆらさせる (Speed 0.5, 角度 2度)
+				gameOverLogoAngle = sinf(floatTime * 0.5f) * 2.0f;
+			}
+
+			// 5秒後にタイトルへ
+			if (gameOverTimer > 5.0f)
 			{
 				SceneManager::Instance().ChangeScene(new SceneLoading(new SceneTitle()));
-				return; // これ以降の処理をしないようにリターン
+				return;
 			}
 		}
 
@@ -427,12 +477,20 @@ void SceneGame::Render()
 		{
 			float sw = Graphics::Instance().GetScreenWidth();
 			float sh = Graphics::Instance().GetScreenHeight();
-			// 画面中央に表示
+
+			// 画像サイズ
+			float w = 600.0f;
+			float h = 300.0f;
+
+			// 計算した Y座標 と 角度(Rotation) を適用して描画
 			gameOverSprite->Render(
 				rc,
-				(sw - 600) / 2, (sh - 300) / 2, 0, // 座標 (画像サイズに合わせて調整)
-				600, 300,                          // サイズ
-				0, 1, 1, 1, 1
+				(sw - w) / 2.0f, // X (中央)
+				gameOverLogoY,   // Y (アニメーション適用)
+				0,               // Z
+				w, h,            // サイズ
+				gameOverLogoAngle, // 回転 (アニメーション適用)
+				1, 1, 1, 1       // 色
 			);
 		}
 

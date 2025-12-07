@@ -31,6 +31,9 @@ public:
 
 	static void ResetSpawnCount();
 
+	// Œ»İ‚Ì¶¬‰ñ”‚ğæ“¾‚·‚éŠÖ”
+	static int GetSpawnCount() { return s_spawnCount; }
+
 	virtual void Initialize();
 
 	void Finalize();
