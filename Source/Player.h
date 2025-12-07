@@ -51,7 +51,8 @@ public:
 
 	bool UpdateAutoSpawn(float elapsedTime);
 
-	static void UpdateSpawn(std::vector<std::shared_ptr<Character>>& players, const Picking_Ray& pickingRay);
+	static void UpdateSpawn(std::vector<std::shared_ptr<Character>>& players, const Picking_Ray& pickingRay, float limitRange = 30.0f);
+
 	static bool UpdateActiveByKeyboard(const std::vector<std::shared_ptr<Character>>& players);
 
 protected:

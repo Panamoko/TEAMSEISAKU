@@ -688,9 +688,18 @@ void SceneGame::UpdatePlayerSpawn()
 	bool isClick = (Input::Instance().GetMouse().GetButtonDown() & Mouse::BTN_LEFT);
 	if (!ImGui::GetIO().WantCaptureMouse && isClick)
 	{
-		if (players.size() < 5)
+		if (players.size() < 5) // ¦Player.cpp‘¤‚Å s_spawnCount ‚ðŽg‚¤C³‚ð‚µ‚Ä‚¢‚éê‡‚Í‚»‚¿‚ç‚É]‚Á‚Ä‚­‚¾‚³‚¢
 		{
-			Player::UpdateSpawn(players, pickingRay);
+			// š’Ç‰Á: ƒV[ƒ“‚É‚æ‚Á‚Ä‹ÖŽ~”ÍˆÍ‚ð•Ï‚¦‚é
+			float limitRange = 30.0f; // ƒfƒtƒHƒ‹ƒg (scene_tutorial ‚È‚Ç)
+
+			if (scene_name == "scene_play")
+			{
+				limitRange = 55.0f; // scene_play ‚ÌŽž‚Í”ÍˆÍ‚ðL‚°‚é (•Ç‚ÌˆÊ’u‚É‡‚í‚¹‚Ä’²®‚µ‚Ä‚­‚¾‚³‚¢)
+			}
+
+			// šC³: Œˆ’è‚µ‚½”ÍˆÍ‚ð“n‚·
+			Player::UpdateSpawn(players, pickingRay, limitRange);
 		}
 	}
 }

@@ -150,13 +150,11 @@ void Player::SpawnAlly(SceneGame* scene) { if (scene) scene->AddAllyStraightFor(
 // UpdateSpawn, UpdateActiveByKeyboard, UpdateAutoSpawn, InputMove, InputJump, GetMoveVecなど
 // 下記の部分だけは省略せず記述しますが、変更点は上記までです。
 
-void Player::UpdateSpawn(std::vector<std::shared_ptr<Character>>& players, const Picking_Ray& pickingRay)
+void Player::UpdateSpawn(std::vector<std::shared_ptr<Character>>& players, const Picking_Ray& pickingRay, float limitRange)
 {
-    // ... (元のコードのまま) ...
     bool isClick = (Input::Instance().GetMouse().GetButtonDown() & Mouse::BTN_LEFT);
     if (!ImGui::GetIO().WantCaptureMouse && isClick)
     {
-        // ▼▼▼ 修正1: 判定を players.size() から s_spawnCount に変更 ▼▼▼
         if (s_spawnCount < 5)
         {
             DirectX::XMFLOAT3 org = pickingRay.GetRayOrigin();
@@ -172,8 +170,12 @@ void Player::UpdateSpawn(std::vector<std::shared_ptr<Character>>& players, const
                     if (core) {
                         float dx = std::abs(hitX - core->position.x);
                         float dz = std::abs(hitZ - core->position.z);
-                        if (dx < 30.0f && dz < 30.0f) return;
+
+                        // ★修正: 固定値 30.0f ではなく、引数 limitRange を使用する
+                        if (dx < limitRange && dz < limitRange) return;
                     }
+
+                    // ... (以下、生成処理は変更なし) ...
                     std::shared_ptr<Player> newPlayer = nullptr;
                     if (GetAsyncKeyState('X') & 0x8000)      newPlayer = std::make_shared<PlayerMelee>();
                     else if (GetAsyncKeyState('V') & 0x8000) newPlayer = std::make_shared<PlayerHeal>();
@@ -187,7 +189,6 @@ void Player::UpdateSpawn(std::vector<std::shared_ptr<Character>>& players, const
                         players.push_back(newPlayer);
                         if (players.size() == 1) SetActive(newPlayer.get());
 
-                        // ▼▼▼ 修正2: 生成成功時にカウントを増やす ▼▼▼
                         s_spawnCount++;
                     }
                 }
