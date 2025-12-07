@@ -58,6 +58,7 @@ private:
     float autoHealRange = 15.0f;      // 索敵半径（回復なので少し広めに設定）
     float autoHealInterval = 2.0f;    // 発射間隔（秒）
     float autoHealTimer = 0.0f;       // クールダウンタイマー
+    float searchTimer = 0.0f;
 
     // ===== 見た目・弾管理 =====
     DirectX::XMFLOAT3 anchor = { 0,0,0 };

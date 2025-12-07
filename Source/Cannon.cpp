@@ -17,6 +17,8 @@ Cannon::Cannon()
 	power = 10.0f;
 	speed = 3.0f;
     scale = { 0.5f,0.5f,0.5f };
+    weight = 0.0f;
+
 
     //“–‚½‚è”»’è‚Ìí—Şİ’è
     collider = std::make_unique<CylinderCollider>();

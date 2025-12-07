@@ -38,6 +38,8 @@ Gimmic_BreakWall::Gimmic_BreakWall()
 
     color.w = 1.0f;
 
+    weight = 0.0f;
+
     CollisionManager::Instance().AddObject(this);
 
 }
