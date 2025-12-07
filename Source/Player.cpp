@@ -115,9 +115,6 @@ void Player::Update(float elapsedTime)
             // これで「待機モーションなのに勝手に動く」現象がなくなります
             InputMove(elapsedTime);
         }
-
-        // ジャンプは移動していなくてもできるように外に出しておく
-        InputJump();
     }
     else
     {
@@ -230,17 +227,6 @@ void Player::InputMove(float elapsedTime)
     DirectX::XMFLOAT3 moveVec = GetMoveVec();
     Move(elapsedTime, moveVec.x, moveVec.z, moveSpeed);
     Turn(elapsedTime, moveVec.x, moveVec.z, turnSpeed);
-}
-
-void Player::InputJump()
-{
-    GamePad& gamePad = Input::Instance().GetGamePad();
-    if (gamePad.GetButtonDown() & GamePad::BTN_A) {
-        if (jumpCount < jumpLimit) {
-            jumpCount++;
-            Jump(jumpSpeed);
-        }
-    }
 }
 
 DirectX::XMFLOAT3 Player::GetMoveVec() const

@@ -41,19 +41,16 @@ EnemySlime::EnemySlime(const char* modelPath)
 {
 	class_name = "EnemySlime";
 
-	// モデルロード (各個体でアニメーションさせるためUniqueInstance)
 	uniqueModel = ModelManager::Instance().CreateUniqueInstance(modelPath);
 	model = uniqueModel.get();
 
-	// パラメータ設定
-	scale = { 0.01f, 0.01f, 0.01f };
+	scale = { 0.005f, 0.005f, 0.005f };
 	radius = 0.5f;
 	height = 1.0f;
 	type = Type::Enemy;
 	maxHealth = 20;
 	health = maxHealth;
 
-	// コライダー設定
 	collider = std::make_unique<CylinderCollider>();
 	collider->type = ColliderType::Cylinder;
 	collider->owner = this;
@@ -63,15 +60,7 @@ EnemySlime::EnemySlime(const char* modelPath)
 
 	CollisionManager::Instance().AddObject(this);
 
-	// アニメーション初期化
-	if (model) {
-		animator.SetModel(model);
-		animator.Play("NIC_Idle", true);
-		model->UpdateTransform();
-	}
 	UpdateTransform();
-
-	// 初期状態へ
 	SetWanderState();
 }
 
@@ -83,7 +72,6 @@ void EnemySlime::Update(float elapsedTime)
 	targetUpdateTimer -= elapsedTime;
 	cylinder->center = position;
 
-	// ステート更新
 	switch (state)
 	{
 	case State::Wander:	UpdateWanderState(elapsedTime); break;
@@ -91,23 +79,16 @@ void EnemySlime::Update(float elapsedTime)
 	case State::Attack:	UpdateAttackState(elapsedTime); break;
 	}
 
-	animator.Update(elapsedTime);
-
-	// 固定砲台以外は「分離行動（重なり回避）」を行う
 	if (class_name != "EnemySlimeTurret")
 	{
 		ApplySeparationForce(elapsedTime);
 	}
 
-	// 物理・移動更新
 	UpdateVelocity(elapsedTime);
 	UpdateInvincibleTimer(elapsedTime);
-	UpdateTransform(); // 行列更新
+	UpdateTransform();
 
-	// 弾の更新
 	projectileManager.Update(elapsedTime);
-
-	// モデル更新
 	if (model) model->UpdateTransform();
 }
 
@@ -123,7 +104,6 @@ void EnemySlime::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* re
 {
 	Enemy::RenderDebugPrimitive(rc, renderer);
 
-	// 経路の可視化
 	if (gridMap && !currentPath.empty())
 	{
 		for (const auto& node : currentPath)
@@ -134,27 +114,20 @@ void EnemySlime::RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* re
 		}
 	}
 
-	// 各種範囲の可視化
-	renderer->RenderCylinder(rc, territoryOrigin, territoryRange, 1.0f, { 0, 1, 0, 1 }); // 縄張り
-	renderer->RenderSphere(rc, targetPosition, 1.0f, { 1, 1, 0, 1 });                    // 目的地
-	renderer->RenderCylinder(rc, position, searchRange, 1.0f, { 1, 0, 0, 1 });           // 索敵範囲
+	renderer->RenderCylinder(rc, territoryOrigin, territoryRange, 1.0f, { 0, 1, 0, 1 });
+	renderer->RenderSphere(rc, targetPosition, 1.0f, { 1, 1, 0, 1 });
+	renderer->RenderCylinder(rc, position, searchRange, 1.0f, { 1, 0, 0, 1 });
 }
 
 // ----------------------------------------------------------------------------
 // AI & 戦略ロジック
 // ----------------------------------------------------------------------------
-
-// 戦略的なターゲット座標の計算
 bool EnemySlime::GetStrategicTarget(DirectX::XMFLOAT3& outPos)
 {
 	Core* core = Core::Instance();
 	if (!core || core->GetHP() <= 0.0f) return false;
 
-	// ---------------------------------------------------------
-	// ★追加: コア防衛優先ロジック
-	// コアの一定範囲内にプレイヤーがいたら、即座にその地点を目標にする
-	// ---------------------------------------------------------
-	const float kDefenseRange = 25.0f; // 防衛反応する距離 (コアからの距離)
+	const float kDefenseRange = 25.0f;
 	float closestDistSq = FLT_MAX;
 	DirectX::XMFLOAT3 defenseTarget = { 0,0,0 };
 	bool isEmergency = false;
@@ -163,11 +136,7 @@ bool EnemySlime::GetStrategicTarget(DirectX::XMFLOAT3& outPos)
 	for (const auto* p : players)
 	{
 		if (!p || p->GetHealth() <= 0) continue;
-
-		// プレイヤーとコアの距離をチェック
 		float d2 = MathUtils::DistSqXZ(p->GetPosition(), core->position);
-
-		// 危険範囲内ならターゲット候補にする
 		if (d2 < kDefenseRange * kDefenseRange)
 		{
 			if (d2 < closestDistSq)
@@ -183,23 +152,17 @@ bool EnemySlime::GetStrategicTarget(DirectX::XMFLOAT3& outPos)
 
 	if (isEmergency)
 	{
-		// 緊急事態：一番近い侵入者の位置を目標とする
 		strategicPos = defenseTarget;
 	}
 	else
 	{
-		// ---------------------------------------------------------
-		// ▼ 既存ロジック: コアが安全なら、密度の高い激戦区へ向かう
-		// ---------------------------------------------------------
-
-		// 1. コア周辺の8方向エリアで、プレイヤー・味方の数をカウント
 		int sectorCounts[8] = { 0 };
 		DirectX::XMFLOAT3 corePos = core->position;
 
 		auto CountUnit = [&](const DirectX::XMFLOAT3& pos) {
 			float dx = pos.x - corePos.x;
 			float dz = pos.z - corePos.z;
-			float angle = atan2f(dx, dz); // (x, z) 0時方向=0, 時計回り
+			float angle = atan2f(dx, dz);
 			if (angle < 0.0f) angle += DirectX::XM_2PI;
 			int sector = static_cast<int>(angle / (DirectX::XM_PI / 4.0f));
 			sector = std::clamp(sector, 0, 7);
@@ -210,7 +173,6 @@ bool EnemySlime::GetStrategicTarget(DirectX::XMFLOAT3& outPos)
 		const auto& allies = AllySlime::GetAllAllies();
 		for (const auto* a : allies) { if (a && a->GetHealth() > 0) CountUnit(a->GetPosition()); }
 
-		// 最も敵が多いセクターを探す
 		int maxSector = 0;
 		int maxCount = -1;
 		for (int i = 0; i < 8; ++i)
@@ -221,20 +183,16 @@ bool EnemySlime::GetStrategicTarget(DirectX::XMFLOAT3& outPos)
 			}
 		}
 
-		if (maxCount <= 0) return false; // 敵がいなければ戦略移動不要
+		if (maxCount <= 0) return false;
 
-		// 2. ターゲット地点（激戦区の中心）を決定
 		float targetAngle = maxSector * (DirectX::XM_PI / 4.0f) + (DirectX::XM_PI / 8.0f);
-		float distFromCore = 15.0f; // コアから少し離れた位置で迎撃
+		float distFromCore = 15.0f;
 
 		strategicPos.x = corePos.x + sinf(targetAngle) * distFromCore;
 		strategicPos.y = position.y;
 		strategicPos.z = corePos.z + cosf(targetAngle) * distFromCore;
 	}
 
-	// ---------------------------------------------------------
-	// 3. 自分はこの地点に近い「選抜メンバー（上位N体）」か？
-	// ---------------------------------------------------------
 	struct Candidate { Enemy* enemy; float distSq; };
 	std::vector<Candidate> candidates;
 
@@ -249,13 +207,10 @@ bool EnemySlime::GetStrategicTarget(DirectX::XMFLOAT3& outPos)
 		candidates.push_back({ enemy.get(), dx * dx + dz * dz });
 	}
 
-	// 距離順にソート
 	std::sort(candidates.begin(), candidates.end(),
 		[](const Candidate& a, const Candidate& b) { return a.distSq < b.distSq; });
 
-	// 上位に入っているかチェック
 	bool isElite = false;
-	// ★変更: 緊急時(防衛)なら反応する数を増やす (4体 -> 8体など)
 	int limit = isEmergency ? 8 : 4;
 
 	for (int i = 0; i < (int)candidates.size(); ++i)
@@ -269,7 +224,6 @@ bool EnemySlime::GetStrategicTarget(DirectX::XMFLOAT3& outPos)
 
 	if (isElite)
 	{
-		// IDに基づいた「固定的」な分散座標を生成
 		float angleOffset = (float)(GetID() % 8) * (DirectX::XM_2PI / 8.0f);
 		float radiusOffset = 3.0f + (float)(GetID() % 3);
 
@@ -283,7 +237,6 @@ bool EnemySlime::GetStrategicTarget(DirectX::XMFLOAT3& outPos)
 	return false;
 }
 
-// ターゲット索敵
 Character* EnemySlime::SearchTarget()
 {
 	float rangeSq = searchRange * searchRange;
@@ -291,7 +244,6 @@ Character* EnemySlime::SearchTarget()
 	float closestDistSq = FLT_MAX;
 	bool foundAlly = false;
 
-	// 1. AllySlime (味方) を優先検索
 	const auto& allies = AllySlime::GetAllAllies();
 	for (Character* ally : allies)
 	{
@@ -308,7 +260,6 @@ Character* EnemySlime::SearchTarget()
 	}
 	if (foundAlly) return bestTarget;
 
-	// 2. Player を検索
 	const auto& players = Player::GetAllPlayers();
 	for (const auto* player : players)
 	{
@@ -323,12 +274,11 @@ Character* EnemySlime::SearchTarget()
 	return bestTarget;
 }
 
-// 分離行動（重なり回避）
 void EnemySlime::ApplySeparationForce(float elapsedTime)
 {
 	DirectX::XMFLOAT3 separation = { 0, 0, 0 };
 	int neighborCount = 0;
-	float separationRadius = 1.5f; // 反発しあう距離
+	float separationRadius = 1.5f;
 
 	EnemyManager& em = EnemyManager::Instance();
 	for (int i = 0; i < em.GetEnemyCount(); ++i)
@@ -343,7 +293,7 @@ void EnemySlime::ApplySeparationForce(float elapsedTime)
 		if (distSq < separationRadius * separationRadius && distSq > 0.0001f)
 		{
 			float dist = sqrtf(distSq);
-			float strength = (separationRadius - dist) / dist; // 近いほど強い
+			float strength = (separationRadius - dist) / dist;
 			separation.x += dx * strength;
 			separation.z += dz * strength;
 			neighborCount++;
@@ -360,41 +310,33 @@ void EnemySlime::ApplySeparationForce(float elapsedTime)
 	}
 }
 
-// ----------------------------------------------------------------------------
-// ステートマシン: 徘徊
-// ----------------------------------------------------------------------------
 void EnemySlime::SetWanderState()
 {
 	state = State::Wander;
 	DirectX::XMFLOAT3 strategicPos;
 
-	// 戦略目標があるか確認
 	if (GetStrategicTarget(strategicPos))
 	{
 		targetPosition = strategicPos;
 	}
 	else
 	{
-		// なければランダム移動
 		float theta = MathUtils::RandomRenge(-DirectX::XM_PI, DirectX::XM_PI);
 		float range = MathUtils::RandomRenge(0.0f, territoryRange);
 		targetPosition.x = territoryOrigin.x + sinf(theta) * range;
 		targetPosition.y = territoryOrigin.y;
 		targetPosition.z = territoryOrigin.z + cosf(theta) * range;
 	}
-	animator.Play("NIC_Fwd_Run", true);
 }
 
 void EnemySlime::UpdateWanderState(float elapsedTime)
 {
-	// 到着判定
 	if (MathUtils::DistSqXZ(targetPosition, position) < 1.5f * 1.5f)
 	{
 		SetIdleState();
 		return;
 	}
 
-	// 移動不能なら即座に待機へ（次のフレームで再索敵/再行動）
 	if (!MoveToTarget(elapsedTime, 1.0f, 1.0f))
 	{
 		SetIdleState();
@@ -414,7 +356,6 @@ void EnemySlime::UpdateWanderState(float elapsedTime)
 		DirectX::XMFLOAT3 newStrategicPos;
 		if (GetStrategicTarget(newStrategicPos))
 		{
-			// 固定オフセット化したので、ここでは単純に「場所が変わったか」だけ見ればOK
 			float distSq = MathUtils::DistSqXZ(targetPosition, newStrategicPos);
 			if (distSq > 25.0f)
 			{
@@ -424,19 +365,14 @@ void EnemySlime::UpdateWanderState(float elapsedTime)
 	}
 }
 
-// ----------------------------------------------------------------------------
-// ステートマシン: 待機
-// ----------------------------------------------------------------------------
 void EnemySlime::SetIdleState()
 {
 	state = State::Idle;
 	stateTimer = MathUtils::RandomRenge(3.0f, 5.0f);
-	animator.Play("NIC_Idle", true);
 }
 
 void EnemySlime::UpdateIdleState(float elapsedTime)
 {
-	// 時間経過で再び徘徊へ
 	stateTimer -= elapsedTime;
 	if (stateTimer < 0.0f)
 	{
@@ -444,7 +380,6 @@ void EnemySlime::UpdateIdleState(float elapsedTime)
 		return;
 	}
 
-	// 待機中も索敵
 	if (targetUpdateTimer <= 0.0f)
 	{
 		targetUpdateTimer = 0.5f;
@@ -455,21 +390,18 @@ void EnemySlime::UpdateIdleState(float elapsedTime)
 	}
 }
 
-// ----------------------------------------------------------------------------
-// ステートマシン: 攻撃
-// ----------------------------------------------------------------------------
 void EnemySlime::SetAttackState(Character* target)
 {
 	state = State::Attack;
 	stateTimer = 0.0f;
 	targetCharacter = target;
 	isAttackFired = false;
-	animator.Play("NIC_Attack", true);
+	motionTimer = 0.0f;
 }
 
 void EnemySlime::UpdateAttackState(float elapsedTime)
 {
-	// ターゲットの再評価 (0.5秒ごと)
+	// ターゲット再評価
 	if (targetUpdateTimer <= 0.0f)
 	{
 		targetUpdateTimer = 0.5f;
@@ -477,7 +409,6 @@ void EnemySlime::UpdateAttackState(float elapsedTime)
 		if (newTarget) targetCharacter = newTarget;
 	}
 
-	// ターゲット無効チェック
 	if (!targetCharacter || targetCharacter->GetHealth() <= 0)
 	{
 		SetIdleState();
@@ -485,13 +416,40 @@ void EnemySlime::UpdateAttackState(float elapsedTime)
 	}
 
 	targetPosition = targetCharacter->GetPosition();
-	MoveToTarget(elapsedTime, 0.0f, 1.0f); // 旋回のみ
 
-	// アニメーションに合わせて発射
-	float currentAnimTime = animator.GetCurrentSeconds();
-	float fireTimingSeconds = 12.0f / 60.0f;
+	// 敵へのベクトル
+	float dx = targetPosition.x - position.x;
+	float dz = targetPosition.z - position.z;
+	float distSq = dx * dx + dz * dz;
 
-	if (!isAttackFired && currentAnimTime >= fireTimingSeconds)
+	// ★修正: 攻撃中は素早くターゲットを向く
+	if (distSq > 0.0001f)
+	{
+		Turn(elapsedTime, dx, dz, turnSpeed * 3.0f);
+	}
+
+	// ★修正: 正面判定
+	float fx = sinf(angle.y);
+	float fz = cosf(angle.y);
+	float dist = sqrtf(distSq);
+	float tx = (dist > 0.0f) ? dx / dist : 0.0f;
+	float tz = (dist > 0.0f) ? dz / dist : 1.0f;
+	float dot = fx * tx + fz * tz;
+
+	// 発射タイミング (例: 0.2秒時点)
+	const float attackCycleDuration = 1.0f;
+	const float fireTiming = 0.2f;
+
+	// まだ向いていない場合 (角度差18度以上)、発射タイミング前なら待機
+	if (dot < 0.95f && motionTimer < fireTiming)
+	{
+		// returnしてタイマーを進めない
+		return;
+	}
+
+	motionTimer += elapsedTime;
+
+	if (!isAttackFired && motionTimer >= fireTiming)
 	{
 		DirectX::XMFLOAT3 dir = { sinf(angle.y), 0.0f, cosf(angle.y) };
 		DirectX::XMFLOAT3 pos = { position.x, position.y + height * 0.5f, position.z };
@@ -503,25 +461,20 @@ void EnemySlime::UpdateAttackState(float elapsedTime)
 		isAttackFired = true;
 	}
 
-	// アニメーションループ判定
-	if (currentAnimTime < fireTimingSeconds && isAttackFired)
+	if (motionTimer >= attackCycleDuration)
 	{
+		motionTimer -= attackCycleDuration;
 		isAttackFired = false;
 	}
 
-	// 距離チェック
-	if (MathUtils::DistSqXZ(targetCharacter->GetPosition(), position) > searchRange * searchRange)
+	if (distSq > searchRange * searchRange)
 	{
 		SetIdleState();
 		targetCharacter = nullptr;
 	}
 }
 
-// ----------------------------------------------------------------------------
-// その他
-// ----------------------------------------------------------------------------
-
-// A*を使った移動処理
+// MoveToTarget等は省略 (既存のまま)
 bool EnemySlime::MoveToTarget(float elapsedTime, float moveSpeedRate, float turnSpeedRate)
 {
 	float vx = 0.0f, vz = 0.0f;
@@ -530,19 +483,15 @@ bool EnemySlime::MoveToTarget(float elapsedTime, float moveSpeedRate, float turn
 	if (gridMap && moveSpeedRate > 0.0f)
 	{
 		pathRecalcTimer -= elapsedTime;
-
-		// 目的地が動いたかチェック
 		float distToPrev = MathUtils::DistSqXZ(targetPosition, prevTargetPos);
-		bool targetMoved = (distToPrev > 1.0f); // 1.0m以上ずれたら再計算
+		bool targetMoved = (distToPrev > 1.0f);
 
-		// 経路がない、または目的地が変わった場合のみ計算する
 		if (currentPath.empty() || targetMoved)
 		{
-			// 少し待機時間を持たせる（連続呼び出し防止）
 			if (pathRecalcTimer <= 0.0f || targetMoved)
 			{
-				pathRecalcTimer = 0.5f; // 次回のチェックまでインターバル
-				prevTargetPos = targetPosition; // 記憶更新
+				pathRecalcTimer = 0.5f;
+				prevTargetPos = targetPosition;
 
 				auto start = gridMap->WorldToCell(position.x, position.z);
 				auto goal = gridMap->WorldToCell(targetPosition.x, targetPosition.z);
@@ -553,25 +502,17 @@ bool EnemySlime::MoveToTarget(float elapsedTime, float moveSpeedRate, float turn
 					*gridMap,
 					start.first, start.second
 				);
-
 				currentPath = rawPath;
 
-				// 経路再計算の結果、経路が見つからなかった場合の即時判定
 				if (currentPath.empty())
 				{
-					// ゴールに十分近いか？(2.0m^2 = 4.0)
 					float d2 = MathUtils::DistSqXZ(position, targetPosition);
 					if (d2 > 4.0f)
 					{
-						// さらに視線も通っていないなら到達不能とみなす
-						if (!HasLineOfSight(gridMap, position, targetPosition))
-						{
-							return false; // × 到達不能
-						}
+						if (!HasLineOfSight(gridMap, position, targetPosition)) return false;
 					}
 				}
 
-				// パスインデックスの初期化ロジック
 				pathIndex = 0;
 				if (!currentPath.empty())
 				{
@@ -592,7 +533,6 @@ bool EnemySlime::MoveToTarget(float elapsedTime, float moveSpeedRate, float turn
 					}
 					pathIndex = closestIndex;
 
-					// 進行方向チェック（後ろのノードを選ばないようにする）
 					if (pathIndex + 1 < currentPath.size())
 					{
 						DirectX::XMFLOAT3 nodePos = gridMap->GetWorldPosition(currentPath[pathIndex].first, currentPath[pathIndex].second);
@@ -602,10 +542,7 @@ bool EnemySlime::MoveToTarget(float elapsedTime, float moveSpeedRate, float turn
 						float myVecX = position.x - nodePos.x;
 						float myVecZ = position.z - nodePos.z;
 						float dot = pathVecX * myVecX + pathVecZ * myVecZ;
-						if (dot > 0.0f)
-						{
-							pathIndex++;
-						}
+						if (dot > 0.0f) pathIndex++;
 					}
 				}
 			}
@@ -629,32 +566,23 @@ bool EnemySlime::MoveToTarget(float elapsedTime, float moveSpeedRate, float turn
 		}
 		else
 		{
-			// 経路なし or 到着済みなら直進トライ
 			float dx = targetPosition.x - position.x;
 			float dz = targetPosition.z - position.z;
 			float distSq = dx * dx + dz * dz;
 
-			// まだ到着していない（距離がある）場合
 			if (distSq > 0.5f * 0.5f)
 			{
-				// ★修正: 直進する前に「壁がないか」チェックする
 				if (HasLineOfSight(gridMap, position, targetPosition))
 				{
-					// 視線が通るなら直進トライ
 					float dist = sqrtf(distSq);
 					if (dist > 0.001f) { vx = dx / dist; vz = dz / dist; shouldMove = true; }
 				}
-				else
-				{
-					// 距離があるのに経路がなく、視線も通らない ＝ 壁に阻まれている
-					return false; // × 到達不能
-				}
+				else return false;
 			}
 		}
 	}
 	else if (moveSpeedRate > 0.0f)
 	{
-		// マップなしの場合は直進
 		float dx = targetPosition.x - position.x;
 		float dz = targetPosition.z - position.z;
 		float dist = sqrtf(dx * dx + dz * dz);
@@ -667,7 +595,7 @@ bool EnemySlime::MoveToTarget(float elapsedTime, float moveSpeedRate, float turn
 		Turn(elapsedTime, vx, vz, turnSpeed * turnSpeedRate);
 	}
 
-	return true; // 〇 移動成功 or 到着済み
+	return true;
 }
 
 void EnemySlime::SetTerritory(const DirectX::XMFLOAT3& origin, float range)
@@ -677,7 +605,6 @@ void EnemySlime::SetTerritory(const DirectX::XMFLOAT3& origin, float range)
 
 	if (state == State::Wander)
 	{
-		// 戦略的ターゲット優先、なければランダム
 		DirectX::XMFLOAT3 strategicPos;
 		if (GetStrategicTarget(strategicPos))
 		{
@@ -696,14 +623,12 @@ void EnemySlime::SetTerritory(const DirectX::XMFLOAT3& origin, float range)
 
 void EnemySlime::OnDead()
 {
-	animator.Play("NIC_Death", false);
 	CollisionManager::Instance().Remove(this);
 	Destroy();
 }
 
 void EnemySlime::OnCollision(GameObject* object)
 {
-	// MTD補正（押し出し）
 	if (fabsf(mtd.x) > 1e-6f || fabsf(mtd.y) > 1e-6f || fabsf(mtd.z) > 1e-6f)
 	{
 		position.x += mtd.x; position.y += mtd.y; position.z += mtd.z;

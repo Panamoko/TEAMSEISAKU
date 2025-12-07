@@ -71,24 +71,51 @@ void EnemySlimeTurret::UpdateAttackState(float elapsedTime)
     // --- 攻撃ロジック ---
     targetPosition = targetCharacter->GetPosition();
 
-    // ★修正1: 敵の方向を向く処理
-    // MoveToTargetを使わず、直接ターゲットへの方向を計算してTurnを呼ぶ
+    // 敵へのベクトル
     float dx = targetPosition.x - position.x;
     float dz = targetPosition.z - position.z;
-    // 距離の2乗
     float distSq = dx * dx + dz * dz;
 
+    // A. 旋回処理
     if (distSq > 0.0001f)
     {
-        // 旋回のみ実行 (turnSpeedは親クラスで定義されているものを使用)
-        // 必要に応じて倍率(2.0fなど)を調整して旋回速度を変えてください
-        Turn(elapsedTime, dx, dz, turnSpeed * 2.0f);
+        // 旋回速度を上げる (2.0f -> 5.0f)
+        // これにより素早くターゲットの方を向くようになります
+        Turn(elapsedTime, dx, dz, turnSpeed * 5.0f);
     }
 
-    float currentAnimTime = animator.GetCurrentSeconds();
-    float fireTimingSeconds = 12.0f / 30.0f;
+    // B. 角度チェック (しっかり向いているか？)
+    // 現在の正面ベクトル (Character::Turnの仕様に合わせる)
+    float fx = sinf(angle.y);
+    float fz = cosf(angle.y);
 
-    if (!isAttackFired && currentAnimTime >= fireTimingSeconds)
+    // ターゲットへの正規化ベクトル
+    float dist = sqrtf(distSq);
+    float tx = (dist > 0.0f) ? dx / dist : 0.0f;
+    float tz = (dist > 0.0f) ? dz / dist : 1.0f;
+
+    // 内積計算 (1.0 = 正面, 0.0 = 真横, -1.0 = 真後ろ)
+    float dot = fx * tx + fz * tz;
+
+    // 閾値判定 (0.95 ≒ 角度差18度以内 なら発射許可)
+    bool isFacing = (dot > 0.95f);
+
+    // 発射タイミング (0.4秒時点)
+    const float fireTiming = 0.4f;
+
+    // まだ向いていない場合、発射タイミング前ならタイマーを進めない
+    // これにより「振り向くまで撃たない」挙動になります
+    if (!isFacing && motionTimer < fireTiming)
+    {
+        return;
+    }
+
+    // タイマー進行
+    motionTimer += elapsedTime;
+
+    const float fireInterval = 1.0f; // 発射間隔
+
+    if (!isAttackFired && motionTimer >= fireTiming)
     {
         // 発射位置の計算
         float forwardOffset = 1.5f;
@@ -100,13 +127,9 @@ void EnemySlimeTurret::UpdateAttackState(float elapsedTime)
 
         // 初期発射ベクトル（向いている方向）
         DirectX::XMFLOAT3 dir = { sinf(angle.y), 0.0f, cosf(angle.y) };
-        // 少し上向きに撃ち出すと放物線っぽく見えて良いかも（任意）
-        // dir.y = 0.2f; 
-        // Normalize(dir);
 
-        // ★変更: ProjectileTurret を生成
+        // ProjectileTurret を生成
         ProjectileTurret* projectile = new ProjectileTurret(&projectileManager);
-        // projectile->type = Type::EnemyAttack; // コンストラクタで設定済みなら不要
 
         // Launchにターゲットを渡す
         projectile->Launch(dir, startPos, targetCharacter);
@@ -114,8 +137,10 @@ void EnemySlimeTurret::UpdateAttackState(float elapsedTime)
         isAttackFired = true;
     }
 
-    if (currentAnimTime < fireTimingSeconds && isAttackFired)
+    // 次のサイクルの準備
+    if (motionTimer >= fireInterval)
     {
+        motionTimer -= fireInterval;
         isAttackFired = false;
     }
 

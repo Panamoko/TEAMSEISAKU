@@ -61,7 +61,6 @@ protected:
 	void OnDead() override;
 
 	void InputMove(float elapsedTime);
-	void InputJump();
 	DirectX::XMFLOAT3 GetMoveVec() const;
 
 	bool UpdateMoveToCore(float elapsedTime);

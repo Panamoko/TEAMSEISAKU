@@ -385,7 +385,7 @@ void SceneGame::Render()
 	Camera& camera = Camera::Instance();
 	ShapeRenderer* shapeRenderer = graphics.GetShapeRenderer();
 
-	game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), modelRenderer);
+	//game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), modelRenderer);
 
 	RenderPiP(dc);
 
@@ -395,7 +395,7 @@ void SceneGame::Render()
 	rc.renderState = graphics.GetRenderState();
 	rc.view = camera.GetView();
 	rc.projection = camera.GetProjection();
-	game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), modelRenderer);
+	//game_editor.render(objects, sprites2d, ModelManager::Instance().GetModels(), modelRenderer);
 	modelRenderer->BeginFrame(rc);
 
 	// 3Dモデル描画
@@ -418,11 +418,11 @@ void SceneGame::Render()
 	}
 
 	// 3Dデバッグ描画
-	{
-		for (auto& character : players) character->RenderDebugPrimitive(rc, shapeRenderer);
-		EnemyManager::Instance().RenderDebugPrimitive(rc, shapeRenderer);
-		//GimmicManager::Instance().RenderDebugPrimitive(rc, shapeRenderer);
-	}
+	//{
+	//	for (auto& character : players) character->RenderDebugPrimitive(rc, shapeRenderer);
+	//	EnemyManager::Instance().RenderDebugPrimitive(rc, shapeRenderer);
+	//	//GimmicManager::Instance().RenderDebugPrimitive(rc, shapeRenderer);
+	//}
 
 	// 2Dスプライト描画
 	{
