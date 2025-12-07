@@ -387,6 +387,10 @@ void SceneGame::Render()
 			else if (auto* h = dynamic_cast<AllySlimeHeal*>(dragState.draggedAlly))  h->RenderUI(rc, dx, dy, iconSize);
 			else if (auto* m = dynamic_cast<AllySlimeMelee*>(dragState.draggedAlly)) m->RenderUI(rc, dx, dy, iconSize);
 		}
+		if (Core::Instance())
+		{
+			Core::Instance()->RenderUI(rc);
+		}
 		if (isSceneStarting && dissolve)
 		{
 			// タイマーが Max(開始時) -> 0(終了時) へ減っていく

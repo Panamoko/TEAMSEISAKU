@@ -5,6 +5,7 @@
 #include "GimmicManager.h"
 #include <DirectXMath.h>
 #include <Animator.h>
+#include "System/Sprite.h"
 
 class Core : public GimmicBase
 {
@@ -16,6 +17,8 @@ public:
 	void Render(const RenderContext& rc, ModelRenderer* renderer)override;
 	//デバッグ描画
 	void RenderDebugPrimitive(const RenderContext& rc, ShapeRenderer* renderer) override;
+	// UI描画用関数
+	void RenderUI(const RenderContext& rc);
 	void OnCollision(GameObject* object)override;
 	bool OnImGui()override;
 	float GetHP() { return hp; };
@@ -45,5 +48,11 @@ private:
 	float orbitSpeed = 45.0f;     // 旋回速度 (度/秒) 
 
 	float shakeMagnitude = 0.0f; // 現在の揺れの強さ
+
+	// 演出用スプライトとパラメータ
+	Sprite* overlaySprite = nullptr;   // 黒背景用
+	Sprite* clearLogoSprite = nullptr; // Game Clearロゴ用
+	float overlayAlpha = 0.0f;         // 背景の透明度
+	float logoPosY = -300.0f;          // ロゴのY座標（画面外からスタート）
 };
 
