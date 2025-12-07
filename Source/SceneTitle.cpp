@@ -210,7 +210,7 @@ void SceneTitle::Render()
 	if (groundModel) modelRenderer->Render(rc, groundTransform, groundModel, ShaderId::Lambert);
 	if (player) player->Render(rc, modelRenderer);
 	for (auto& s : slimes) s->Render(rc, modelRenderer);
-	game_editor.render(objects, sprites, ModelManager::Instance().GetModels(), modelRenderer);
+	//game_editor.render(objects, sprites, ModelManager::Instance().GetModels(), modelRenderer);
 
 	// 2. 2D UI•`‰æ
 	float sw = static_cast<float>(graphics.GetScreenWidth());
