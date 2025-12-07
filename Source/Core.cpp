@@ -9,6 +9,8 @@
 #include "Camera.h"          
 #include "CameraController.h"
 #include "SceneGame.h"
+#include "SpriteManager.h"     
+#include "System/Graphics.h"   
 
 Core* Core::sInstance = nullptr;
 
@@ -37,6 +39,10 @@ Core::Core()
 	scale = { 0.3f, 0.3f, 0.3f };
 	hp = 1500.0f;
     hitSE[1] = Audio::Instance().LoadAudioSource("Data/Sound/SE_CoreBreak.wav");
+
+    // 演出用画像の読み込み
+    overlaySprite = SpriteManager::Instance().Load("Data/Sprite/Baxkground.png");
+    clearLogoSprite = SpriteManager::Instance().Load("Data/Sprite/Game Clear.png");
 }
 
 Core::~Core()
@@ -88,7 +94,7 @@ void Core::Update(float elapsedTime)
         XMFLOAT3 finalFocus;
         XMStoreFloat3(&finalFocus, vCurrentFocus);
 
-        // ★追加: シェイク処理 (演出初期に激しく揺らす)
+        // シェイク処理 (演出初期に激しく揺らす)
         if (dyingTimer < 0.5f) // 最初の0.5秒だけ揺らす
         {
             shakeMagnitude = (1.0f - (dyingTimer / 0.5f)) * 1.5f; // 1.5mの幅で減衰振動
@@ -106,6 +112,45 @@ void Core::Update(float elapsedTime)
 
         camera.SetQuarterView(finalFocus, currentYaw, currentPitch, currentDist);
         animator.Update(elapsedTime);
+
+        // UIアニメーション計算
+
+        // A. 黒背景のフェードイン (最初の1秒で 透明 -> 0.7)
+        float fadeTime = 1.0f;
+        float alphaT = std::clamp(dyingTimer / fadeTime, 0.0f, 1.0f);
+        overlayAlpha = std::lerp(0.0f, 0.7f, alphaT); // 最大0.7(半透明)まで
+
+        // B. ロゴの落下 (0.5秒待ってから、1秒かけて落下)
+        float dropDelay = 0.5f;
+        float dropDuration = 1.0f;
+        float screenH = Graphics::Instance().GetScreenHeight();
+        float targetY = (screenH / 2.0f) - 150.0f; // 画面中央付近（画像の高さに合わせて調整）
+
+        if (dyingTimer > dropDelay)
+        {
+            float dropT = std::clamp((dyingTimer - dropDelay) / dropDuration, 0.0f, 1.0f);
+
+            // バウンスっぽいイージング (EaseOutBack風)
+            float c1 = 1.70158f;
+            float c3 = c1 + 1.0f;
+            float easeDrop = 1.0f + c3 * powf(dropT - 1.0f, 3.0f) + c1 * powf(dropT - 1.0f, 2.0f);
+
+            // ロゴのY座標を更新
+            logoPosY = std::lerp(-300.0f, targetY, easeDrop);
+
+            if (dropT >= 1.0f)
+            {
+                // 落下終了からの経過時間
+                float floatTime = dyingTimer - (dropDelay + dropDuration);
+
+                // sin波でオフセットを加算 (速度2.0, 振幅15.0px)
+                logoPosY += sinf(floatTime * 2.0f) * 15.0f;
+            }
+        }
+        else
+        {
+            logoPosY = -300.0f; // まだ時間になっていなければ画面外待機
+        }
 
         // 終了判定
         if (dyingTimer >= dyingDuration)
@@ -129,7 +174,11 @@ void Core::Update(float elapsedTime)
             isDying = true;
             dyingTimer = 0.0f; // 実時間タイマーリセット
 
-            // ★追加: 全体スローモーションを開始
+            // UI初期化
+            overlayAlpha = 0.0f;
+            logoPosY = -300.0f;
+
+            // 全体スローモーションを開始
             float slowScale = 0.1f; // (10%の速度)
             SceneGame::SetSlowMotion(slowScale, dyingDuration);
             currentSlowScale = slowScale; // スロー倍率を保存
@@ -137,7 +186,7 @@ void Core::Update(float elapsedTime)
             // カメラ操作を無効化
             CameraController::SetEnable(false);
 
-            // ★修正: 現在のカメラ状態を保存 (オービット用にYaw/Pitch/Distも)
+            // 現在のカメラ状態を保存 (オービット用にYaw/Pitch/Distも)
             Camera& camera = Camera::Instance();
             startFocus = camera.GetFocus();
 
@@ -172,6 +221,34 @@ void Core::Update(float elapsedTime)
     if (cylinder)
     {
         cylinder->center = position;
+    }
+}
+
+// 2D UI描画関数
+void Core::RenderUI(const RenderContext& rc)
+{
+    if (!isDying) return;
+
+    float sw = Graphics::Instance().GetScreenWidth();
+    float sh = Graphics::Instance().GetScreenHeight();
+
+    // 1. 黒背景の描画（画面いっぱいに引き伸ばす）
+    if (overlaySprite)
+    {
+        // Sprite::Render(rc, x, y, z, w, h, angle, r, g, b, a)
+        overlaySprite->Render(rc, 0, 0, 0, sw, sh, 0, 1.0f, 1.0f, 1.0f, overlayAlpha);
+    }
+
+    // 2. ゲームクリアロゴの描画
+    if (clearLogoSprite)
+    {
+        // 画像サイズ（適宜調整してください）
+        float logoW = 800.0f;
+        float logoH = 300.0f;
+        float logoX = (sw - logoW) * 0.5f; // 中央揃え
+
+        // ロゴは常に不透明(1.0)で表示（背景フェードとは別）
+        clearLogoSprite->Render(rc, logoX, logoPosY, 0, logoW, logoH, 0, 1.0f, 1.0f, 1.0f, 1.0f);
     }
 }
 
