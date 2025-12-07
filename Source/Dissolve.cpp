@@ -44,8 +44,8 @@ void Dissolve::Render(ID3D11DeviceContext* dc, float threshold)
     CbDissolve cb;
     cb.color = { 0.0f, 0.0f, 0.0f, 1.0f };     // 黒色
     cb.threshold = threshold;
-    cb.edgeWidth = 0.04f;                      // エッジの太さ
-    cb.edgeColor = { 0.0f, 0.5f, 1.0f, 1.0f }; // エッジ色（青系）
+    cb.edgeWidth = 0.0f;
+    cb.edgeColor = { 0.0f, 0.0f, 0.0f, 0.0f };
 
     dc->UpdateSubresource(constantBuffer.Get(), 0, nullptr, &cb, 0, 0);
 

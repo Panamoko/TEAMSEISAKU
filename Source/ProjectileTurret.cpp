@@ -38,7 +38,7 @@ void ProjectileTurret::Update(float elapsedTime)
     }
 
     // 最大旋回速度
-    float currentMaxTurnSpeed = 1.0f;
+    float currentMaxTurnSpeed = 1.5f;
 
     // 進行度 t (0.0 -> 1.0)
     float t = 1.0f - (lifeTimer / maxLife);
