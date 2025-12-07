@@ -1,4 +1,4 @@
-#include "AllySlimeMelee.h"
+ï»¿#include "AllySlimeMelee.h"
 #include "Player.h"
 #include "EnemyManager.h"
 #include "GimmicManager.h"
@@ -12,8 +12,8 @@
 #include "Barracks.h"
 #include "AllySlime.h"
 #include "SpriteManager.h"
-#include <cstdlib> // rand()—p
-// š’Ç‰Á: Collider‚Ì’è‹`‚ª•K—v‚È‚½‚ß”O‚Ì‚½‚ßŠm”FiŠù‘¶ƒR[ƒh‚Åg‚¦‚Ä‚¢‚é‚È‚ç•s—v‚¾‚ª–¾¦“I‚ª—Ç‚¢j
+#include <cstdlib> // rand()ç”¨
+#include "Cannon.h"
 #include "Collider.h"
 
 using namespace DirectX;
@@ -25,16 +25,16 @@ static inline XMFLOAT3 operator*(const XMFLOAT3& a, float s) { return { a.x * s,
 AllySlimeMelee::AllySlimeMelee(int formationIndex, Player* initLeader)
     : index(formationIndex), leader(initLeader)
 {
-    // šC³1: Load ‚Å‚Í‚È‚­ CreateUniqueInstance ‚ğg‚¢AŒÂ•Ê‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğì¬
+    // â˜…ä¿®æ­£1: Load ã§ã¯ãªã CreateUniqueInstance ã‚’ä½¿ã„ã€å€‹åˆ¥ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ä½œæˆ
     auto modelPtr = ModelManager::Instance().CreateUniqueInstance("Data/Model/Slime/Slime_R.mdl");
-    slimeModel = modelPtr.release(); // Š—LŒ ‚ğó‚¯æ‚é
+    slimeModel = modelPtr.release(); // æ‰€æœ‰æ¨©ã‚’å—ã‘å–ã‚‹
 
-    // šC³2: ƒAƒjƒ[ƒ^[‰Šú‰» (ƒXƒy[ƒX‚ ‚è‚Ì³‚µ‚¢–¼‘O)
+    // â˜…ä¿®æ­£2: ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚¿ãƒ¼åˆæœŸåŒ– (ã‚¹ãƒšãƒ¼ã‚¹ã‚ã‚Šã®æ­£ã—ã„åå‰)
     animator.SetModel(slimeModel);
     animator.Play("kyara_taiki (1)", true);
 
-    // šC³3: ŠJnŠÔ‚ğƒ‰ƒ“ƒ_ƒ€‚É‚¸‚ç‚µ‚ÄA“¯Šú‚µ‚È‚¢‚æ‚¤‚É‚·‚é
-    float randomOffset = static_cast<float>(rand() % 100) / 100.0f; // 0.0~1.0•b
+    // â˜…ä¿®æ­£3: é–‹å§‹æ™‚é–“ã‚’ãƒ©ãƒ³ãƒ€ãƒ ã«ãšã‚‰ã—ã¦ã€åŒæœŸã—ãªã„ã‚ˆã†ã«ã™ã‚‹
+    float randomOffset = static_cast<float>(rand() % 100) / 100.0f; // 0.0~1.0ç§’
     animator.Update(randomOffset);
 
     scale = { 0.002f, 0.002f, 0.002f };
@@ -69,7 +69,7 @@ AllySlimeMelee::~AllySlimeMelee()
         delete hpBarSprite;
         hpBarSprite = nullptr;
     }
-    // šC³4: “Æ©ƒCƒ“ƒXƒ^ƒ“ƒX‚È‚Ì‚Å©•ª‚Åíœ‚·‚é
+    // â˜…ä¿®æ­£4: ç‹¬è‡ªã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ãªã®ã§è‡ªåˆ†ã§å‰Šé™¤ã™ã‚‹
     if (slimeModel) {
         delete slimeModel;
         slimeModel = nullptr;
@@ -147,9 +147,16 @@ void AllySlimeMelee::SearchTarget()
             auto barracks = std::dynamic_pointer_cast<Barracks>(g);
             if (barracks && barracks->GetHP() > 0.0f) isTarget = true;
         }
+        // â˜…è¿½åŠ : Cannonã‚’ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã«ã™ã‚‹
+        else if (g->class_name == "Cannon")
+        {
+            auto cannon = std::dynamic_pointer_cast<Cannon>(g);
+            if (cannon && cannon->GetHP() > 0.0f) isTarget = true;
+        }
 
         if (isTarget)
         {
+            // ... (è·é›¢åˆ¤å®šã¯ãã®ã¾ã¾)
             float dx = g->position.x - center.x;
             float dz = g->position.z - center.z;
             float d2 = dx * dx + dz * dz;
@@ -166,74 +173,115 @@ void AllySlimeMelee::SearchTarget()
 
 void AllySlimeMelee::UpdateState(float elapsedTime)
 {
+    // ---------------------------------------------------------
+    // 1. ç¾åœ¨ã®ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã®ç”Ÿå­˜ç¢ºèª & æƒ…å ±æ›´æ–°
+    // ---------------------------------------------------------
     bool hasTarget = false;
     float targetRadius = 0.5f;
 
+    // æ•µã‚¿ãƒ¼ã‚²ãƒƒãƒˆã®ç¢ºèª
     if (auto e = targetEnemy.lock())
     {
-        if (!e->IsDestroyRequested())
+        // å‰Šé™¤ãƒªã‚¯ã‚¨ã‚¹ãƒˆãŒå‡ºã¦ã„ãªã„ã€ã‹ã¤ HPãŒæ®‹ã£ã¦ã„ã‚‹ãªã‚‰æœ‰åŠ¹
+        if (!e->IsDestroyRequested() && e->GetHealth() > 0)
         {
             targetPos = e->GetPosition();
             targetRadius = e->GetRadius();
             hasTarget = true;
         }
-        else targetEnemy.reset();
+        else
+        {
+            targetEnemy.reset();
+        }
     }
+    // ã‚®ãƒŸãƒƒã‚¯ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã®ç¢ºèªï¼ˆæ•µãŒã„ãªã„å ´åˆï¼‰
     else if (auto g = targetGimmic.lock())
     {
         if (g->IsActive())
         {
             targetPos = g->position;
-            targetRadius = 1.0f; // ƒfƒtƒHƒ‹ƒg
+            targetRadius = 1.0f; // ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ
 
-            // šC³: ƒRƒ‰ƒCƒ_[‚ğ‚Á‚Ä‚¢‚éê‡‚Í‚»‚Ì”¼Œa‚ğg—p‚·‚é
-            // ‚±‚ê‚É‚æ‚èCore(”¼Œa3.5)‚È‚Ç‚Ì‘å‚«‚ÈƒIƒuƒWƒFƒNƒg‚É‚ß‚è‚Ü‚¸‚É’â~‚Å‚«‚é
+            // ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼ã‹ã‚‰æ­£ç¢ºãªåŠå¾„ã‚’å–å¾—
             if (g->collider && g->collider->type == ColliderType::Cylinder)
             {
                 auto* cyl = static_cast<CylinderCollider*>(g->collider.get());
                 targetRadius = cyl->radius;
             }
-            // OBB‚È‚Ç‚Ìê‡‚Í•K—v‚É‰‚¶‚Ä’Ç‰Ái¡‚ÍCylinder‚ªåj
 
+            // å„ã‚®ãƒŸãƒƒã‚¯ã”ã¨ã®ç”Ÿå­˜åˆ¤å®š
+            bool isAlive = true;
             if (g->class_name == "Gimmic_BreakWall")
             {
-                if (dynamic_cast<Gimmic_BreakWall*>(g.get())->IsBroken()) hasTarget = false;
-                else hasTarget = true;
+                if (dynamic_cast<Gimmic_BreakWall*>(g.get())->IsBroken()) isAlive = false;
             }
             else if (g->class_name == "Core")
             {
-                if (dynamic_cast<Core*>(g.get())->GetHP() <= 0) hasTarget = false;
-                else hasTarget = true;
+                if (dynamic_cast<Core*>(g.get())->GetHP() <= 0) isAlive = false;
             }
             else if (g->class_name == "Yagura")
             {
-                if (dynamic_cast<Yagura*>(g.get())->GetHp() <= 0) hasTarget = false;
-                else hasTarget = true;
+                if (dynamic_cast<Yagura*>(g.get())->GetHp() <= 0) isAlive = false;
             }
             else if (g->class_name == "Barracks")
             {
-                if (dynamic_cast<Barracks*>(g.get())->GetHP() <= 0) hasTarget = false;
-                else hasTarget = true;
+                if (dynamic_cast<Barracks*>(g.get())->GetHP() <= 0) isAlive = false;
             }
-            else hasTarget = true;
+            else if (g->class_name == "Cannon")
+            {
+                if (dynamic_cast<Cannon*>(g.get())->GetHP() <= 0) isAlive = false;
+            }
 
-            if (!hasTarget) targetGimmic.reset();
+            if (isAlive) hasTarget = true;
+            else targetGimmic.reset();
         }
-        else targetGimmic.reset();
+        else
+        {
+            targetGimmic.reset();
+        }
     }
 
+    // ---------------------------------------------------------
+    // 2. å…±é€šãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿è¨ˆç®—
+    // ---------------------------------------------------------
+
+    // ç´¢æ•µã‚¿ã‚¤ãƒãƒ¼ã‚’æ¸›ã‚‰ã™
+    searchTimer -= elapsedTime;
+
+    // è¦ªï¼ˆã‚¢ãƒ³ã‚«ãƒ¼ï¼‰ã¨ã®è·é›¢ã‚’è¨ˆç®—
+    float distToAnchorX = anchor.x - position.x;
+    float distToAnchorZ = anchor.z - position.z;
+    float distToAnchorSq = distToAnchorX * distToAnchorX + distToAnchorZ * distToAnchorZ;
+
+    // å¼·åˆ¶å¸°é‚„ã™ã‚‹è·é›¢ï¼ˆä¾‹: 15mï¼‰
+    const float kMaxSeparation = 15.0f;
+    const float kMaxSeparationSq = kMaxSeparation * kMaxSeparation;
+
+    // å¸°é‚„ä¸­ã€å†ç´¢æ•µã‚’è¨±å¯ã™ã‚‹è·é›¢ï¼ˆä¾‹: 5mã¾ã§æˆ»ã£ãŸã‚‰OKï¼‰
+    const float kReEngageDistance = 5.0f;
+
+
+    // ---------------------------------------------------------
+    // 3. ã‚¹ãƒ†ãƒ¼ãƒˆãƒã‚·ãƒ³
+    // ---------------------------------------------------------
     switch (state)
     {
     case State::Follow:
+        // ã‚¿ãƒ¼ã‚²ãƒƒãƒˆãŒã„ã‚Œã°è¿½è·¡ã¸
         if (hasTarget) {
             state = State::Chase;
         }
         else {
-            SearchTarget();
+            // ã‚¿ã‚¤ãƒãƒ¼çµŒéã§ç´¢æ•µå®Ÿè¡Œ
+            if (searchTimer <= 0.0f) {
+                SearchTarget();
+                searchTimer = 0.5f; // 0.5ç§’é–“éš”
+            }
+
+            // ã‚¢ãƒ³ã‚«ãƒ¼ã¸ç§»å‹•
             float dx = anchor.x - position.x;
             float dz = anchor.z - position.z;
             float d = sqrtf(dx * dx + dz * dz);
-            // —h‚ê–h~: 0.1fˆÈ‰º‚È‚ç“®‚©‚È‚¢
             if (d > 0.1f)
             {
                 Move(elapsedTime, dx / d, dz / d, moveSpeed);
@@ -243,6 +291,15 @@ void AllySlimeMelee::UpdateState(float elapsedTime)
         break;
 
     case State::Chase:
+        // â˜…é‡è¦: è¦ªã‹ã‚‰é›¢ã‚Œã™ãã¦ã„ãŸã‚‰ã€ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã‚’æ¨ã¦ã¦å¼·åˆ¶å¸°é‚„
+        if (distToAnchorSq > kMaxSeparationSq)
+        {
+            targetEnemy.reset();
+            targetGimmic.reset();
+            state = State::Return;
+            break;
+        }
+
         if (!hasTarget) {
             state = State::Return;
         }
@@ -251,14 +308,15 @@ void AllySlimeMelee::UpdateState(float elapsedTime)
             float dz = targetPos.z - position.z;
             float d = sqrtf(dx * dx + dz * dz);
 
-            // šC³: targetRadius‚ğŠÜ‚ß‚½‹——£”»’è‚É‚È‚é‚½‚ßACore(3.5)‚È‚ç
-            // 1.5 + 3.5 + 0.6 = 5.6 ‚Ì‹——£‚Å’â~EUŒ‚ŠJn‚·‚é
+            // æ”»æ’ƒå°„ç¨‹å†…ï¼ˆç›¸æ‰‹ã®åŠå¾„ï¼‹è‡ªåˆ†ã®åŠå¾„ï¼‹å°„ç¨‹ï¼‰ã«å…¥ã£ãŸã‹ï¼Ÿ
             float range = attackRange + targetRadius + radius;
+
             if (d <= range) {
                 state = State::Attack;
                 attackTimer = 0.0f;
             }
             else {
+                // ã¾ã é ã„ã®ã§è¿½ã„ã‹ã‘ã‚‹
                 if (d > 0.1f) {
                     Move(elapsedTime, dx / d, dz / d, moveSpeed * 1.2f);
                     Turn(elapsedTime, dx / d, dz / d, turnSpeed);
@@ -268,19 +326,31 @@ void AllySlimeMelee::UpdateState(float elapsedTime)
         break;
 
     case State::Attack:
+        // æ”»æ’ƒä¸­ã§ã‚‚é›¢ã‚Œã™ããŸã‚‰ä¸­æ–­ã—ã¦æˆ»ã‚‹
+        if (distToAnchorSq > kMaxSeparationSq)
+        {
+            state = State::Return;
+            break;
+        }
+
         if (!hasTarget) {
             state = State::Return;
         }
         else {
+            // æ•µã®æ–¹ã‚’å‘ã
             float dx = targetPos.x - position.x;
             float dz = targetPos.z - position.z;
             Turn(elapsedTime, dx, dz, turnSpeed);
 
             attackTimer += elapsedTime;
+
+            // æ”»æ’ƒåˆ¤å®šç™ºç”Ÿã‚¿ã‚¤ãƒŸãƒ³ã‚° (0.2ç§’ã€œ0.3ç§’ã®é–“)
             if (attackTimer > 0.2f && attackTimer < 0.3f)
             {
                 CheckAttackCollision();
             }
+
+            // ã‚¯ãƒ¼ãƒ«ãƒ€ã‚¦ãƒ³å®Œäº†ã§å†ã³è¿½è·¡/æ”»æ’ƒåˆ¤å®šã¸
             if (attackTimer > damageCooldown)
             {
                 state = State::Chase;
@@ -293,12 +363,22 @@ void AllySlimeMelee::UpdateState(float elapsedTime)
         float dz = anchor.z - position.z;
         float d = sqrtf(dx * dx + dz * dz);
 
-        SearchTarget();
-        if (!targetEnemy.expired() || !targetGimmic.expired()) {
-            state = State::Chase;
-            break;
+        // ã‚ã‚‹ç¨‹åº¦è¿‘ãã¾ã§æˆ»ã£ãŸã‚‰ã€å†ç´¢æ•µã‚’è¨±å¯ã™ã‚‹
+        if (d < kReEngageDistance)
+        {
+            if (searchTimer <= 0.0f) {
+                SearchTarget();
+                searchTimer = 0.5f;
+            }
+
+            // ã‚¿ãƒ¼ã‚²ãƒƒãƒˆãŒè¦‹ã¤ã‹ã£ãŸã‚‰ï¼ˆSearchTargetå†…ã§ã‚»ãƒƒãƒˆã•ã‚Œã‚‹ï¼‰è¿½è·¡ã¸
+            if (!targetEnemy.expired() || !targetGimmic.expired()) {
+                state = State::Chase;
+                break;
+            }
         }
 
+        // ã‚¢ãƒ³ã‚«ãƒ¼ã¸æˆ»ã‚‹ç§»å‹•
         if (d < 0.5f) {
             state = State::Follow;
         }
@@ -339,8 +419,8 @@ void AllySlimeMelee::Update(float elapsedTime)
 {
     animator.Update(elapsedTime);
 
-    // ƒAƒjƒ[ƒVƒ‡ƒ“§Œä
-    // isAction (UŒ‚’†ƒtƒ‰ƒO) ‚ÌŠÇ—
+    // ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³åˆ¶å¾¡
+    // isAction (æ”»æ’ƒä¸­ãƒ•ãƒ©ã‚°) ã®ç®¡ç†
     if (isAction)
     {
         if (!animator.IsPlaying()) isAction = false;
@@ -348,7 +428,7 @@ void AllySlimeMelee::Update(float elapsedTime)
 
     if (state == State::Attack)
     {
-        // UŒ‚ƒ‚[ƒVƒ‡ƒ“ (‚Ü‚¾Ä¶‚µ‚Ä‚È‚¯‚ê‚Î)
+        // æ”»æ’ƒãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ (ã¾ã å†ç”Ÿã—ã¦ãªã‘ã‚Œã°)
         if (!isAction)
         {
             isAction = true;
@@ -357,7 +437,7 @@ void AllySlimeMelee::Update(float elapsedTime)
     }
     else
     {
-        // ˆÚ“®E‘Ò‹@
+        // ç§»å‹•ãƒ»å¾…æ©Ÿ
         if (!isAction)
         {
             float speedSq = velocity.x * velocity.x + velocity.z * velocity.z;

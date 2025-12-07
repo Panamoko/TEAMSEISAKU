@@ -8,8 +8,8 @@ class ProjectileStraite : public Projectile
 {
 public:
 	//ProjectileStraite();
-	ProjectileStraite(ProjectileManager* manager, const char* modelPath = "Data/Model/Sword/Sword.mdl",
-		Type type_ = Type::PlayerAttack, float scale_ = 3.0f);
+	ProjectileStraite(ProjectileManager* manager, const char* modelPath = "Data/Model/Slime/Bullet.mdl",
+		Type type_ = Type::PlayerAttack, float scale_ = 0.15f);
 	~ProjectileStraite() override;
 
 	// çXêVèàóù

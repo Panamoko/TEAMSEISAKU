@@ -94,6 +94,12 @@ void AllySlimeHeal::UpdateHealing(float elapsedTime)
         return;
     }
 
+    searchTimer -= elapsedTime;
+    if (searchTimer > 0.0f) {
+        return;
+    }
+    searchTimer = 0.5f; // Ÿ‰ñ‚ÌŒŸõ‚Í0.5•bŒã
+
     const float rangeSq = autoHealRange * autoHealRange;
     bool healedAny = false;
 

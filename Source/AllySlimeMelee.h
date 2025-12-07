@@ -61,6 +61,9 @@ private:
     float attackRange = 1.5f;    // 攻撃届く距離
     float damageCooldown = 1.0f; // 攻撃間隔
     float attackTimer = 0.0f;    // タイマー
+    int   attackDamage = 0;      // ダメージ量
+    float searchTimer = 0.0f;
+
 
     // ターゲット情報
     // 敵かギミックのどちらかを保持する

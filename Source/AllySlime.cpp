@@ -7,12 +7,14 @@
 #include "GimmicManager.h"
 #include "Gimmic_BreakWall.h"
 #include "Core.h"
+#include "EffectManager.h"
 #include <cmath>
 #include <cfloat>
 #include "SpriteManager.h"
 #include "Collider.h"
 #include "CollisionManager.h"
 #include <cstdlib>
+#include "Cannon.h"
 
 using namespace DirectX;
 
@@ -156,20 +158,36 @@ void AllySlime::AutoAttackUpdate(float elapsedTime)
         float targetHeight = 0.0f;
         bool isTarget = false;
 
+        // ★追加: Cannonをターゲットとして認識する
+        if (gimmic->class_name == "Cannon")
+        {
+            auto cannon = std::dynamic_pointer_cast<Cannon>(gimmic);
+            // HPが残っている場合のみターゲットにする
+            if (cannon && cannon->GetHP() > 0.0f) isTarget = true;
+        }
+
+        // コライダー形状に応じた高さ設定
         if (gimmic->collider->type == ColliderType::OBB)
         {
             OBB* box = static_cast<OBB*>(gimmic->collider.get());
             targetHeight = box->half.y * 2.0f;
-            isTarget = true;
+            // 壁などは既に上で判定済みだが、OBBを持つ他のギミック用
+            if (gimmic->class_name == "Gimmic_BreakWall" && !isTarget) {
+                // 壁は上で判定しているのでここではフラグを立て直さない
+                // (BreakWallの判定ロジックに合わせて調整)
+                auto wall = std::dynamic_pointer_cast<Gimmic_BreakWall>(gimmic);
+                if (wall && !wall->IsBroken()) isTarget = true;
+            }
         }
         else if (gimmic->collider->type == ColliderType::Cylinder)
         {
             CylinderCollider* cyl = static_cast<CylinderCollider*>(gimmic->collider.get());
             targetHeight = cyl->height;
-            isTarget = true;
+            // Cannonなどは上で isTarget=true になっていればOK
         }
 
         if (isTarget) {
+            // ... (距離判定とベストターゲット更新のロジックはそのまま)
             const XMFLOAT3& gp = gimmic->position;
             float dx = gp.x - position.x;
             float dy = (gp.y + targetHeight * 0.5f) - (position.y + height * 0.5f);
@@ -228,6 +246,12 @@ void AllySlime::CollisionProjectilesVsEnemies()
                 enemy->GetPosition(), enemy->GetRadius(), enemy->GetHeight(), outPos);
 
             if (!hit) continue;
+
+            // エフェクト設定
+            Effekseer::Handle handle = EffectManager::Instance().Play("SlimeAttack", outPos);
+            EffectManager::Instance().SetScale(handle, 0.05f, 0.05f, 0.05f);
+            EffectManager::Instance().Skip(handle, 151.0f);
+
             if (enemy->ApplyDamage(5, 0.5f)) {}
             projectile->Destroy();
             break;
@@ -253,6 +277,11 @@ void AllySlime::CollisionProjectilesVsEnemies()
             }
 
             if (hit) {
+                // エフェクト設定
+                Effekseer::Handle handle = EffectManager::Instance().Play("SlimeAttack", projectile->GetPosition());
+                EffectManager::Instance().SetScale(handle, 0.05f, 0.05f, 0.05f);
+                EffectManager::Instance().Skip(handle, 151.0f);
+
                 gimmic->OnCollision(projectile);
                 projectile->Destroy();
                 break;
